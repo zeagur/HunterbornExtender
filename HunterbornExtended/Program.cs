@@ -8,6 +8,7 @@ using Noggog;
 using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Mutagen.Bethesda.Plugins.Cache;
+using Mutagen.Bethesda.SourceGenerators;
 
 
 namespace HunterbornExtender
@@ -53,7 +54,7 @@ namespace HunterbornExtender
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            //state.
+            
         }
 
 
