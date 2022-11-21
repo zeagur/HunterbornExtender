@@ -8,7 +8,6 @@ using Noggog;
 using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Mutagen.Bethesda.Plugins.Cache;
-using Mutagen.Bethesda.SourceGenerators;
 
 
 namespace HunterbornExtender
