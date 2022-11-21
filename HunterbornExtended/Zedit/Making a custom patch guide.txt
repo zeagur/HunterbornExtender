@@ -1,0 +1,80 @@
+type                      animal or monster
+
+name                      Name of animal type   Pig/Goat/etc
+properName				  Name Shown on Carcass (Animal Only)
+sortName				  Name Show in Patcher during animal discovery
+
+animalSwitch              On/Off switch from MCM menu for animals/monsters
+                          _DS_Hunterborn_IncludeChicken
+                          _DS_Hunterborn_IncludeDog
+                          _DS_Hunterborn_IncludeHare
+                          _DS_Hunterborn_IncludeMudcrab
+                          _DS_Hunterborn_IncludeSkeever
+                          _DS_Hunterborn_IncludeSlaughterfish
+                          _DS_Hunterborn_IncludeMonsterChaurus
+                          _DS_Hunterborn_IncludeMonsterSpiders
+                          _DS_Hunterborn_IncludeMonsterSpriggans
+                          _DS_Hunterborn_IncludeMonsterTrolls
+                          _DS_Hunterborn_IncludeMonsterWerewolves
+                          _DS_Hunterborn_IncludeMonsterDragons
+                          
+carcassMessageBox         Msg Box that shows up when you first inspect animal
+              animal      _DS_MsgBox_FreshCarcass
+          fish/mudcrab    _DS_MsgBox_FreshCarcass_Clean
+              bird        _DS_MsgBox_FreshCarcass_Pluck
+              monster     not needed
+
+carcassSize               Size of carcass
+                          Affects how long it takes to harvest/skin/etc. 
+                          Affects how much meat you get
+                          Sizes
+                          -----
+                          Size 1: Chicken, hare, mudcrab, skeever, slaughterfish.
+                          Size 2: Deer, dog, elk female, fox, goat, giant mudcrab, wolf.
+                          Size 3: Bear, elk male, horse, sabre cat. Chaurus, frostbite spider.
+                          Size 4: Cow (due to bulk).
+                          Size 5: Cave bear, snow bear, horker (due to bulk). Giant frostbite spider, troll, werewolf.
+                          Size 7: Mammoth. Dragon.
+                          
+carcassWeight             Approx weight of carcass
+
+carcassValue              Value of carcass
+
+peltCount                 ["4","2","2","2"]
+                          leather strip
+                          leather
+                          fine -> normal
+                          flawless -> fine
+                          
+furPlateCount             ["1", "2", "4", "8"]   amount of fur plates made with recipes
+                          poor skin
+                          normal
+                          fine
+                          flawless
+                          
+meat                      name of meat of animal
+
+Mats                      materials when harvesting
+                          0   Low roll
+                          1   Mid roll
+                          2   Best roll
+                          3   Extra Yield options from MCM menu
+                          4   High End Materials
+                          5   Quest Materials
+                          
+negativeTreasure          items removed from monsters, add items that normally show up in deathitem formlist
+                          ["BearClaws", "BearPelt", "HumanFlesh"]
+
+sharedDeathItems          list of shared death items
+                          IASharedListDeathItemMudcrab01
+                          IASharedListDeathItemMudcrab02
+                          IASharedListDeathItemMudcrab03
+                          IASharedListDeathItemTroll
+                          IASharedListDeathItemTrollFrost
+                          IASharedListDeathItemWerewolf
+                          
+bloodType                 blood you want to use
+
+venom                     venom you want to use
+
+voice                     VTCK record - voice that NPC uses *Important*
