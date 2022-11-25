@@ -1,8 +1,7 @@
-﻿namespace HunterbornExtenderUI
-{
-    public enum EntryType 
-    { 
-        Animal,
-        Monster
-    }
+﻿namespace HunterbornExtenderUI;
+
+public enum EntryType 
+{ 
+    Animal,
+    Monster
 }

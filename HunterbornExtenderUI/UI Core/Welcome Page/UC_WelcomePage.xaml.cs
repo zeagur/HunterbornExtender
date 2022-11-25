@@ -1,15 +1,14 @@
 ﻿using System.Windows.Controls;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+/// <summary>
+/// Interaction logic for UC_WelcomePage.xaml
+/// </summary>
+public partial class UC_WelcomePage : UserControl
 {
-    /// <summary>
-    /// Interaction logic for UC_WelcomePage.xaml
-    /// </summary>
-    public partial class UC_WelcomePage : UserControl
+    public UC_WelcomePage()
     {
-        public UC_WelcomePage()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

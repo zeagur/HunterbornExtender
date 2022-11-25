@@ -1,8 +1,7 @@
-﻿namespace HunterbornExtenderUI
+﻿namespace HunterbornExtenderUI;
+
+public class Plugin
 {
-    public class Plugin
-    {
-        public List<PluginEntry> Entries { get; set; } = new();
-        public string FilePath { get; set; } = "";
-    }
+    public List<PluginEntry> Entries { get; set; } = new();
+    public string FilePath { get; set; } = "";
 }

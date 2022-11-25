@@ -4,57 +4,56 @@ using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+public class MainWindowVM : ViewModel
 {
-    public class MainWindowVM : ViewModel
+    private StateProvider _stateProvider;
+    private PluginLoader _pluginLoader;
+    private DataState _dataState;
+
+    [Reactive]
+    public object DisplayedSubView { get; set; }
+    public VM_WelcomePage WelcomePage { get; set; }
+    public VM_DeathItemAssignmentPage DeathItemMenu { get; set; }
+    public VM_PluginEditorPage PluginEditorPage { get; set; }
+
+    [Reactive]
+    public ICommand ClickDeathItemAssignment { get; }
+        
+    [Reactive]
+    public ICommand ClickPluginsMenu { get; }
+        
+    [Reactive]
+    public ICommand Test { get; }
+        
+    public MainWindowVM(StateProvider stateProvider, PluginLoader pluginLoader, DataState dataState)
     {
-        private StateProvider _stateProvider;
-        private PluginLoader _pluginLoader;
-        private DataState _dataState;
+        _stateProvider = stateProvider;
+        _pluginLoader = pluginLoader;
+        _dataState = dataState;
 
-        [Reactive]
-        public object DisplayedSubView { get; set; }
-        public VM_WelcomePage WelcomePage { get; set; }
-        public VM_DeathItemAssignmentPage DeathItemMenu { get; set; }
-        public VM_PluginEditorPage PluginEditorPage { get; set; }
+        WelcomePage = new(_dataState);
+        PluginEditorPage = new(_stateProvider);
+        DeathItemMenu = new(_stateProvider, _dataState);
 
-        [Reactive]
-        public ICommand ClickDeathItemAssignment { get; }
-        
-        [Reactive]
-        public ICommand ClickPluginsMenu { get; }
-        
-        [Reactive]
-        public ICommand Test { get; }
-        
-        public MainWindowVM(StateProvider stateProvider, PluginLoader pluginLoader, DataState dataState)
-        {
-            _stateProvider = stateProvider;
-            _pluginLoader = pluginLoader;
-            _dataState = dataState;
+        Init();
 
-            WelcomePage = new(_dataState);
-            PluginEditorPage = new(_stateProvider);
-            DeathItemMenu = new(_stateProvider, _dataState);
+        //DisplayedSubView = WelcomePage;
+        DisplayedSubView = PluginEditorPage;
 
-            Init();
-
-            //DisplayedSubView = WelcomePage;
-            DisplayedSubView = PluginEditorPage;
-
-            ClickDeathItemAssignment = ReactiveCommand.Create(
-                () => DisplayedSubView = DeathItemMenu);
+        ClickDeathItemAssignment = ReactiveCommand.Create(
+            () => DisplayedSubView = DeathItemMenu);
             
-            ClickPluginsMenu = ReactiveCommand.Create(
-                () => DisplayedSubView = PluginEditorPage);
+        ClickPluginsMenu = ReactiveCommand.Create(
+            () => DisplayedSubView = PluginEditorPage);
 
-            Test = ReactiveCommand.Create(
-                () => MessageBox.Show("Test"));
-        }
-        public void Init()
-        {
-            _dataState.Plugins = _pluginLoader.LoadPlugins();
-            PluginEditorPage.Plugins = new VMLoader_Plugins(_stateProvider).GetPluginVMs(_dataState.Plugins);
-        }
+        Test = ReactiveCommand.Create(
+            () => MessageBox.Show("Test"));
+    }
+    public void Init()
+    {
+        _dataState.Plugins = _pluginLoader.LoadPlugins();
+        PluginEditorPage.Plugins = new VMLoader_Plugins(_stateProvider).GetPluginVMs(_dataState.Plugins);
     }
 }

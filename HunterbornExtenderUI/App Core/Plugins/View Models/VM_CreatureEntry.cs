@@ -1,7 +1,6 @@
-﻿namespace HunterbornExtenderUI
-{
-    public class VM_CreatureEntry
-    {
+﻿namespace HunterbornExtenderUI;
 
-    }
+public class VM_CreatureEntry
+{
+
 }

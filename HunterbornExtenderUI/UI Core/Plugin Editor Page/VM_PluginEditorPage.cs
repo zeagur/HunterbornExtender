@@ -2,26 +2,25 @@
 using System.Windows.Input;
 using ReactiveUI;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+public class VM_PluginEditorPage
 {
-    public class VM_PluginEditorPage
+    private StateProvider _stateProvider;
+    public ObservableCollection<VM_Plugin> Plugins { get; set; } = new();
+    public VM_Plugin? DisplayedPlugin { get; set; } = null;
+
+    public ICommand AddPlugin { get; }
+    public ICommand DeletePlugin { get; }
+
+    public VM_PluginEditorPage(StateProvider stateProvider)
     {
-        private StateProvider _stateProvider;
-        public ObservableCollection<VM_Plugin> Plugins { get; set; } = new();
-        public VM_Plugin? DisplayedPlugin { get; set; } = null;
+        _stateProvider = stateProvider;
 
-        public ICommand AddPlugin { get; }
-        public ICommand DeletePlugin { get; }
+        AddPlugin = ReactiveCommand.Create(
+            () => Plugins.Add(new VM_Plugin(_stateProvider)));
 
-        public VM_PluginEditorPage(StateProvider stateProvider)
-        {
-            _stateProvider = stateProvider;
-
-            AddPlugin = ReactiveCommand.Create(
-                () => Plugins.Add(new VM_Plugin(_stateProvider)));
-
-            DeletePlugin = ReactiveCommand.Create<VM_Plugin>(
-                x => Plugins.Remove(x));
-        }
+        DeletePlugin = ReactiveCommand.Create<VM_Plugin>(
+            x => Plugins.Remove(x));
     }
 }

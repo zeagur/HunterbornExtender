@@ -1,15 +1,14 @@
 ﻿using System.Windows.Controls;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+/// <summary>
+/// Interaction logic for UC_DeathItemAssignmentPage.xaml
+/// </summary>
+public partial class UC_DeathItemAssignmentPage : UserControl
 {
-    /// <summary>
-    /// Interaction logic for UC_DeathItemAssignmentPage.xaml
-    /// </summary>
-    public partial class UC_DeathItemAssignmentPage : UserControl
+    public UC_DeathItemAssignmentPage()
     {
-        public UC_DeathItemAssignmentPage()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

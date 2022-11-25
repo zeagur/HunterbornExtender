@@ -1,25 +1,24 @@
 ﻿using Autofac;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml
+/// </summary>
+public partial class MainWindow : MahApps.Metro.Controls.MetroWindow
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : MahApps.Metro.Controls.MetroWindow
+    public MainWindow()
     {
-        public MainWindow()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            var builder = new ContainerBuilder();
-            builder.RegisterModule<MainModule>();
-            var container = builder.Build();
+        var builder = new ContainerBuilder();
+        builder.RegisterModule<MainModule>();
+        var container = builder.Build();
 
-            container.Resolve<StateProvider>();
-            container.Resolve<EDIDtoForm>();
+        container.Resolve<StateProvider>();
+        container.Resolve<EDIDtoForm>();
 
-            var mvm = container.Resolve<MainWindowVM>();
-            this.DataContext = mvm;
-        }
+        var mvm = container.Resolve<MainWindowVM>();
+        this.DataContext = mvm;
     }
 }
