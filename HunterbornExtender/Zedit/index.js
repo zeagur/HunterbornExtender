@@ -116,17 +116,17 @@ let vanillaToCaco = {
   'HumanFlesh': 'CACO_FoodMeatHumanoidFlesh'
 };
 
-let loadKnownDeathItemsAnimals = function () {
+let loadKnownDeathItemsAnimals() {
   let elements = xelib.GetElements(flstRecords['_DS_FL_DeathItems'], 'FormIDs');
   knownDeathItemsAnimals = elements.map(element => xelib.GetValue(element));
 };
 
-let loadKnownDeathItemsMonsters = function () {
+let loadKnownDeathItemsMonsters() {
   let elements = xelib.GetElements(flstRecords['_DS_FL_DeathItems_Monsters'], 'FormIDs');
   knownDeathItemsMonsters = elements.map(element => xelib.GetValue(element));
 };
 
-let hasFaction = function (rec, factions) {
+let hasFaction(rec, factions) {
   if (!xelib.HasElement(rec, 'Factions'))
     return;
   let elements = xelib.GetElements(rec, 'Factions'),
@@ -134,14 +134,14 @@ let hasFaction = function (rec, factions) {
   return !!recordFactions.find(faction => factions.includes(faction));
 };
 
-let hasVoice = function (rec, voices) {
+let hasVoice(rec, voices) {
   if (!xelib.HasElement(rec, 'VTCK'))
     return;
   let element = xelib.GetRefEditorID(rec, 'VTCK');
   return !!voices.includes(element);
 };
 
-let isCreature = function (rec) {
+let isCreature(rec) {
   let deathItem = xelib.GetValue(rec, 'INAM');
   return (!hasFaction(rec, forbiddenFactions) &&
     hasVoice(rec, allowedVoice) &&
@@ -152,7 +152,7 @@ let isCreature = function (rec) {
     !blacklistedDeathItems.includes(deathItem.replace(/\s\[.*\]/, '')));
 };
 
-let getElementFileName = function (rec) {
+let getElementFileName(rec) {
   return xelib.WithHandle(xelib.GetElementFile(rec), file => {
     return xelib.Name(file);
   });
@@ -166,14 +166,14 @@ function isEmpty(obj) {
   return true;
 }
 
-let cacheRecords = function (cache, sig) {
+private void cacheRecords(cache, sig) {
   xelib.GetRecords(0, sig).forEach(rec => {
     let edid = xelib.EditorID(rec);
     cache[edid] = xelib.GetWinningOverride(rec);
   });
 };
 
-let BuildPeltRecords = function () {
+private void BuildPeltRecords() {
   xelib.GetElements(0, "Hunterborn.esp\\FLST\\_DS_FL_PeltLists\\FormIDs").forEach((value, index) => {
     if (xelib.HasElement(xelib.GetLinksTo(value), "FormIDs")) {
       let testing = xelib.GetElements(xelib.GetLinksTo(value), "FormIDs")
@@ -198,7 +198,7 @@ let BuildPeltRecords = function () {
   });
 };
 
-let buildDeathItem = function (deathItems, rec) {
+let buildDeathItem(deathItems, rec) {
   let name = xelib.LongName(rec),
   editorID = xelib.EditorID(rec),
   filename = getElementFileName(rec),
@@ -260,7 +260,7 @@ let buildDeathItem = function (deathItems, rec) {
     });
 };
 
-let CreateStandardRecords = function (patch) {
+let CreateStandardRecords(patch) {
   qustRecords["_DS_Hunterborn"] = xelib.CopyElement(xelib.GetWinningOverride(xelib.GetElement(0, "Hunterborn.esp\\QUST\\_DS_Hunterborn")), patch);
   flstRecords["_DS_FL_CarcassObjects"] = xelib.CopyElement(flstRecords["_DS_FL_CarcassObjects"], patch);
   flstRecords["_DS_FL_PeltLists"] = xelib.CopyElement(flstRecords["_DS_FL_PeltLists"], patch);
@@ -275,7 +275,7 @@ let CreateStandardRecords = function (patch) {
   flstRecords["_DS_FL_Mats__Perfect_Monsters"] = xelib.CopyElement(flstRecords["_DS_FL_Mats__Perfect_Monsters"], patch);
 };
 
-let CreateToken = function (animalType, animalRecord, patch) {
+let CreateToken(animalType, animalRecord, patch) {
   if (miscRecords.hasOwnProperty(`_DS_DI${animalType}`)) {
     Token = xelib.CopyElement(miscRecords[`_DS_DI${animalType}`], patch, true);
     xelib.SetValue(Token, 'EDID', xelib.EditorID(Token).replace(animalType.replace('Crab', 'crab'), animalRecord));
@@ -309,7 +309,7 @@ let CreateToken = function (animalType, animalRecord, patch) {
   }
 };
 
-let CreateCarcass = function (animalType, animalRecord, npc, jsonRecord, patch) {
+let CreateCarcass(animalType, animalRecord, npc, jsonRecord, patch) {
   Carcass = null;
   if (miscRecords.hasOwnProperty(`_DS_CarcassFresh_${animalType}`) && !monsterTypes.includes(animalType)) {
     Carcass = xelib.CopyElement(miscRecords[`_DS_CarcassFresh_${animalType}`], patch, true);
@@ -338,7 +338,7 @@ let CreateCarcass = function (animalType, animalRecord, npc, jsonRecord, patch) 
   return Carcass;
 };
 
-let CreateMats = function (animalType, animalRecord, jsonRecord, patch) {
+let CreateMats(animalType, animalRecord, jsonRecord, patch) {
   if (flstRecords.hasOwnProperty(`_DS_FL_Mats_${animalType}`)) {
     let oldEdid = xelib.EditorID(flstRecords[`_DS_FL_Mats_${animalType}`]);
     let formList = xelib.CopyElement(flstRecords[`_DS_FL_Mats_${animalType}`], patch, true);
@@ -377,7 +377,7 @@ let CreateMats = function (animalType, animalRecord, jsonRecord, patch) {
   }
 };
 
-let GetDefaultPelt = function (npc) {
+let GetDefaultPelt(npc) {
   let deathItem = xelib.GetLinksTo(npc, 'INAM');
   if (!deathItem)
     return;
@@ -391,7 +391,7 @@ let GetDefaultPelt = function (npc) {
     return xelib.GetLinksTo(entry, 'LVLO\\Reference');
 };
 
-let TweakPelts = function (Pelts, DefaultPelt) {
+let TweakPelts(Pelts, DefaultPelt) {
   let DefaultPeltValue = xelib.GetValue(DefaultPelt, 'DATA - Data\\Value');
   if (Pelts[xelib.FullName(DefaultPelt)][0]) {
     xelib.SetValue(Pelts[xelib.FullName(DefaultPelt)][0], 'FULL', `${xelib.FullName(DefaultPelt)} (Poor)`);
@@ -410,7 +410,7 @@ let TweakPelts = function (Pelts, DefaultPelt) {
   }
 };
 
-let CreatePelts = function (Pelts, Carcass, animalType, animalRecord, aiIndex, npc, patch) {
+let CreatePelts(Pelts, Carcass, animalType, animalRecord, aiIndex, npc, patch) {
   if (flstRecords.hasOwnProperty(`_DS_FL_Pelts${animalType}`)) {
     let oldEdid = xelib.EditorID(flstRecords[`_DS_FL_Pelts${animalType}`]);
     PeltsFL = xelib.CopyElement(flstRecords[`_DS_FL_Pelts${animalType}`], patch, true);
@@ -460,7 +460,7 @@ let CreatePelts = function (Pelts, Carcass, animalType, animalRecord, aiIndex, n
   }
 };
 
-let CreateNewDeathItem = function (animalType, animalRecord, npc, jsonRecord, patch) {
+let CreateNewDeathItem(animalType, animalRecord, npc, jsonRecord, patch) {
   if (lvliRecords.hasOwnProperty(`_DS_DeathItem_${animalType.replace(/0[123]|Female|Male/i,'')}`)) {
     NewDeathItem = xelib.CopyElement(lvliRecords[`_DS_DeathItem_${animalType.replace(/0[123]|Female|Male/i,'')}`], patch, true);
     let oldEdid = xelib.EditorID(NewDeathItem);
@@ -502,7 +502,7 @@ let CreateNewDeathItem = function (animalType, animalRecord, npc, jsonRecord, pa
   xelib.SetValue(newform, "Object v2\\Alias", "None");
 };
 
-let CreatePerfectMats = function (animalType, animalRecord, patch) {
+let CreatePerfectMats(animalType, animalRecord, patch) {
   if (lvliRecords.hasOwnProperty(`_DS_LI_Mats_Perfect_${animalType}`)) {
     PerfectMats = xelib.CopyElement(lvliRecords[`_DS_LI_Mats_Perfect_${animalType}`], patch, true);
     let oldEdid = xelib.EditorID(PerfectMats);
@@ -519,7 +519,7 @@ let CreatePerfectMats = function (animalType, animalRecord, patch) {
   }
 };
 
-let CreateRecipe1 = function (Recipes, peltArray, animalType, animalRecord, jsonRecord, patch, index) {
+let CreateRecipe1(Recipes, peltArray, animalType, animalRecord, jsonRecord, patch, index) {
   if (cobjRecords.hasOwnProperty(`_DS_Recipe_Pelt_${animalType}_0${index}`) || cobjRecords.hasOwnProperty(`RecipeLeather${animalType}Hide`) || cobjRecords.hasOwnProperty(`RecipeLeather${animalType}Hide02`) || cobjRecords.hasOwnProperty(`DLC1RecipeLeather${animalType}Hide`)) {
     if (cobjRecords.hasOwnProperty(`_DS_Recipe_Pelt_${animalType}_0${index}`)) {
       Recipes[index] = xelib.CopyElement(cobjRecords[`_DS_Recipe_Pelt_${animalType}_0${index}`], patch, true);
@@ -551,7 +551,7 @@ let CreateRecipe1 = function (Recipes, peltArray, animalType, animalRecord, json
   }
 };
 
-let CreateRecipe2 = function (Recipes, peltArray, animalType, animalRecord, jsonRecord, patch, index1, index2) {
+let CreateRecipe2(Recipes, peltArray, animalType, animalRecord, jsonRecord, patch, index1, index2) {
   if (cobjRecords.hasOwnProperty(`HB_Recipe_FurPlate_${animalType}_0${index1}`)) {
     Recipes[index2] = xelib.CopyElement(cobjRecords[`HB_Recipe_FurPlate_${animalType}_0${index1}`], patch, true);
     oldEdid = xelib.EditorID(Recipes[index2]);
@@ -570,7 +570,7 @@ let CreateRecipe2 = function (Recipes, peltArray, animalType, animalRecord, json
   cobjRecords[edid] = Recipes[index2];
 };
 
-let CreateRecipe3 = function (Recipes, peltArray, animalType, animalRecord, jsonRecord, patch, index) {
+let CreateRecipe3(Recipes, peltArray, animalType, animalRecord, jsonRecord, patch, index) {
   if (cobjRecords.hasOwnProperty(`RecipeLeatherGoatHide_TreeBark`)) {
     if (cobjRecords.hasOwnProperty(`_DS_Recipe_Pelt_${animalType}_01_TreeBark`)) {
       Recipes[index] = xelib.CopyElement(cobjRecords[`_DS_Recipe_Pelt_${animalType}_01_TreeBark`], patch, true);
@@ -599,7 +599,7 @@ let CreateRecipe3 = function (Recipes, peltArray, animalType, animalRecord, json
   }
 };
 
-let CreateRecipes = function (Recipes, Pelts, animalType, animalRecord, npc, jsonRecord, patch) {
+let CreateRecipes(Recipes, Pelts, animalType, animalRecord, npc, jsonRecord, patch) {
   if (GetDefaultPelt(npc) != undefined) {
     let peltTemp = xelib.GetWinningOverride(GetDefaultPelt(npc));
     if (!DefaultPelt.hasOwnProperty(xelib.FullName(peltTemp))) {
@@ -617,7 +617,7 @@ let CreateRecipes = function (Recipes, Pelts, animalType, animalRecord, npc, jso
   }
 };
 
-let CarcassSizes = function (aiIndex, animalType, jsonRecord, patch) {
+let CarcassSizes(aiIndex, animalType, jsonRecord, patch) {
   if (!monsterTypes.includes(animalType)) {
     CarcassSizeArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Animals");
   } else {
@@ -632,7 +632,7 @@ let CarcassSizes = function (aiIndex, animalType, jsonRecord, patch) {
   }
 };
 
-let ActiveAnimalSwitches = function (aiIndex, animalType, jsonRecord, patch) {
+let ActiveAnimalSwitches(aiIndex, animalType, jsonRecord, patch) {
   if (!monsterTypes.includes(animalType)) {
     let AnimalSwitchesArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Animals");
     AnimalSwitchesArrayProperty = xelib.GetScriptProperty(AnimalSwitchesArray, "ActiveAnimalSwitches");
@@ -649,7 +649,7 @@ let ActiveAnimalSwitches = function (aiIndex, animalType, jsonRecord, patch) {
   xelib.SetValue(newform, "Object v2\\Alias", "None");
 };
 
-let AllMeatWeights = function (aiIndex, animalType, jsonRecord, patch) {
+let AllMeatWeights(aiIndex, animalType, jsonRecord, patch) {
   if (!monsterTypes.includes(animalType))
     MeatWeightsArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Animals");
   else
@@ -663,7 +663,7 @@ let AllMeatWeights = function (aiIndex, animalType, jsonRecord, patch) {
   }
 };
 
-let BloodTypes = function (aiIndex, animalType, jsonRecord, patch) {
+let BloodTypes(aiIndex, animalType, jsonRecord, patch) {
   if (monsterTypes.includes(animalType)) {
     let BloodTypesArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Monsters");
     let BloodTypesArrayProperty = xelib.GetScriptProperty(BloodTypesArray, "BloodTypes");
@@ -677,7 +677,7 @@ let BloodTypes = function (aiIndex, animalType, jsonRecord, patch) {
   }
 };
 
-let DefaultPeltValues = function (animalType, npc, patch, Pelts) {
+let DefaultPeltValues(animalType, npc, patch, Pelts) {
   if (!monsterTypes.includes(animalType)) {
     DefaultPeltValuesArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Animals");
   } else {
@@ -692,7 +692,7 @@ let DefaultPeltValues = function (animalType, npc, patch, Pelts) {
   }
 };
 
-let MeatTypes = function (aiIndex, animalType, jsonRecord, patch) {
+let MeatTypes(aiIndex, animalType, jsonRecord, patch) {
   if (!monsterTypes.includes(animalType)) {
     MeatTypesArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Animals");
   } else {
@@ -714,7 +714,7 @@ let MeatTypes = function (aiIndex, animalType, jsonRecord, patch) {
   xelib.SetValue(newform, "Object v2\\Alias", "None");
 };
 
-let NegativeTreasure = function (aiIndex, animalType, animalRecord, jsonRecord, patch) {
+let NegativeTreasure(aiIndex, animalType, animalRecord, jsonRecord, patch) {
   if (monsterTypes.includes(animalType)) {
     let NegativeTreasureArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Monsters");
     NegativeTreasureArrayProperty = xelib.GetScriptProperty(NegativeTreasureArray, "NegativeTreasure");
@@ -737,7 +737,7 @@ let NegativeTreasure = function (aiIndex, animalType, animalRecord, jsonRecord, 
   }
 };
 
-let SharedDeathItems = function (aiIndex, animalType, jsonRecord, patch) {
+let SharedDeathItems(aiIndex, animalType, jsonRecord, patch) {
   if (!monsterTypes.includes(animalType))
     SharedDeathItemsArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Animals");
   else
@@ -752,7 +752,7 @@ let SharedDeathItems = function (aiIndex, animalType, jsonRecord, patch) {
   xelib.SetValue(newform, "Object v2\\Alias", "None");
 };
 
-let VenomTypes = function (aiIndex, animalType, jsonRecord, patch) {
+let VenomTypes(aiIndex, animalType, jsonRecord, patch) {
   if (monsterTypes.includes(animalType)) {
     let VenomTypesArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Monsters");
     let VenomTypesArrayProperty = xelib.GetScriptProperty(VenomTypesArray, "VenomTypes");
@@ -766,7 +766,7 @@ let VenomTypes = function (aiIndex, animalType, jsonRecord, patch) {
   }
 };
 
-let FreshCarcassMsgBoxes = function (aiIndex, animalType, jsonRecord, patch) {
+let FreshCarcassMsgBoxes(aiIndex, animalType, jsonRecord, patch) {
   if (!monsterTypes.includes(animalType)) {
     let FreshCarcassMsgBoxesArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_MAIN");
     let FreshCarcassMsgBoxesArrayProperty = xelib.GetScriptProperty(FreshCarcassMsgBoxesArray, "FreshCarcassMsgBoxes");
@@ -780,7 +780,7 @@ let FreshCarcassMsgBoxes = function (aiIndex, animalType, jsonRecord, patch) {
   }
 };
 
-let AnimalIndex = function (aiIndex, animalType, jsonRecord, patch) {
+let AnimalIndex(aiIndex, animalType, jsonRecord, patch) {
   if (!monsterTypes.includes(animalType)) {
     let AnimalIndexArray = xelib.GetScript(qustRecords["_DS_Hunterborn"], "_DS_HB_Animals");
     AnimalIndexArrayProperty = xelib.GetScriptProperty(AnimalIndexArray, "AnimalIndex");
@@ -796,7 +796,7 @@ let AnimalIndex = function (aiIndex, animalType, jsonRecord, patch) {
   }
 };
 
-let ModifyDeathItem = function (npc, patch) {
+let ModifyDeathItem(npc, patch) {
   let deathItem = xelib.GetLinksTo(npc, 'INAM');
   let deathItemWinning = xelib.GetWinningOverride(deathItem);
   let deathItemFlag = xelib.GetValue(deathItemWinning, 'LVLF');
@@ -806,7 +806,7 @@ let ModifyDeathItem = function (npc, patch) {
   }
 };
 
-let addRecords = function (npc, animalType, patch, helpers) {
+let addRecords(npc, animalType, patch, helpers) {
   if (animalType != "Skip" && !miscRecords['_DS_DI' + xelib.GetValue(npc, 'INAM').replace('DeathItem', '').replace(/ \[LVLI.*/i, '')]) {
 
     animalType = fixedAnimalTypes[animalType] || animalType;
@@ -906,7 +906,7 @@ let addRecords = function (npc, animalType, patch, helpers) {
   }
 };
 
-let spliceTypes = function (name, type, sortName) {
+let spliceTypes(name, type, sortName) {
   let i = 1;
   if (animalTypes.find(element => element == sortName) == undefined) {
     let arrayTest = animalTypes[i];
@@ -922,7 +922,7 @@ let spliceTypes = function (name, type, sortName) {
   return true;
 };
 
-let loadJsonData = function (patchJson, i) {
+let loadJsonData(patchJson, i) {
   jsonData[i] = fh.loadJsonFile(patchJson, []);
   for (let j = 0; j < Object.keys(jsonData[i]).length; j++) {
     if (!allowedVoice.includes(jsonData[i][j].voice)) {
@@ -941,7 +941,7 @@ let loadJsonData = function (patchJson, i) {
   }
 };
 
-let CheckPatches = function () {
+let CheckPatches() {
   if (!CheckPatchesRunOnce) {
     CheckPatchesRunOnce = true;
     let i = 0;
@@ -963,10 +963,10 @@ let CheckPatches = function () {
   }
 }
 
-let settingsController = function ($scope, referenceService, progressService, errorService) {
+let settingsController($scope, referenceService, progressService, errorService) {
   let patcherSettings = $scope.settings.hunterbornCreaturePatcher;
 
-  let GetCreatures = function () {
+  let GetCreatures() {
     cacheRecords(flstRecords, 'FLST');
     loadKnownDeathItemsMonsters();
     loadKnownDeathItemsAnimals();
@@ -983,7 +983,7 @@ let settingsController = function ($scope, referenceService, progressService, er
     });
   };
 
-  $scope.loadCreatures = function () {
+  $scope.loadCreatures() {
     CheckPatches();
     progressService.showProgress({
       message: 'Loading records...'
@@ -992,7 +992,7 @@ let settingsController = function ($scope, referenceService, progressService, er
     progressService.hideProgress();
   };
 
-  $scope.clearCreatures = function () {
+  $scope.clearCreatures() {
     CheckPatches();
     $scope.items = patcherSettings.items = {};
     progressService.showProgress({
