@@ -32,9 +32,9 @@ namespace HunterbornExtenderUI
         [Reactive]
         public string SortName { get; set; } = "";
         [Reactive]
-        public FormKey AnimalSwitch { get; set; } = new();
+        public FormKey AnimalSwitch { get; set; }
         [Reactive]
-        public FormKey CarcassMessageBox { get; set; } = new();
+        public FormKey CarcassMessageBox { get; set; }
         [Reactive]
         public int CarcassSize { get; set; } = 1;
         [Reactive]
@@ -46,19 +46,19 @@ namespace HunterbornExtenderUI
         [Reactive]
         public string[] FurPlateCount { get; set; } = new string[4] { "1", "1", "1", "1" };
         [Reactive]
-        public FormKey Meat { get; set; } = new();
+        public FormKey Meat { get; set; }
         [Reactive]
         public ObservableCollection<VM_MatEntry> Mats { get; set; } = new();
         [Reactive]
         public ObservableCollection<FormKey> NegativeTreasure { get; set; } = new();
         [Reactive]
-        public FormKey SharedDeathItems { get; set; } = new();
+        public FormKey SharedDeathItems { get; set; }
         [Reactive]
-        public FormKey BloodType { get; set; } = new();
+        public FormKey BloodType { get; set; }
         [Reactive]
-        public FormKey Venom { get; set; } = new();
+        public FormKey Venom { get; set; }
         [Reactive]
-        public FormKey Voice { get; set; } = new();
+        public FormKey Voice { get; set; }
         [Reactive]
         public string FilePath { get; set; } = "";
         public ILinkCache LinkCache { get; set; }
