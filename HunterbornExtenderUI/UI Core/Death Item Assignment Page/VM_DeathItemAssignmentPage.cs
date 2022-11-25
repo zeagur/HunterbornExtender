@@ -6,10 +6,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Noggog.WPF;
 
 namespace HunterbornExtenderUI
 {
-    public class VM_DeathItemAssignmentPage : VM
+    public class VM_DeathItemAssignmentPage : ViewModel
     {
         private StateProvider _stateProvider;
         private DataState _dataState;

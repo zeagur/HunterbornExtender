@@ -7,12 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace HunterbornExtenderUI
 {
-    public class MainWindowVM : VM
+    public class MainWindowVM : ViewModel
     {
         private StateProvider _stateProvider;
         private PluginLoader _pluginLoader;

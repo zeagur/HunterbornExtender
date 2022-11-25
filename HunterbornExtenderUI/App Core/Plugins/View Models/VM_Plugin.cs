@@ -1,11 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Input;
+using Noggog.WPF;
 using ReactiveUI;
 
 namespace HunterbornExtenderUI
 {
-    public class VM_Plugin : VM
+    public class VM_Plugin : ViewModel
     {
         private StateProvider _state;
         public VM_Plugin(StateProvider state)

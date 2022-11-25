@@ -10,10 +10,11 @@ using System.Linq;
 using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Threading.Tasks;
+using Noggog.WPF;
 
 namespace HunterbornExtenderUI
 {
-    public class VM_PluginEntry : VM
+    public class VM_PluginEntry : ViewModel
     {
         private StateProvider _state;
         public VM_PluginEntry(StateProvider state)
@@ -122,7 +123,7 @@ namespace HunterbornExtenderUI
             return model;
         }
 
-        public class VM_MatEntry : VM
+        public class VM_MatEntry : ViewModel
         {
             [Reactive]
             public ObservableCollection<VM_Mat> Items { get; set; } = new();
@@ -160,7 +161,7 @@ namespace HunterbornExtenderUI
                 return model;
             }
 
-            public class VM_Mat : VM
+            public class VM_Mat : ViewModel
             {
                 public ILinkCache LinkCache { get; set; }
                 public IEnumerable<Type> MatType { get; } = typeof(IIngredientGetter).AsEnumerable();
