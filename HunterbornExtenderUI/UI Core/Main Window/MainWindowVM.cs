@@ -18,13 +18,8 @@ public class MainWindowVM : ViewModel
     public VM_DeathItemAssignmentPage DeathItemMenu { get; set; }
     public VM_PluginEditorPage PluginEditorPage { get; set; }
 
-    [Reactive]
     public ICommand ClickDeathItemAssignment { get; }
-        
-    [Reactive]
     public ICommand ClickPluginsMenu { get; }
-        
-    [Reactive]
     public ICommand Test { get; }
         
     public MainWindowVM(StateProvider stateProvider, PluginLoader pluginLoader, DataState dataState)
