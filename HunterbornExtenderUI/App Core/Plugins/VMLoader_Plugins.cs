@@ -4,10 +4,10 @@ namespace HunterbornExtenderUI;
 
 public class VMLoader_Plugins
 {
-    private StateProvider _state;
-    public VMLoader_Plugins(StateProvider state)
+    private readonly Func<VM_Plugin> _vmPluginFactory;
+    public VMLoader_Plugins(Func<VM_Plugin> vmPluginFactory)
     {
-        _state = state;
+        _vmPluginFactory = vmPluginFactory;
     }   
 
     public ObservableCollection<VM_Plugin> GetPluginVMs(IEnumerable<Plugin> models)
@@ -15,7 +15,7 @@ public class VMLoader_Plugins
         ObservableCollection<VM_Plugin> result = new();
         foreach (var model in models)
         {
-            var viewModel = new VM_Plugin(_state);
+            var viewModel = _vmPluginFactory();
             viewModel.LoadFromModel(model);
             result.Add(viewModel);
         }

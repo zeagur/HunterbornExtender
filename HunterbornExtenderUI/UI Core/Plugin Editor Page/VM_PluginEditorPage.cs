@@ -6,19 +6,16 @@ namespace HunterbornExtenderUI;
 
 public class VM_PluginEditorPage
 {
-    private StateProvider _stateProvider;
     public ObservableCollection<VM_Plugin> Plugins { get; set; } = new();
     public VM_Plugin? DisplayedPlugin { get; set; } = null;
 
     public ICommand AddPlugin { get; }
     public ICommand DeletePlugin { get; }
 
-    public VM_PluginEditorPage(StateProvider stateProvider)
+    public VM_PluginEditorPage(Func<VM_Plugin> pluginFactory)
     {
-        _stateProvider = stateProvider;
-
         AddPlugin = ReactiveCommand.Create(
-            () => Plugins.Add(new VM_Plugin(_stateProvider)));
+            () => Plugins.Add(pluginFactory()));
 
         DeletePlugin = ReactiveCommand.Create<VM_Plugin>(
             x => Plugins.Remove(x));
