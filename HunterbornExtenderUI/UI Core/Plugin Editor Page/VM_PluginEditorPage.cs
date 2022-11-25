@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using ReactiveUI;
 
 namespace HunterbornExtenderUI
 {
@@ -13,22 +15,18 @@ namespace HunterbornExtenderUI
         public ObservableCollection<VM_Plugin> Plugins { get; set; } = new();
         public VM_Plugin? DisplayedPlugin { get; set; } = null;
 
-        public RelayCommand AddPlugin { get; }
-        public RelayCommand DeletePlugin { get; }
+        public ICommand AddPlugin { get; }
+        public ICommand DeletePlugin { get; }
 
         public VM_PluginEditorPage(StateProvider stateProvider)
         {
             _stateProvider = stateProvider;
 
-            AddPlugin = new RelayCommand(
-                canExecute: _ => true,
-                execute: _ => Plugins.Add(new VM_Plugin(_stateProvider))
-            );
+            AddPlugin = ReactiveCommand.Create(
+                () => Plugins.Add(new VM_Plugin(_stateProvider)));
 
-            DeletePlugin = new RelayCommand(
-                canExecute: _ => true,
-                execute: x => Plugins.Remove((VM_Plugin)x)
-            );
+            DeletePlugin = ReactiveCommand.Create<VM_Plugin>(
+                x => Plugins.Remove(x));
         }
     }
 }

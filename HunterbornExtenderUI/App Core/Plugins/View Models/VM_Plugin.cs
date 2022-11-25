@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Input;
+using ReactiveUI;
 
 namespace HunterbornExtenderUI
 {
@@ -15,15 +12,11 @@ namespace HunterbornExtenderUI
         {
             _state = state;
 
-            AddEntry = new RelayCommand(
-                canExecute: _ => true,
-                execute: _ => Entries.Add(new VM_PluginEntry(_state))
-            );
+            AddEntry = ReactiveCommand.Create(
+                () => Entries.Add(new VM_PluginEntry(_state)));
 
-            DeleteEntry = new RelayCommand(
-                canExecute: _ => true,
-                execute: x => Entries.Remove((VM_PluginEntry)x)
-            );
+            DeleteEntry = ReactiveCommand.Create<VM_PluginEntry>(
+                x => Entries.Remove(x));
         }
 
         public ObservableCollection<VM_PluginEntry> Entries { get; set; } = new();
@@ -31,8 +24,8 @@ namespace HunterbornExtenderUI
         public Plugin SourceDTO { get; set; } = new();
         public string FilePath { get; set; } = "";
         public string FileName { get; set; } = "";
-        public RelayCommand AddEntry { get; }
-        public RelayCommand DeleteEntry { get; }
+        public ICommand AddEntry { get; }
+        public ICommand DeleteEntry { get; }
 
         public void LoadFromModel(Plugin model)
         {

@@ -25,11 +25,14 @@ namespace HunterbornExtenderUI
         public VM_PluginEditorPage PluginEditorPage { get; set; }
 
         [Reactive]
-        public RelayCommand ClickDeathItemAssignment { get; }
+        public ICommand ClickDeathItemAssignment { get; }
+        
         [Reactive]
-        public RelayCommand ClickPluginsMenu { get; }
+        public ICommand ClickPluginsMenu { get; }
+        
         [Reactive]
-        public RelayCommand Test { get; }
+        public ICommand Test { get; }
+        
         public MainWindowVM(StateProvider stateProvider, PluginLoader pluginLoader, DataState dataState)
         {
             _stateProvider = stateProvider;
@@ -45,20 +48,14 @@ namespace HunterbornExtenderUI
             //DisplayedSubView = WelcomePage;
             DisplayedSubView = PluginEditorPage;
 
-            ClickDeathItemAssignment = new RelayCommand(
-                canExecute: _ => true,
-                execute: _ => DisplayedSubView = DeathItemMenu
-            );
+            ClickDeathItemAssignment = ReactiveCommand.Create(
+                () => DisplayedSubView = DeathItemMenu);
+            
+            ClickPluginsMenu = ReactiveCommand.Create(
+                () => DisplayedSubView = PluginEditorPage);
 
-            ClickPluginsMenu = new RelayCommand(
-                canExecute: _ => true,
-                execute: _ => DisplayedSubView = PluginEditorPage
-            );
-
-            Test = new RelayCommand(
-                canExecute: _ => true,
-                execute: _ => MessageBox.Show("Test")
-            );
+            Test = ReactiveCommand.Create(
+                () => MessageBox.Show("Test"));
         }
         public void Init()
         {
