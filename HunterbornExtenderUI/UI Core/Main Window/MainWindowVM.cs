@@ -41,12 +41,11 @@ public class MainWindowVM : ViewModel
 
         Init();
 
-        //DisplayedSubView = WelcomePage;
-        DisplayedSubView = PluginEditorPage;
+        DisplayedSubView = WelcomePage;
 
         ClickDeathItemAssignment = ReactiveCommand.Create(
             () => DisplayedSubView = DeathItemMenu);
-            
+
         ClickPluginsMenu = ReactiveCommand.Create(
             () => DisplayedSubView = PluginEditorPage);
 

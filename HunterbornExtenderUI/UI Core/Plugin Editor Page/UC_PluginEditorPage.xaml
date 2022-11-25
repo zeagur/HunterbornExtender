@@ -21,7 +21,7 @@
         <Button Grid.Row="0" Grid.Column="0" Command="{Binding AddPlugin}" Foreground="Lightgreen">Add New</Button>
         <ScrollViewer Grid.Row="1" Grid.Column="0">
             <StackPanel >
-                <ListBox SelectedValue="{Binding DisplayedPlugin}" ItemsSource="{Binding Plugins}" IsSynchronizedWithCurrentItem="False" >
+                <ListBox SelectedValue="{Binding DisplayedPlugin}" ItemsSource="{Binding PluginList.Plugins}" IsSynchronizedWithCurrentItem="False" >
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Border BorderThickness="1" BorderBrush ="AliceBlue">
@@ -39,17 +39,6 @@
                     </ListBox.ItemTemplate>
 
                     <!-- the following ItemContainerStyle makes selecting the TextBox containing Category also toggle the ListBoxItem.IsSelected property to focus on that ListBox Item-->
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="{x:Type ListBoxItem}">
-                            <!--
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsVisible}" Value="False">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                            -->
-                        </Style>
-                    </ListBox.ItemContainerStyle>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>

@@ -1,8 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows;
 using System.Windows.Input;
 using Noggog.WPF;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace HunterbornExtenderUI;
 
@@ -21,6 +23,7 @@ public class VM_Plugin : ViewModel
     }
 
     public ObservableCollection<VM_PluginEntry> Entries { get; set; } = new();
+    [Reactive]
     public VM_PluginEntry? DisplayedEntry { get; set; }
     public Plugin SourceDTO { get; set; } = new();
     public string FilePath { get; set; } = "";
