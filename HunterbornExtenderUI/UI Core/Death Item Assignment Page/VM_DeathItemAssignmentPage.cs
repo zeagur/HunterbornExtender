@@ -1,38 +1,30 @@
-﻿using Mutagen.Bethesda.Oblivion;
-using ReactiveUI.Fody.Helpers;
-using System;
-using System.Collections.Generic;
+﻿using ReactiveUI.Fody.Helpers;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Noggog.WPF;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+public class VM_DeathItemAssignmentPage : ViewModel
 {
-    public class VM_DeathItemAssignmentPage : VM
+    private StateProvider _stateProvider;
+
+    public List<string> DeathItemTypes { get; set; } = new();
+    [Reactive]
+    public ObservableCollection<VM_CreatureEntry> DeathItemCreatureEntries { get; set; } = new();
+    public VM_DeathItemAssignmentPage(StateProvider stateProvider)
     {
-        private StateProvider _stateProvider;
-        private DataState _dataState;
+        _stateProvider = stateProvider;
 
-        public List<string> DeathItemTypes { get; set; } = new();
-        [Reactive]
-        public ObservableCollection<VM_CreatureEntry> DeathItemCreatureEntries { get; set; } = new();
-        public VM_DeathItemAssignmentPage(StateProvider stateProvider, DataState dataState)
-        {
-            _stateProvider = stateProvider;
-            _dataState = dataState;
+        DeathItemTypes = new List<string>(CreatureTypes.AnimalTypes);
+        DeathItemTypes.AddRange(CreatureTypes.MonsterTypes);
+        DeathItemTypes.Sort();
+        DeathItemTypes.Insert(0, "Skip");
 
-            DeathItemTypes = new List<string>(CreatureTypes.AnimalTypes);
-            DeathItemTypes.AddRange(CreatureTypes.MonsterTypes);
-            DeathItemTypes.Sort();
-            DeathItemTypes.Insert(0, "Skip");
-
-            ScanForNamedNPCs();
-        }
+        ScanForNamedNPCs();
+    }
         
-        private void ScanForNamedNPCs()
-        {
+    private void ScanForNamedNPCs()
+    {
 
-        }
     }
 }

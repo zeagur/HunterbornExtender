@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Noggog.WPF;
+using ReactiveUI;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+public class VM_WelcomePage : ViewModel
 {
-    public class VM_WelcomePage : VM
-    {
-        public int PluginCount { get; set; } = 0;
-        private DataState _dataState { get; set; }
+    private readonly ObservableAsPropertyHelper<int> _pluginCount;
+    public int PluginCount => _pluginCount.Value;
 
-        public VM_WelcomePage(DataState dataState)
-        {
-            _dataState = dataState;
-            PluginCount = _dataState.Plugins.Count();
-        }
+    public VM_WelcomePage(VM_PluginList pluginList)
+    {
+        _pluginCount = pluginList.WhenAnyValue(x => x.Plugins.Count)
+            .ToProperty(this, nameof(PluginCount));
     }
 }

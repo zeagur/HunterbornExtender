@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace HunterbornExtenderUI;
 
-namespace HunterbornExtenderUI
-{
-    public enum EntryType 
-    { 
-        Animal,
-        Monster
-    }
+public enum EntryType 
+{ 
+    Animal,
+    Monster
 }

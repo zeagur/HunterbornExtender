@@ -1,8 +1,7 @@
 ﻿<Application x:Class="HunterbornExtenderUI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:HunterbornExtenderUI"
-             StartupUri=".\UI Core\Main Window\MainWindow.xaml">
+             xmlns:local="clr-namespace:HunterbornExtenderUI">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

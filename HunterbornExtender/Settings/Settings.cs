@@ -1,10 +1,5 @@
-﻿using System;
+﻿namespace HunterbornExtender.Settings;
 
-namespace HunterbornExtender.Settings
+public class Settings
 {
-    public class Settings
-    {
-    }
-
-
 }

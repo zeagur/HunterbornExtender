@@ -23,20 +23,26 @@
             <RadioButton GroupName="Nav" Margin="0, 5, 0, 0" Command="{Binding ClickPluginsMenu}" BorderBrush="Gray" BorderThickness="1" Style="{StaticResource {x:Type ToggleButton}}" HorizontalContentAlignment="Center">Mod Support Plugins</RadioButton>
         </StackPanel>
 
-        <ContentPresenter Grid.Row="0" Grid.Column="1" DataContext="{Binding DisplayedSubView}">
-            <ContentPresenter.Resources>
-                <DataTemplate DataType="{x:Type local:VM_WelcomePage}">
-                    <local:UC_WelcomePage/>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type local:VM_DeathItemAssignmentPage}">
-                    <local:UC_DeathItemAssignmentPage/>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type local:VM_PluginEditorPage}">
-                    <local:UC_PluginEditorPage/>
-                </DataTemplate>
-            </ContentPresenter.Resources>
-        </ContentPresenter>
+        <!--<local:UC_PluginEditorPage Grid.Row="0" Grid.Column="1" DataContext="{Binding PluginEditorPage}" />-->
 
-        <Button VerticalAlignment="Bottom" Command="{Binding Test}" Foreground="Red">Test</Button>
+        <Border Grid.Row="0" Grid.Column="1" BorderBrush="Bisque" BorderThickness="1">
+            <ContentPresenter  Content="{Binding DisplayedSubView}">
+                <ContentPresenter.Resources>
+                    <DataTemplate DataType="{x:Type local:VM_WelcomePage}">
+                        <local:UC_WelcomePage/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type local:VM_DeathItemAssignmentPage}">
+                        <local:UC_DeathItemAssignmentPage/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type local:VM_PluginEditorPage}">
+                        <local:UC_PluginEditorPage/>
+                    </DataTemplate>
+                </ContentPresenter.Resources>
+            </ContentPresenter>
+        </Border>
+        
+        <Button VerticalAlignment="Bottom" HorizontalAlignment="Left" Command="{Binding Test}" Foreground="Red">Test</Button>
+        <Button VerticalAlignment="Bottom" HorizontalAlignment="Center" Command="{Binding ClickDeathItemAssignment}" Foreground="Red">DA</Button>
+        <Button VerticalAlignment="Bottom" HorizontalAlignment="Right" Command="{Binding ClickPluginsMenu}" Foreground="Red">DA</Button>
     </Grid>
 </mahapps:MetroWindow>

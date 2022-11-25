@@ -1,31 +1,22 @@
-﻿using Mutagen.Bethesda.Synthesis;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+public class VMLoader_Plugins
 {
-    public class VMLoader_Plugins
+    private readonly Func<VM_Plugin> _vmPluginFactory;
+    public VMLoader_Plugins(Func<VM_Plugin> vmPluginFactory)
     {
-        private StateProvider _state;
-        public VMLoader_Plugins(StateProvider state)
-        {
-            _state = state;
-        }   
+        _vmPluginFactory = vmPluginFactory;
+    }   
 
-        public ObservableCollection<VM_Plugin> GetPluginVMs(HashSet<Plugin> models)
+    public IEnumerable<VM_Plugin> GetPluginVMs(IEnumerable<Plugin> models)
+    {
+        foreach (var model in models)
         {
-            ObservableCollection<VM_Plugin> result = new();
-            foreach (var model in models)
-            {
-                var viewModel = new VM_Plugin(_state);
-                viewModel.LoadFromModel(model);
-                result.Add(viewModel);
-            }
-            return result;
+            var viewModel = _vmPluginFactory();
+            viewModel.LoadFromModel(model);
+            yield return viewModel;
         }
     }
 }

@@ -1,31 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace HunterbornExtenderUI;
 
-namespace HunterbornExtenderUI
+public class PluginLegacyzEdit
 {
-    public class PluginLegacyzEdit
-    {
-        public List<PluginEntryLegacyzEdit> Entries { get; set; } = new();
+    public List<PluginEntryLegacyzEdit> Entries { get; set; } = new();
 
-        public Plugin ToPluginEntry(EDIDtoForm edidConverter)
+    public Plugin ToPluginEntry(EDIDtoForm edidConverter)
+    {
+        Plugin plugin = new();
+        foreach (var entry in Entries)
         {
-            Plugin plugin = new();
-            foreach (var entry in Entries)
+            var convertedEntry = entry.ToPluginEntry(edidConverter);
+            if (convertedEntry != null)
             {
-                var convertedEntry = entry.ToPluginEntry(edidConverter);
-                if (convertedEntry != null)
-                {
-                    plugin.Entries.Add(convertedEntry);
-                }
-                else
-                {
-                    // log
-                }
+                plugin.Entries.Add(convertedEntry);
             }
-            return plugin;
+            else
+            {
+                // log
+            }
         }
+        return plugin;
     }
 }

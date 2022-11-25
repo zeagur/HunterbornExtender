@@ -1,34 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
+using System.Windows.Input;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
-namespace HunterbornExtenderUI
+namespace HunterbornExtenderUI;
+
+public class VM_PluginEditorPage
 {
-    public class VM_PluginEditorPage
+    [Reactive]
+    public VM_Plugin? DisplayedPlugin { get; set; } = null;
+    public VM_PluginList PluginList { get; set; }
+    public ICommand AddPlugin { get; }
+    public ICommand DeletePlugin { get; }
+
+    public VM_PluginEditorPage(
+        VM_PluginList pluginList,
+        Func<VM_Plugin> pluginFactory)
     {
-        private StateProvider _stateProvider;
-        public ObservableCollection<VM_Plugin> Plugins { get; set; } = new();
-        public VM_Plugin? DisplayedPlugin { get; set; } = null;
+        PluginList = pluginList;
 
-        public RelayCommand AddPlugin { get; }
-        public RelayCommand DeletePlugin { get; }
+        AddPlugin = ReactiveCommand.Create(
+            () => pluginList.Plugins.Add(pluginFactory()));
 
-        public VM_PluginEditorPage(StateProvider stateProvider)
-        {
-            _stateProvider = stateProvider;
-
-            AddPlugin = new RelayCommand(
-                canExecute: _ => true,
-                execute: _ => Plugins.Add(new VM_Plugin(_stateProvider))
-            );
-
-            DeletePlugin = new RelayCommand(
-                canExecute: _ => true,
-                execute: x => Plugins.Remove((VM_Plugin)x)
-            );
-        }
+        DeletePlugin = ReactiveCommand.Create<VM_Plugin>(
+            x => pluginList.Plugins.Remove(x));
     }
 }
