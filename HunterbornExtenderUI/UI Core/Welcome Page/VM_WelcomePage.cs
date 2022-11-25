@@ -7,13 +7,10 @@ public class VM_WelcomePage : ViewModel
 {
     private readonly ObservableAsPropertyHelper<int> _pluginCount;
     public int PluginCount => _pluginCount.Value;
-    
-    private DataState _dataState { get; set; }
 
-    public VM_WelcomePage(DataState dataState)
+    public VM_WelcomePage(VM_PluginList pluginList)
     {
-        _dataState = dataState;
-        _pluginCount = _dataState.Plugins.CountChanged
+        _pluginCount = pluginList.WhenAnyValue(x => x.Plugins.Count)
             .ToProperty(this, nameof(PluginCount));
     }
 }

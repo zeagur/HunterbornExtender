@@ -10,15 +10,13 @@ public class VMLoader_Plugins
         _vmPluginFactory = vmPluginFactory;
     }   
 
-    public ObservableCollection<VM_Plugin> GetPluginVMs(IEnumerable<Plugin> models)
+    public IEnumerable<VM_Plugin> GetPluginVMs(IEnumerable<Plugin> models)
     {
-        ObservableCollection<VM_Plugin> result = new();
         foreach (var model in models)
         {
             var viewModel = _vmPluginFactory();
             viewModel.LoadFromModel(model);
-            result.Add(viewModel);
+            yield return viewModel;
         }
-        return result;
     }
 }

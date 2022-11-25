@@ -8,9 +8,9 @@ public class MainModule : Autofac.Module
     {
         // Singletons
         builder.RegisterType<StateProvider>().AsSelf().SingleInstance();
-        builder.RegisterType<DataState>().AsSelf().SingleInstance();
         builder.RegisterType<EDIDtoForm>().AsSelf().SingleInstance();
         builder.RegisterType<PluginLoader>().AsSelf().SingleInstance();
+        builder.RegisterType<VM_PluginList>().AsSelf().SingleInstance();
         builder.RegisterType<VMLoader_Plugins>().AsSelf().SingleInstance();
         builder.RegisterType<VM_WelcomePage>().AsSelf().SingleInstance();
         builder.RegisterType<VM_DeathItemAssignmentPage>().AsSelf().SingleInstance();
