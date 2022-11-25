@@ -1,11 +1,5 @@
-﻿using Mutagen.Bethesda.Oblivion;
-using ReactiveUI.Fody.Helpers;
-using System;
-using System.Collections.Generic;
+﻿using ReactiveUI.Fody.Helpers;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Noggog.WPF;
 
 namespace HunterbornExtenderUI

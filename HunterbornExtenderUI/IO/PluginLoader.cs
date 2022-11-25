@@ -1,13 +1,5 @@
-﻿using Mutagen.Bethesda.Skyrim;
-using Mutagen.Bethesda.Synthesis;
-using SynthEBD;
-using System;
-using System.Collections.Generic;
+﻿using SynthEBD;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HunterbornExtenderUI
 {

@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Mutagen.Bethesda.Json;
 using System.IO;
-using Newtonsoft.Json.Linq;
-using System.Windows;
 using HunterbornExtenderUI;
 
 namespace SynthEBD
