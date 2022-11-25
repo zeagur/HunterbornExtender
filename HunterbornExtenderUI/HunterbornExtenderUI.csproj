@@ -5,6 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
 	<TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
     <Nullable>enable</Nullable>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
     <UseWPF>true</UseWPF>
     <ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>

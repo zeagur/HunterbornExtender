@@ -4,8 +4,8 @@ namespace HunterbornExtenderUI;
 
 public class EnumBindingSourceExtension : MarkupExtension // https://brianlagunas.com/a-better-way-to-data-bind-enums-in-wpf/
 {
-    private Type _enumType;
-    public Type EnumType
+    private Type? _enumType;
+    public Type? EnumType
     {
         get { return this._enumType; }
         set
@@ -20,22 +20,16 @@ public class EnumBindingSourceExtension : MarkupExtension // https://brianlaguna
                         throw new ArgumentException("Type must be for an Enum.");
                 }
 
-#pragma warning disable CS8601 // Possible null reference assignment.
-                this._enumType = value;
-#pragma warning restore CS8601 // Possible null reference assignment.
+                this._enumType = value!;
             }
         }
     }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public EnumBindingSourceExtension() { }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public EnumBindingSourceExtension(Type enumType)
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
-        this.EnumType = enumType;
+        EnumType = enumType;
     }
 
     public override object ProvideValue(IServiceProvider serviceProvider)
