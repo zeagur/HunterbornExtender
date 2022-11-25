@@ -21,12 +21,13 @@ namespace HunterbornExtenderUI
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            
 
             //SynthesisPipeline.Instance
             //.SetTypicalOpen(Initialize);
 
-            //var window = new MainWindow();
-            //window.Show();
+            var window = new MainWindow();
+            window.Show();
         }
 
         /*
