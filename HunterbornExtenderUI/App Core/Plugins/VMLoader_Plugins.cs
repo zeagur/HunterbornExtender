@@ -10,7 +10,7 @@ public class VMLoader_Plugins
         _state = state;
     }   
 
-    public ObservableCollection<VM_Plugin> GetPluginVMs(HashSet<Plugin> models)
+    public ObservableCollection<VM_Plugin> GetPluginVMs(IEnumerable<Plugin> models)
     {
         ObservableCollection<VM_Plugin> result = new();
         foreach (var model in models)

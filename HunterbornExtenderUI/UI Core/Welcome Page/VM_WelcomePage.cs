@@ -1,15 +1,19 @@
 ﻿using Noggog.WPF;
+using ReactiveUI;
 
 namespace HunterbornExtenderUI;
 
 public class VM_WelcomePage : ViewModel
 {
-    public int PluginCount { get; set; } = 0;
+    private readonly ObservableAsPropertyHelper<int> _pluginCount;
+    public int PluginCount => _pluginCount.Value;
+    
     private DataState _dataState { get; set; }
 
     public VM_WelcomePage(DataState dataState)
     {
         _dataState = dataState;
-        PluginCount = _dataState.Plugins.Count();
+        _pluginCount = _dataState.Plugins.CountChanged
+            .ToProperty(this, nameof(PluginCount));
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Input;
+using Noggog;
 using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -46,9 +47,10 @@ public class MainWindowVM : ViewModel
         Test = ReactiveCommand.Create(
             () => MessageBox.Show("Test"));
     }
+    
     public void Init()
     {
-        _dataState.Plugins = _pluginLoader.LoadPlugins();
-        PluginEditorPage.Plugins = new VMLoader_Plugins(_stateProvider).GetPluginVMs(_dataState.Plugins);
+        _dataState.Plugins.SetTo(_pluginLoader.LoadPlugins());
+        PluginEditorPage.Plugins = new VMLoader_Plugins(_stateProvider).GetPluginVMs(_dataState.Plugins.Items);
     }
 }
