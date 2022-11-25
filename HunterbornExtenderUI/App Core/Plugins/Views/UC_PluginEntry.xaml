@@ -1,0 +1,119 @@
+﻿<UserControl x:Class="HunterbornExtenderUI.UC_PluginEntry"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:HunterbornExtenderUI"
+             xmlns:plugins="clr-namespace:Mutagen.Bethesda.WPF.Plugins;assembly=Mutagen.Bethesda.WPF"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             d:DataContext="{d:DesignInstance Type=local:VM_PluginEntry}"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name"/>
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Proper Name"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ProperName}"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Sort Name"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SortName}"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Type"/>
+        <ComboBox Grid.Row="3" Grid.Column="1" Width="auto" HorizontalAlignment="Left" SelectedValue="{Binding Type}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type local:EntryType}}}" IsSynchronizedWithCurrentItem="True"/>
+
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Animal Switch"/>
+        <plugins:FormKeyPicker Grid.Row="4" Grid.Column="1" FormKey="{Binding AnimalSwitch}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding AnimalSwitchType}" MaxHeight="250"/>
+
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Carcass Message Box"/>
+        <plugins:FormKeyPicker Grid.Row="5" Grid.Column="1" FormKey="{Binding CarcassMessageBox}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding CarcassMessageBoxType}" MaxHeight="250"/>
+
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="Carcass Size"/>
+        <xctk:IntegerUpDown Grid.Row="6" Grid.Column="1" Value="{Binding CarcassSize}" Foreground="White" MinWidth="25"/>
+
+        <TextBlock Grid.Row="7" Grid.Column="0" Text="Carcass Value"/>
+        <xctk:IntegerUpDown Grid.Row="7" Grid.Column="1" Value="{Binding CarcassValue}" Foreground="White" MinWidth="25"/>
+
+        <TextBlock Grid.Row="7" Grid.Column="0" Text="Pelt Count"/>
+        <StackPanel Grid.Row="7" Grid.Column="1"  Orientation="Horizontal">
+            <xctk:IntegerUpDown Value="{Binding PeltCount[0]}" Foreground="White" MinWidth="25"/>
+            <xctk:IntegerUpDown Value="{Binding PeltCount[1]}" Foreground="White" MinWidth="25"/>
+            <xctk:IntegerUpDown Value="{Binding PeltCount[2]}" Foreground="White" MinWidth="25"/>
+            <xctk:IntegerUpDown Value="{Binding PeltCount[3]}" Foreground="White" MinWidth="25"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="8" Grid.Column="0" Text="Fur Plate Count"/>
+        <StackPanel Grid.Row="8" Grid.Column="1"  Orientation="Horizontal">
+            <xctk:IntegerUpDown Value="{Binding FurPlateCount[0]}" Foreground="White" MinWidth="25"/>
+            <xctk:IntegerUpDown Value="{Binding FurPlateCount[1]}" Foreground="White" MinWidth="25"/>
+            <xctk:IntegerUpDown Value="{Binding FurPlateCount[2]}" Foreground="White" MinWidth="25"/>
+            <xctk:IntegerUpDown Value="{Binding FurPlateCount[3]}" Foreground="White" MinWidth="25"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="9" Grid.Column="0" Text="Meat"/>
+        <plugins:FormKeyPicker Grid.Row="9" Grid.Column="1" FormKey="{Binding Meat}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding MeatType}" MaxHeight="250"/>
+
+        <TextBlock Grid.Row="10" Grid.Column="0" Text="Mats"/>
+        <ItemsControl Grid.Row="10" Grid.Column="1" ItemsSource="{Binding Mats}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderThickness="1" BorderBrush="Aquamarine">
+                        <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Item"/>
+                                        <plugins:FormKeyPicker Grid.Row="0" Grid.Column="1" FormKey="{Binding Key}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding MatType}" MaxHeight="250"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Count"/>
+                                        <xctk:IntegerUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Value}" Foreground="White" MinWidth="25"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock Grid.Row="11" Grid.Column="0" Text="Negative Treasure"/>
+        <plugins:FormKeyMultiPicker MaxHeight="500" Grid.Row="11" Grid.Column="1" MinWidth="150" FormKeys="{Binding NegativeTreasure}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding NegativeTreasureType}" />
+
+        <TextBlock Grid.Row="12" Grid.Column="0" Text="Shared Death Items"/>
+        <plugins:FormKeyPicker Grid.Row="12" Grid.Column="1" FormKey="{Binding SharedDeathItems}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding SharedDeathItemsType}" MaxHeight="250"/>
+
+        <TextBlock Grid.Row="13" Grid.Column="0" Text="Blood Type"/>
+        <plugins:FormKeyPicker Grid.Row="13" Grid.Column="1" FormKey="{Binding BloodType}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding SharedDeathItemsType}" MaxHeight="250"/>
+
+        <TextBlock Grid.Row="14" Grid.Column="0" Text="Venom"/>
+        <plugins:FormKeyPicker Grid.Row="14" Grid.Column="1" FormKey="{Binding Venom}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding VenomType}" MaxHeight="250"/>
+
+        <TextBlock Grid.Row="15" Grid.Column="0" Text="Voice"/>
+        <plugins:FormKeyPicker Grid.Row="15" Grid.Column="1" FormKey="{Binding Voice}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding VoiceType}" MaxHeight="250"/>
+    </Grid>
+</UserControl>

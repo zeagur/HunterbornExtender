@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows10.0.22621.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Plugins\Complete Alchemy &amp; Cooking Overhaul.json" />
+    <None Remove="Plugins\Dawnguard.json" />
+    <None Remove="Plugins\DiverseDragonsCollectionSE.json" />
+    <None Remove="Plugins\Dragonborn.json" />
+    <None Remove="Plugins\Gray Fox Cowl.json" />
+    <None Remove="Plugins\moonpath.json" />
+    <None Remove="Plugins\Skyrim Immersive Creatures Special Edition.json" />
+    <None Remove="Plugins\Skyrim.json" />
+    <None Remove="Plugins\SkyTEST-RealisticAnimals&amp;Predators.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Plugins\Complete Alchemy &amp; Cooking Overhaul.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\Dawnguard.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\DiverseDragonsCollectionSE.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\Dragonborn.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\Gray Fox Cowl.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\moonpath.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\Skyrim Immersive Creatures Special Edition.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\Skyrim.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\SkyTEST-RealisticAnimals&amp;Predators.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.4.0" />
+    <PackageReference Include="Mutagen.Bethesda" Version="0.39.6" />
+    <PackageReference Include="Mutagen.Bethesda.Json" Version="0.39.6" />
+    <PackageReference Include="Mutagen.Bethesda.Skyrim" Version="0.39.6" />
+    <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.24.1" />
+    <PackageReference Include="Mutagen.Bethesda.WPF" Version="0.39.6" />
+    <PackageReference Include="Noggog.Autofac" Version="2.50.1" />
+  </ItemGroup>
+
+</Project>

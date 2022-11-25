@@ -1,0 +1,42 @@
+﻿<mahapps:MetroWindow x:Class="HunterbornExtenderUI.MainWindow"
+                      xmlns:mahapps="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HunterbornExtenderUI"
+        mc:Ignorable="d"
+        Title="Hunter...Reborn?" Height="450" Width="800"
+        d:DataContext="{d:DesignInstance Type=local:MainWindowVM}"
+        SaveWindowPosition="True">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="1">
+            <RadioButton GroupName="Nav" Margin="0, 5, 0, 0" Command="{Binding ClickDeathItemAssignment}" BorderBrush="Gray" BorderThickness="1" Style="{StaticResource {x:Type ToggleButton}}" HorizontalContentAlignment="Center" IsChecked="True">Death Item Assignment</RadioButton>
+            <RadioButton GroupName="Nav" Margin="0, 5, 0, 0" Command="{Binding ClickPluginsMenu}" BorderBrush="Gray" BorderThickness="1" Style="{StaticResource {x:Type ToggleButton}}" HorizontalContentAlignment="Center">Mod Support Plugins</RadioButton>
+        </StackPanel>
+
+        <ContentPresenter Grid.Row="0" Grid.Column="1" DataContext="{Binding DisplayedSubView}">
+            <ContentPresenter.Resources>
+                <DataTemplate DataType="{x:Type local:VM_WelcomePage}">
+                    <local:UC_WelcomePage/>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type local:VM_DeathItemAssignmentPage}">
+                    <local:UC_DeathItemAssignmentPage/>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type local:VM_PluginEditorPage}">
+                    <local:UC_PluginEditorPage/>
+                </DataTemplate>
+            </ContentPresenter.Resources>
+        </ContentPresenter>
+
+        <Button VerticalAlignment="Bottom" Command="{Binding Test}" Foreground="Red">Test</Button>
+    </Grid>
+</mahapps:MetroWindow>
