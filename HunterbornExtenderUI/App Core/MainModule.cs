@@ -15,6 +15,8 @@ public class MainModule : Autofac.Module
         builder.RegisterType<VM_WelcomePage>().AsSelf().SingleInstance();
         builder.RegisterType<VM_DeathItemAssignmentPage>().AsSelf().SingleInstance();
         builder.RegisterType<VM_PluginEditorPage>().AsSelf().SingleInstance();
+        builder.RegisterType<VM_WelcomePage>().AsSelf().SingleInstance();
+        builder.RegisterType<VM_DeathItemAssignmentPage>().AsSelf().SingleInstance();
 
         builder.RegisterType<MainWindowVM>().AsSelf().SingleInstance();
         // Other

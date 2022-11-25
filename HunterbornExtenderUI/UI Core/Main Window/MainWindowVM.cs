@@ -9,29 +9,35 @@ namespace HunterbornExtenderUI;
 
 public class MainWindowVM : ViewModel
 {
-    private StateProvider _stateProvider;
     private PluginLoader _pluginLoader;
     private DataState _dataState;
+    private readonly VMLoader_Plugins _vmPluginLoader;
 
     [Reactive]
     public object DisplayedSubView { get; set; }
-    public VM_WelcomePage WelcomePage { get; set; }
-    public VM_DeathItemAssignmentPage DeathItemMenu { get; set; }
-    public VM_PluginEditorPage PluginEditorPage { get; set; }
+    public VM_WelcomePage WelcomePage { get; }
+    public VM_DeathItemAssignmentPage DeathItemMenu { get; }
+    public VM_PluginEditorPage PluginEditorPage { get; }
 
     public ICommand ClickDeathItemAssignment { get; }
     public ICommand ClickPluginsMenu { get; }
     public ICommand Test { get; }
         
-    public MainWindowVM(StateProvider stateProvider, PluginLoader pluginLoader, DataState dataState)
+    public MainWindowVM(
+        PluginLoader pluginLoader,
+        DataState dataState,
+        VM_WelcomePage welcomePage,
+        VM_PluginEditorPage pluginEditorPage,
+        VMLoader_Plugins vmPluginLoader,
+        VM_DeathItemAssignmentPage deathItemMenu)
     {
-        _stateProvider = stateProvider;
         _pluginLoader = pluginLoader;
         _dataState = dataState;
+        _vmPluginLoader = vmPluginLoader;
 
-        WelcomePage = new(_dataState);
-        PluginEditorPage = new(_stateProvider);
-        DeathItemMenu = new(_stateProvider, _dataState);
+        WelcomePage = welcomePage;
+        PluginEditorPage = pluginEditorPage;
+        DeathItemMenu = deathItemMenu;
 
         Init();
 
@@ -51,6 +57,6 @@ public class MainWindowVM : ViewModel
     public void Init()
     {
         _dataState.Plugins.SetTo(_pluginLoader.LoadPlugins());
-        PluginEditorPage.Plugins = new VMLoader_Plugins(_stateProvider).GetPluginVMs(_dataState.Plugins.Items);
+        PluginEditorPage.Plugins = _vmPluginLoader.GetPluginVMs(_dataState.Plugins.Items);
     }
 }
