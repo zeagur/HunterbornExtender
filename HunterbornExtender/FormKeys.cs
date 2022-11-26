@@ -10,6 +10,11 @@ namespace HunterbornExtender {
         static readonly ModKey DLC1 = ModKey.FromNameAndExtension("Dawnguard.esm");
         static readonly ModKey DLC2 = ModKey.FromNameAndExtension("Dragonborn.esm");
 
+        static readonly public IFormLink<IQuestGetter> _DS_Hunterborn = HUNTERBORN.MakeFormKey(0x003367).ToLink<IQuestGetter>();
+
+        static readonly public IFormLink<IKeywordGetter> _DS_KW_AnimalToken = HUNTERBORN.MakeFormKey(0x0178A1).ToLink<IKeywordGetter>();
+        static readonly public IFormLink<IKeywordGetter> _DS_KW_MonsterToken = HUNTERBORN.MakeFormKey(0x027768).ToLink<IKeywordGetter>();
+
         static readonly public IFormLink<IMessage> MSG_FIELDDRESS = HUNTERBORN.MakeFormKey(0x38D1).ToLink<IMessage>();
         static readonly public IFormLink<IMessage> MSG_CLEAN = HUNTERBORN.MakeFormKey(0x178A3).ToLink<IMessage>();
         static readonly public IFormLink<IMessage> MSG_PLUCK = HUNTERBORN.MakeFormKey(0x178A2).ToLink<IMessage>();

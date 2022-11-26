@@ -1,0 +1,282 @@
+[
+  {
+    "Type": 0,
+    "Name": "Pig",
+    "ProperName": "Pig",
+    "DescriptiveName": "Pig",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 2,
+    "CarcassWeight": 250,
+    "CarcassValue": 80,
+    "PeltCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "Piglet",
+    "ProperName": "Piglet",
+    "DescriptiveName": "Piglet",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 50,
+    "CarcassValue": 50,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "Calf",
+    "ProperName": "Calf",
+    "DescriptiveName": "Cow, Calf",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 100,
+    "CarcassValue": 50,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "Sheep",
+    "ProperName": "Sheep",
+    "DescriptiveName": "Sheep",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 2,
+    "CarcassWeight": 200,
+    "CarcassValue": 100,
+    "PeltCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "Ram",
+    "ProperName": "Ram",
+    "DescriptiveName": "Sheep, Ram",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 2,
+    "CarcassWeight": 300,
+    "CarcassValue": 100,
+    "PeltCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "Lamb",
+    "ProperName": "Lamb",
+    "DescriptiveName": "Sheep, Lamb",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 100,
+    "CarcassValue": 50,
+    "PeltCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 1,
+    "Name": "DeathHound",
+    "ProperName": "Death Hound",
+    "DescriptiveName": "Death Hound",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 2,
+    "CarcassWeight": 20,
+    "CarcassValue": 10,
+    "PeltCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 1,
+    "Name": "MountedRiekling",
+    "ProperName": "",
+    "DescriptiveName": "Riekling, Mounted",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 3,
+    "CarcassWeight": 30,
+    "CarcassValue": 15,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 4,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 4,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  }
+]

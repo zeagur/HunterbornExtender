@@ -1,0 +1,107 @@
+[
+  {
+    "Type": 0,
+    "Name": "Pig",
+    "ProperName": "Pig",
+    "DescriptiveName": "Pig",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 250,
+    "CarcassValue": 50,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "Goose",
+    "ProperName": "Goose",
+    "DescriptiveName": "Goose",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 14,
+    "CarcassValue": 5,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "Sheep",
+    "ProperName": "Sheep",
+    "DescriptiveName": "Sheep",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 300,
+    "CarcassValue": 50,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  }
+]

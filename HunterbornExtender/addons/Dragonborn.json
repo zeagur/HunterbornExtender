@@ -1,0 +1,177 @@
+[
+  {
+    "Type": 1,
+    "Name": "Werebear",
+    "ProperName": "Werebear",
+    "DescriptiveName": "Werebear",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 5,
+    "CarcassWeight": 50,
+    "CarcassValue": 25,
+    "PeltCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 4,
+      "lvl1": 2,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 1,
+    "Name": "SpiderAlbino",
+    "ProperName": "Albino Spider",
+    "DescriptiveName": "Spider, Albino",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 3,
+    "CarcassWeight": 30,
+    "CarcassValue": 15,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "AshHopper",
+    "ProperName": "Ash Hopper",
+    "DescriptiveName": "Ash Hopper",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 10,
+    "CarcassValue": 20,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "Netch",
+    "ProperName": "Netch",
+    "DescriptiveName": "Netch",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 50,
+    "CarcassValue": 100,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  },
+  {
+    "Type": 0,
+    "Name": "NetchCalf",
+    "ProperName": "Netch Calf",
+    "DescriptiveName": "Netch, Calf",
+    "Toggle": null,
+    "CarcassMessage": null,
+    "CarcassSize": 1,
+    "CarcassWeight": 25,
+    "CarcassValue": 50,
+    "PeltCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "FurCount": {
+      "lvl0": 2,
+      "lvl1": 1,
+      "lvl2": 2,
+      "lvl3": 2
+    },
+    "Meat": null,
+    "Materials": {
+      "lvl0": {},
+      "lvl1": {},
+      "lvl2": {},
+      "lvl3": {}
+    },
+    "RemoveFromInventory": [],
+    "SharedDeathItems": "",
+    "Blood": null,
+    "Venom": null,
+    "Voice": null
+  }
+]
