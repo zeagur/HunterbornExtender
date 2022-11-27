@@ -8,12 +8,14 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <ItemsControl ItemsSource="{Binding DeathItemCreatureEntries}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <local:UC_CreatureEntry/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <ScrollViewer>
+            <ItemsControl ItemsSource="{Binding DeathItemSelectionList.DeathItems}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <local:UC_DeathItemSelection/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

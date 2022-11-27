@@ -44,14 +44,5 @@
         </ScrollViewer>
 
         <local:UC_Plugin Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" DataContext="{Binding DisplayedPlugin}"/>
-        <!--
-        <ContentPresenter Grid.Row="0" Grid.Column="1" Grid.RowSpan="4" Content="{Binding DisplayedPlugin}">
-            <ContentPresenter.Resources>
-                <DataTemplate DataType="{x:Type local:VM_BodySlideSetting}">
-                    <local:UC_BodySlideSetting/>
-                </DataTemplate>
-            </ContentPresenter.Resources>
-        </ContentPresenter>
-        -->
     </Grid>
 </UserControl>

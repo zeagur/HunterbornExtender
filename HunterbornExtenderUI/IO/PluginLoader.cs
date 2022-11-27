@@ -58,7 +58,7 @@ public class PluginLoader
             {
                 PluginLegacyzEdit legacyPlugin = new();
                 legacyPlugin.Entries = entries;
-                Plugin converted = legacyPlugin.ToPluginEntry(_edidToForm);
+                Plugin converted = legacyPlugin.ToPluginEntry(_state.LinkCache);
                 converted.FilePath = path;
                 return converted;
             }

@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Input;
+using HunterbornExtenderUI.App_Core.Death_Item_Selection;
 using Noggog;
 using Noggog.WPF;
 using ReactiveUI;
@@ -13,6 +14,10 @@ public class MainWindowVM : ViewModel
     private readonly VMLoader_Plugins _vmPluginLoader;
     private readonly VM_PluginList _pluginList;
 
+    private DeathItemSettingsLoader _deathItemLoader;
+    private readonly VMLoader_DeathItems _vmDeathItemLoader;
+    private readonly VM_DeathItemSelectionList _deathItemSelectionList;
+
     [Reactive]
     public object DisplayedSubView { get; set; }
     public VM_WelcomePage WelcomePage { get; }
@@ -21,19 +26,26 @@ public class MainWindowVM : ViewModel
 
     public ICommand ClickDeathItemAssignment { get; }
     public ICommand ClickPluginsMenu { get; }
-    public ICommand Test { get; }
         
     public MainWindowVM(
         PluginLoader pluginLoader,
+        DeathItemSettingsLoader deathItemSettingsLoader,
         VM_WelcomePage welcomePage,
         VM_PluginEditorPage pluginEditorPage,
         VMLoader_Plugins vmPluginLoader,
+        VMLoader_DeathItems deathItemLoader,
         VM_PluginList pluginList,
+        VM_DeathItemSelectionList deathItemSelectionList,
         VM_DeathItemAssignmentPage deathItemMenu)
     {
         _pluginLoader = pluginLoader;
-        _vmPluginLoader = vmPluginLoader;
+        _deathItemLoader = deathItemSettingsLoader;
+
         _pluginList = pluginList;
+        _deathItemSelectionList = deathItemSelectionList;
+
+        _vmPluginLoader = vmPluginLoader;
+        _vmDeathItemLoader = deathItemLoader;
 
         WelcomePage = welcomePage;
         PluginEditorPage = pluginEditorPage;
@@ -48,9 +60,6 @@ public class MainWindowVM : ViewModel
 
         ClickPluginsMenu = ReactiveCommand.Create(
             () => DisplayedSubView = PluginEditorPage);
-
-        Test = ReactiveCommand.Create(
-            () => MessageBox.Show("Test"));
     }
     
     public void Init()
@@ -58,5 +67,12 @@ public class MainWindowVM : ViewModel
         _pluginList.Plugins.SetTo(
             _vmPluginLoader.GetPluginVMs(
                 _pluginLoader.LoadPlugins()));
+
+        /*
+        _deathItemSelectionList.DeathItems.SetTo(
+            _vmDeathItemLoader.GetDeathItemVMs(
+                _deathItemLoader.LoadDeathItemSettings()));
+        */
+        DeathItemMenu.Initialize();
     }
 }

@@ -1,5 +1,9 @@
-﻿using Mutagen.Bethesda.Fallout4;
+﻿using DynamicData;
+using Mutagen.Bethesda.Fallout4;
 using Mutagen.Bethesda.Plugins;
+using Mutagen.Bethesda.Plugins.Cache;
+using Noggog;
+using System.Windows.Forms;
 
 namespace HunterbornExtenderUI;
 
@@ -24,15 +28,21 @@ public class PluginEntryLegacyzEdit
     public string venom { get; set; } = "";
     public string voice { get; set; } = "";
 
-    public PluginEntry ToPluginEntry(EDIDtoForm edidConverter)
+    public PluginEntry ToPluginEntry(ILinkCache linkCache)
     {
         PluginEntry plugin = new();
         plugin.Type = EntryTypeConverter.EntryStringToEnum(type);
         plugin.Name = name;
         plugin.ProperName = properName;
         plugin.SortName = sortName;
-        plugin.AnimalSwitch = edidConverter.GetFormFromEditorID<IGlobalGetter>(animalSwitch) ?? new FormKey();
-        plugin.CarcassMessageBox = edidConverter.GetFormFromEditorID<IMessageGetter>(carcassMessageBox) ?? new FormKey();
+        if (linkCache.TryResolve<IGlobalGetter>(animalSwitch, out var animalSwitchGetter))
+        {
+            plugin.AnimalSwitch = animalSwitchGetter.FormKey;
+        }
+        if (linkCache.TryResolve<IMessageGetter>(carcassMessageBox, out var carcassMessageBoxGetter))
+        {
+            plugin.CarcassMessageBox = carcassMessageBoxGetter.FormKey;
+        }
         if (int.TryParse(carcassSize, out var size))
         {
             plugin.CarcassSize = Convert.ToInt32(size);
@@ -59,17 +69,19 @@ public class PluginEntryLegacyzEdit
         }
         plugin.PeltCount = peltCount;
         plugin.FurPlateCount = furPlateCount;
-        plugin.Meat = edidConverter.GetFormFromEditorID<IIngestibleGetter>(meat) ?? new FormKey();
-            
+        if (linkCache.TryResolve<IIngestibleGetter>(meat, out var meatGetter))
+        {
+            plugin.Meat = meatGetter.FormKey;
+        }
+
         foreach (var mat in mats)
         {
             Dictionary<FormKey, int> dict = new();
             foreach (var keyStr in mat.Keys)
             {
-                var keyForm = edidConverter.GetFormFromEditorID<IIngredientGetter>(keyStr);
-                if (keyForm != null)
+                if (linkCache.TryResolve<IIngredientGetter>(meat, out var matKeyGetter))
                 {
-                    dict.Add(keyForm.Value, mat[keyStr]);
+                    dict.Add(matKeyGetter.FormKey, mat[keyStr]);
                 }
             }
             if (dict.Keys.Any())
@@ -80,17 +92,32 @@ public class PluginEntryLegacyzEdit
 
         foreach (var nt in negativeTreasure)
         {
-            var ntForm = edidConverter.GetFormFromEditorID<IIngestibleGetter>(nt);
-            if (ntForm != null)
+            if (linkCache.TryResolve<IIngestibleGetter>(nt, out var ntGetter))
             {
-                plugin.NegativeTreasure.Add(ntForm.Value);
+                plugin.NegativeTreasure.Add(ntGetter.FormKey);
             }
         }
 
-        plugin.SharedDeathItems = edidConverter.GetFormFromEditorID<ILeveledItem>(sharedDeathItems) ?? new FormKey();
-        plugin.BloodType = edidConverter.GetFormFromEditorID<IIngestibleGetter>(bloodType) ?? new FormKey();
-        plugin.Venom = edidConverter.GetFormFromEditorID<IIngestibleGetter>(venom) ?? new FormKey();
-        plugin.Voice = edidConverter.GetFormFromEditorID<IVoiceTypeGetter>(voice) ?? new FormKey();
+        if (linkCache.TryResolve<ILeveledItem>(sharedDeathItems, out var sharedDeathItemGetter))
+        {
+            plugin.SharedDeathItems = sharedDeathItemGetter.FormKey;
+        }
+
+        if (linkCache.TryResolve<IIngestibleGetter>(bloodType, out var bloodTypeGetter))
+        {
+            plugin.BloodType = bloodTypeGetter.FormKey;
+        }
+
+        if (linkCache.TryResolve<IIngestibleGetter>(venom, out var venomGetter))
+        {
+            plugin.Venom = venomGetter.FormKey;
+        }
+
+        if (linkCache.TryResolve<IVoiceTypeGetter>(voice, out var voiceGetter))
+        {
+            plugin.Voice = voiceGetter.FormKey;
+        }
+
         return plugin;
     }
 }
