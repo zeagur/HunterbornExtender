@@ -1,7 +1,9 @@
 ﻿using DynamicData;
-using Mutagen.Bethesda.Fallout4;
+using Mutagen.Bethesda;
+using Mutagen.Bethesda.Environments;
 using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Plugins.Cache;
+using Mutagen.Bethesda.Skyrim;
 using Noggog;
 using System.Windows.Forms;
 
@@ -117,29 +119,6 @@ public class PluginEntryLegacyzEdit
         {
             plugin.Voice = voiceGetter.FormKey;
         }
-
-        /* Debugging formkey loading
-        if (FormKey.TryFactory("00F8AE:Dawnguard.esm", out var gargoyleVoiceFormKey))
-        {
-            bool resolvedAsVoiceTypeGetter = false;
-            bool resolvedAsVoiceType = false;
-            bool resolvedAsGeneric = false;
-            
-            if (linkCache.TryResolve<IVoiceTypeGetter>(gargoyleVoiceFormKey, out var gargoyleVoice_VTgetter))
-            {
-                resolvedAsVoiceTypeGetter = true;
-            }
-
-            if (linkCache.TryResolve<IVoiceType>(gargoyleVoiceFormKey, out var gargoyleVoice_VT))
-            {
-                resolvedAsVoiceType = true;
-            }
-
-            if (linkCache.TryResolve(gargoyleVoiceFormKey, out var gargoyleVoice_Generic))
-            {
-                resolvedAsGeneric = true;
-            }
-        }*/
 
         return plugin;
     }

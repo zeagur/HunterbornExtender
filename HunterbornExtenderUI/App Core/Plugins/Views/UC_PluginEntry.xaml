@@ -112,16 +112,16 @@
         </ItemsControl>
 
         <TextBlock Grid.Row="12" Grid.Column="0" Text="Negative Treasure"/>
-        <plugins:FormKeyMultiPicker MaxHeight="500" Grid.Row="11" Grid.Column="1" MinWidth="150" FormKeys="{Binding NegativeTreasure}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding NegativeTreasureType}" />
+        <plugins:FormKeyMultiPicker MaxHeight="500" Grid.Row="12" Grid.Column="1" MinWidth="150" FormKeys="{Binding NegativeTreasure}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding NegativeTreasureType}" />
 
         <TextBlock Grid.Row="13" Grid.Column="0" Text="Shared Death Items"/>
-        <plugins:FormKeyPicker Grid.Row="12" Grid.Column="1" FormKey="{Binding SharedDeathItems}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding SharedDeathItemsType}" MaxHeight="250"/>
+        <plugins:FormKeyPicker Grid.Row="13" Grid.Column="1" FormKey="{Binding SharedDeathItems}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding SharedDeathItemsType}" MaxHeight="250"/>
 
         <TextBlock Grid.Row="14" Grid.Column="0" Text="Blood Type"/>
-        <plugins:FormKeyPicker Grid.Row="13" Grid.Column="1" FormKey="{Binding BloodType}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding SharedDeathItemsType}" MaxHeight="250"/>
+        <plugins:FormKeyPicker Grid.Row="14" Grid.Column="1" FormKey="{Binding BloodType}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding SharedDeathItemsType}" MaxHeight="250"/>
 
         <TextBlock Grid.Row="15" Grid.Column="0" Text="Venom"/>
-        <plugins:FormKeyPicker Grid.Row="14" Grid.Column="1" FormKey="{Binding Venom}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding VenomType}" MaxHeight="250"/>
+        <plugins:FormKeyPicker Grid.Row="15" Grid.Column="1" FormKey="{Binding Venom}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding VenomType}" MaxHeight="250"/>
 
         <TextBlock Grid.Row="16" Grid.Column="0" Text="Voice"/>
         <plugins:FormKeyPicker Grid.Row="16" Grid.Column="1" FormKey="{Binding Voice}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding VoiceType}" MaxHeight="250"/>
