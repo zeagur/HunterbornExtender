@@ -23,6 +23,12 @@ public class VM_PluginEditorPage
             () => pluginList.Plugins.Add(pluginFactory()));
 
         DeletePlugin = ReactiveCommand.Create<VM_Plugin>(
-            x => pluginList.Plugins.Remove(x));
+            x => {
+                if (System.IO.File.Exists(x.FilePath))
+                {
+                    System.IO.File.Delete(x.FilePath);
+                }
+                pluginList.Plugins.Remove(x);
+                });
     }
 }

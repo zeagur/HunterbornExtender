@@ -81,9 +81,13 @@ public class PluginEntryLegacyzEdit
             Dictionary<FormKey, int> dict = new();
             foreach (var keyStr in mat.Keys)
             {
-                if (linkCache.TryResolve<IIngredientGetter>(meat, out var matKeyGetter))
+                if (linkCache.TryResolve<IMiscItemGetter>(keyStr, out var matKeyGetter))
                 {
                     dict.Add(matKeyGetter.FormKey, mat[keyStr]);
+                }
+                else if (linkCache.TryResolve<IIngredientGetter>(keyStr, out var matKeyGetter2))
+                {
+                    dict.Add(matKeyGetter2.FormKey, mat[keyStr]);
                 }
             }
             if (dict.Keys.Any())

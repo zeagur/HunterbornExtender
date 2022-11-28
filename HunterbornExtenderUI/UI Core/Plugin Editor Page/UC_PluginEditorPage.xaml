@@ -31,7 +31,7 @@
                                         <ColumnDefinition Width="auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Column="0" Text="{Binding FileName}" MinWidth="100"/>
+                                    <TextBlock Grid.Column="0" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" MinWidth="100"/>
                                     <Button Grid.Column="1" HorizontalAlignment="Right" Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Path=DataContext.DeletePlugin}" CommandParameter="{Binding}" Foreground="Firebrick">X</Button>
                                 </Grid>
                             </Border>

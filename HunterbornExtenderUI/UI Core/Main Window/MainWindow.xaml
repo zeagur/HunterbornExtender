@@ -24,21 +24,19 @@
         </StackPanel>
 
         <Border Grid.Row="0" Grid.Column="1" BorderBrush="Teal" BorderThickness="1">
-            <ScrollViewer>
-                <ContentPresenter  Content="{Binding DisplayedSubView}">
-                    <ContentPresenter.Resources>
-                        <DataTemplate DataType="{x:Type local:VM_WelcomePage}">
-                            <local:UC_WelcomePage/>
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type local:VM_DeathItemAssignmentPage}">
-                            <local:UC_DeathItemAssignmentPage/>
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type local:VM_PluginEditorPage}">
-                            <local:UC_PluginEditorPage/>
-                        </DataTemplate>
-                    </ContentPresenter.Resources>
-                </ContentPresenter>
-            </ScrollViewer>
+            <ContentPresenter  Content="{Binding DisplayedSubView}">
+                <ContentPresenter.Resources>
+                    <DataTemplate DataType="{x:Type local:VM_WelcomePage}">
+                        <local:UC_WelcomePage/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type local:VM_DeathItemAssignmentPage}">
+                        <local:UC_DeathItemAssignmentPage/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type local:VM_PluginEditorPage}">
+                        <local:UC_PluginEditorPage/>
+                    </DataTemplate>
+                </ContentPresenter.Resources>
+            </ContentPresenter>
         </Border>
 
         <Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Command="{Binding SaveSettings}" Foreground="LightGreen">Save Settings</Button>

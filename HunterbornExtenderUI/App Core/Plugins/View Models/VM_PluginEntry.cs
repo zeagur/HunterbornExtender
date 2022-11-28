@@ -5,6 +5,10 @@ using Noggog;
 using ReactiveUI.Fody.Helpers;
 using System.Collections.ObjectModel;
 using Noggog.WPF;
+using System.Windows.Input;
+using ReactiveUI;
+using static System.Windows.Forms.AxHost;
+using System;
 
 namespace HunterbornExtenderUI;
 
@@ -15,6 +19,9 @@ public class VM_PluginEntry : ViewModel
     {
         _state = state;
         LinkCache = state.LinkCache;
+
+        AddMat = ReactiveCommand.Create(
+            () => Mats.Add(new(_state.LinkCache, this)));
     }
 
     [Reactive]
@@ -65,6 +72,8 @@ public class VM_PluginEntry : ViewModel
     public IEnumerable<Type> VenomType { get; } = typeof(IIngestibleGetter).AsEnumerable();
     public IEnumerable<Type> VoiceType { get; } = typeof(IVoiceTypeGetter).AsEnumerable();
 
+    public ICommand AddMat { get; }
+
     public void LoadFromModel(PluginEntry model)
     {
         Type = model.Type;
@@ -80,7 +89,7 @@ public class VM_PluginEntry : ViewModel
         Meat = model.Meat;
         foreach (var dict in model.Mats)
         {
-            var matEntry = new VM_MatEntry(LinkCache);
+            var matEntry = new VM_MatEntry(LinkCache, this);
             matEntry.GetFromModel(dict);
             Mats.Add(matEntry);
         }
@@ -116,60 +125,71 @@ public class VM_PluginEntry : ViewModel
         model.Voice = Voice;;
         return model;
     }
+}
 
-    public class VM_MatEntry : ViewModel
+public class VM_MatEntry : ViewModel
+{
+    [Reactive]
+    public ObservableCollection<VM_Mat> Items { get; set; } = new();
+    public ILinkCache LinkCache { get; set; }
+    public ICommand AddItem { get; }
+    public ICommand DeleteMe { get; }
+    public VM_PluginEntry Parent { get; set; }
+
+    public VM_MatEntry(ILinkCache linkCache, VM_PluginEntry parent)
     {
-        [Reactive]
-        public ObservableCollection<VM_Mat> Items { get; set; } = new();
+        LinkCache = linkCache;
+        Parent = parent;
+        AddItem = ReactiveCommand.Create(
+            () => Items.Add(new(linkCache, this)));
+        DeleteMe = ReactiveCommand.Create(
+            () => Parent.Mats.Remove(this));
+    }
 
-        public ILinkCache LinkCache { get; set; }
-
-        public VM_MatEntry(ILinkCache linkCache)
+    public void GetFromModel(Dictionary<FormKey, int> model)
+    {
+        foreach (var key in model.Keys)
         {
-            LinkCache = linkCache;
-        }
-
-        public VM_MatEntry GetFromModel(Dictionary<FormKey, int> model)
-        {
-            VM_MatEntry item = new(LinkCache);
-            foreach (var key in model.Keys)
-            {
-                var entry = new VM_Mat(LinkCache);
-                entry.Key = key;
-                entry.Value = model[key];
-                item.Items.Add(entry);
-            }
-            return item;
-        }
-
-        public Dictionary<FormKey, int> DumpToModel()
-        {
-            Dictionary<FormKey, int> model = new();
-            foreach (var item in Items)
-            {
-                if (!model.ContainsKey(item.Key))
-                {
-                    model.Add(item.Key, item.Value);
-                }
-            }
-            return model;
-        }
-
-        public class VM_Mat : ViewModel
-        {
-            public ILinkCache LinkCache { get; set; }
-            public IEnumerable<Type> MatType { get; } = typeof(IIngredientGetter).AsEnumerable();
-
-            public VM_Mat(ILinkCache linkCache)
-            {
-                LinkCache = linkCache;
-            }
-
-            [Reactive]
-            public FormKey Key { get; set; } = new();
-            [Reactive]
-            public int Value { get; set; } = 1;
-
+            VM_Mat mat = new(LinkCache, this);
+            mat.Key = key;
+            mat.Value = model[key];
+            Items.Add(mat);
         }
     }
+
+    public Dictionary<FormKey, int> DumpToModel()
+    {
+        Dictionary<FormKey, int> model = new();
+        foreach (var item in Items)
+        {
+            if (!model.ContainsKey(item.Key))
+            {
+                model.Add(item.Key, item.Value);
+            }
+        }
+        return model;
+    }
+}
+
+public class VM_Mat : ViewModel
+{
+    public ILinkCache LinkCache { get; set; }
+    public IEnumerable<Type> MatType { get; } = typeof(IMiscItemGetter).AsEnumerable().And(typeof(IIngredientGetter));
+    public VM_MatEntry Parent { get; set; }
+    public ICommand DeleteMe { get; }
+
+    public VM_Mat(ILinkCache linkCache, VM_MatEntry parent)
+    {
+        LinkCache = linkCache;
+        Parent = parent;
+
+        DeleteMe = ReactiveCommand.Create(
+            () => Parent.Items.Remove(this));
+    }
+
+    //[Reactive]
+    public FormKey Key { get; set; } = new();
+    [Reactive]
+    public int Value { get; set; } = 1;
+
 }

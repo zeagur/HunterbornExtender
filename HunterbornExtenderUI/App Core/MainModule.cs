@@ -31,5 +31,8 @@ public class MainModule : Autofac.Module
         builder.RegisterType<VM_Plugin>().AsSelf();
         builder.RegisterType<VM_PluginEntry>().AsSelf();
         builder.RegisterType<VM_DeathItemSelection>().AsSelf();
+        builder.RegisterType<VM_MatEntry>().AsSelf();
+        builder.RegisterType<VM_Mat>().AsSelf();
+        builder.RegisterType<VM_DeathItemSelection>().AsSelf();
     }
 }

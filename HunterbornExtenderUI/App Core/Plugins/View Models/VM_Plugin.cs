@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using SynthEBD;
 
 namespace HunterbornExtenderUI;
 
@@ -20,6 +21,9 @@ public class VM_Plugin : ViewModel
 
         DeleteEntry = ReactiveCommand.Create<VM_PluginEntry>(
             x => Entries.Remove(x));
+
+        SavePlugin = ReactiveCommand.Create(
+            () => SaveToDisk());
     }
 
     public ObservableCollection<VM_PluginEntry> Entries { get; set; } = new();
@@ -27,9 +31,11 @@ public class VM_Plugin : ViewModel
     public VM_PluginEntry? DisplayedEntry { get; set; }
     public Plugin SourceDTO { get; set; } = new();
     public string FilePath { get; set; } = "";
+    [Reactive]
     public string FileName { get; set; } = "";
     public ICommand AddEntry { get; }
     public ICommand DeleteEntry { get; }
+    public ICommand SavePlugin { get; }
 
     public void LoadFromModel(Plugin model)
     {
@@ -52,5 +58,43 @@ public class VM_Plugin : ViewModel
             SourceDTO.Entries.Add(entry.DumpToModel());
         }
         return SourceDTO;
+    }
+
+    public void SaveToDisk()
+    {
+        var model = DumpToModel();
+        string savePath = string.Empty;
+        if (FilePath != String.Empty && File.Exists(FilePath))
+        {
+            savePath = FilePath;
+        }
+        else
+        {
+            System.Windows.Forms.SaveFileDialog dialog = new ();
+
+            var pluginsPath = Path.Combine(_state.ExtraSettingsDataPath, "Plugins");
+
+            if (pluginsPath != "")
+            {
+                dialog.InitialDirectory = pluginsPath;
+            }
+
+            dialog.Filter = "JSON|*.json";
+
+            dialog.Title = "Select Save Location";
+
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                savePath = dialog.FileName;
+                FilePath = savePath;
+                FileName = Path.GetFileName(FilePath);
+            }
+        }
+
+        if (savePath != string.Empty)
+        {
+            JSONhandler<Plugin>.SaveJSONFile(model, FilePath);
+            MessageBox.Show("Saved to " + FilePath);
+        }
     }
 }

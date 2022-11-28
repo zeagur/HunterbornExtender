@@ -36,13 +36,13 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Name"/>
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}"/>
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Proper Name"/>
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ProperName}"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ProperName, UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Sort Name"/>
-        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SortName}"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SortName, UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Row="3" Grid.Column="0" Text="Type"/>
         <ComboBox Grid.Row="3" Grid.Column="1" Width="auto" HorizontalAlignment="Left" SelectedValue="{Binding Type}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type local:EntryType}}}" IsSynchronizedWithCurrentItem="True"/>
@@ -79,33 +79,46 @@
         <plugins:FormKeyPicker Grid.Row="10" Grid.Column="1" FormKey="{Binding Meat}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding MeatType}" MaxHeight="250"/>
 
         <TextBlock Grid.Row="11" Grid.Column="0" Text="Mats"/>
+        <Button Grid.Row="11" Grid.Column="0" Foreground="LightGreen" VerticalAlignment="Top" HorizontalAlignment="Right" Command="{Binding AddMat}" Margin="0 1 0 0">Add Entry</Button>
         <ItemsControl Grid.Row="11" Grid.Column="1" ItemsSource="{Binding Mats}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border BorderThickness="1" BorderBrush="Aquamarine">
-                        <ItemsControl ItemsSource="{Binding Items}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
+                    <Border BorderThickness="2" BorderBrush="White" Margin="0 10 0 0">
+                        <StackPanel>
+                            <ItemsControl ItemsSource="{Binding Items}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderThickness="1" BorderBrush="Aquamarine">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="auto"/>
+                                                </Grid.ColumnDefinitions>
 
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="auto"/>
-                                            <RowDefinition Height="auto"/>
-                                        </Grid.RowDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="auto"/>
+                                                    <RowDefinition Height="auto"/>
+                                                    <RowDefinition Height="auto"/>
+                                                </Grid.RowDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Item"/>
-                                        <plugins:FormKeyPicker Grid.Row="0" Grid.Column="1" FormKey="{Binding Key}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding MatType}" MaxHeight="250"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Item"/>
+                                                <plugins:FormKeyPicker Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" FormKey="{Binding Key}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding MatType}" MaxHeight="250"/>
 
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Count"/>
-                                        <xctk:IntegerUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Value}" Foreground="White" MinWidth="25"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Count"/>
+                                                <xctk:IntegerUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Value}" Foreground="White" MinWidth="25"/>
+
+                                                <Button Grid.Row="1" Grid.Column="2" HorizontalAlignment="Left" Foreground="FireBrick" Command="{Binding DeleteMe}">Remove Mat</Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Foreground="LightGreen" Command="{Binding AddItem}">Add Mat</Button>
+                                <Button Margin="5 0 0 0" Foreground="FireBrick" Command="{Binding DeleteMe}">Remove Entry</Button>
+                            </StackPanel>
+                        </StackPanel>
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
