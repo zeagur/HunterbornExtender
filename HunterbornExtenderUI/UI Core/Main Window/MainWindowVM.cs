@@ -18,6 +18,8 @@ public class MainWindowVM : ViewModel
     private readonly VMLoader_DeathItems _vmDeathItemLoader;
     private readonly VM_DeathItemSelectionList _deathItemSelectionList;
 
+    private PatcherSettings _patcherSettings;
+
     [Reactive]
     public object DisplayedSubView { get; set; }
     public VM_WelcomePage WelcomePage { get; }
@@ -26,7 +28,8 @@ public class MainWindowVM : ViewModel
 
     public ICommand ClickDeathItemAssignment { get; }
     public ICommand ClickPluginsMenu { get; }
-        
+    public ICommand SaveSettings { get; }
+
     public MainWindowVM(
         PluginLoader pluginLoader,
         DeathItemSettingsLoader deathItemSettingsLoader,
@@ -51,6 +54,8 @@ public class MainWindowVM : ViewModel
         PluginEditorPage = pluginEditorPage;
         DeathItemMenu = deathItemMenu;
 
+        _patcherSettings = PatcherSettings.LoadFromDisk(WelcomePage.SettingsDir); // change this to state.ExtraDataSettingsFolder when it becomes exposed
+
         Init();
 
         DisplayedSubView = WelcomePage;
@@ -60,6 +65,20 @@ public class MainWindowVM : ViewModel
 
         ClickPluginsMenu = ReactiveCommand.Create(
             () => DisplayedSubView = PluginEditorPage);
+
+        SaveSettings = ReactiveCommand.Create(() =>
+        {
+            var settings = PatcherSettings.DumpToSettings(deathItemSelectionList, pluginList);
+            if (WelcomePage.SettingsDir != string.Empty && System.IO.Directory.Exists(WelcomePage.SettingsDir))
+            {
+                settings.SaveToDisk(WelcomePage.SettingsDir);
+                MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));
+            }
+            else
+            {
+                MessageBox.Show("Could not find directory " + WelcomePage.SettingsDir);
+            }
+        });
     }
     
     public void Init()
@@ -73,6 +92,6 @@ public class MainWindowVM : ViewModel
             _vmDeathItemLoader.GetDeathItemVMs(
                 _deathItemLoader.LoadDeathItemSettings()));
         */
-        DeathItemMenu.Initialize();
+        DeathItemMenu.Initialize(_patcherSettings.DeathItems);
     }
 }

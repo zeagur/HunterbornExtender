@@ -43,10 +43,10 @@ public class VM_DeathItemAssignmentPage : ViewModel
         CreatureTypes.Insert(0, "Skip");
     }
 
-    public void Initialize()
+    public void Initialize(List<DeathItemSelection> deathItemSettings)
     {
         ScanForPluginEntries();
-        ScanForDeathItems();
+        ScanForDeathItems(deathItemSettings);
     }
         
     private void ScanForPluginEntries()
@@ -64,10 +64,8 @@ public class VM_DeathItemAssignmentPage : ViewModel
         CreatureTypes.Sort(x => x, false);
     }
 
-    private void ScanForDeathItems()
+    private void ScanForDeathItems(List<DeathItemSelection> deathItemSettings)
     {
-        var deathItemSettings = _deathItemSettingsLoader.LoadDeathItemSettings(); 
-
         foreach (var npc in _stateProvider.LoadOrder.PriorityOrder.OnlyEnabledAndExisting().WinningOverrides<INpcGetter>().Where(x => x.DeathItem != null))
         {
             var deathItemListFormLink = npc.DeathItem;

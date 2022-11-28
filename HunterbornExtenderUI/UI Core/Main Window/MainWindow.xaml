@@ -18,12 +18,12 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="1">
+        <StackPanel Grid.Row="0" Grid.Column="0">
             <RadioButton GroupName="Nav" Margin="0, 5, 0, 0" Command="{Binding ClickDeathItemAssignment}" BorderBrush="Gray" BorderThickness="1" Style="{StaticResource {x:Type ToggleButton}}" HorizontalContentAlignment="Center" IsChecked="True">Death Item Assignment</RadioButton>
             <RadioButton GroupName="Nav" Margin="0, 5, 0, 0" Command="{Binding ClickPluginsMenu}" BorderBrush="Gray" BorderThickness="1" Style="{StaticResource {x:Type ToggleButton}}" HorizontalContentAlignment="Center">Mod Support Plugins</RadioButton>
         </StackPanel>
 
-        <Border Grid.Row="0" Grid.Column="1" BorderBrush="Bisque" BorderThickness="1">
+        <Border Grid.Row="0" Grid.Column="1" BorderBrush="Teal" BorderThickness="1">
             <ScrollViewer>
                 <ContentPresenter  Content="{Binding DisplayedSubView}">
                     <ContentPresenter.Resources>
@@ -40,5 +40,7 @@
                 </ContentPresenter>
             </ScrollViewer>
         </Border>
+
+        <Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Command="{Binding SaveSettings}" Foreground="LightGreen">Save Settings</Button>
     </Grid>
 </mahapps:MetroWindow>

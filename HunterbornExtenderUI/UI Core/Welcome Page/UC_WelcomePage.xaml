@@ -15,5 +15,11 @@
                 <TextBlock Text="{Binding PluginCount}"/>
             </StackPanel>
         </StackPanel>
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+            <TextBlock Text="Save settings to folder: " VerticalAlignment="Center"/>
+            <TextBox Text="{Binding SettingsDir}"/>
+            <Button Command="{Binding SetSettingsDir}" Foreground="LightGreen">Find Folder</Button>
+        </StackPanel>
     </Grid>
 </UserControl>
