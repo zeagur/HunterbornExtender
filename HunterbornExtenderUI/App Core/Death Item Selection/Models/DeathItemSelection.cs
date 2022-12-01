@@ -14,6 +14,9 @@ namespace HunterbornExtenderUI
     {
         public FormKey DeathItemList { get; set; }
         public string CreatureEntryName { get; set; } = String.Empty;
+
+        //public PluginEntry? Selection { get; set; } = null;
+
         [JsonIgnore]
         public HashSet<INpcGetter> AssignedNPCs { get; set; } = new();
 

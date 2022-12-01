@@ -1,0 +1,2665 @@
+{
+  "DeathItems": [
+    {
+      "DeathItemList": "03AD77:Skyrim.esm",
+      "CreatureEntryName": "Werebear"
+    },
+    {
+      "DeathItemList": "03AD80:Skyrim.esm",
+      "CreatureEntryName": "Dremora"
+    },
+    {
+      "DeathItemList": "03AD99:Skyrim.esm",
+      "CreatureEntryName": "Wereskeever"
+    },
+    {
+      "DeathItemList": "03AD91:Skyrim.esm",
+      "CreatureEntryName": "Hagraven"
+    },
+    {
+      "DeathItemList": "03AD8C:Skyrim.esm",
+      "CreatureEntryName": "SpiderGiant"
+    },
+    {
+      "DeathItemList": "03AD84:Skyrim.esm",
+      "CreatureEntryName": "Falmer"
+    },
+    {
+      "DeathItemList": "03ADA1:Skyrim.esm",
+      "CreatureEntryName": "ChaurusSwampWarrior"
+    }
+  ],
+  "CreatureData": [
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Pig",
+      "ProperName": "Pig",
+      "SortName": "Pig",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 80,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "CCA145:Update.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "024C3E:Dragonborn.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "01AF1B:Hunterborn.esp": 5
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Piglet",
+      "ProperName": "Piglet",
+      "SortName": "Piglet",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 50,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "CCA145:Update.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "024C3E:Dragonborn.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "01AF1B:Hunterborn.esp": 6
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Calf",
+      "ProperName": "Calf",
+      "SortName": "Cow, Calf",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 50,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "065C99:Skyrim.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F15F:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Sheep",
+      "ProperName": "Sheep",
+      "SortName": "Sheep",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 100,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "CCA146:Update.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F22A:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Ram",
+      "ProperName": "Ram",
+      "SortName": "Sheep, Ram",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 100,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "CCA146:Update.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F22A:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Lamb",
+      "ProperName": "Lamb",
+      "SortName": "Sheep, Lamb",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 50,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "CCA146:Update.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F22A:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "00AA35:Hunterborn.esp": 1,
+          "CCA136:Update.esm": 1
+        },
+        {
+          "00AA35:Hunterborn.esp": 1,
+          "CCA136:Update.esm": 2
+        },
+        {
+          "00AA35:Hunterborn.esp": 2,
+          "CCA136:Update.esm": 2
+        },
+        {
+          "00AA35:Hunterborn.esp": 1,
+          "01AF1B:Hunterborn.esp": 2
+        }
+      ],
+      "Type": "Monster",
+      "Name": "DeathHound",
+      "ProperName": "Death Hound",
+      "SortName": "Death Hound",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "011681:Dawnguard.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01CD6F:Dragonborn.esm": 1
+        },
+        {
+          "01CD6F:Dragonborn.esm": 1,
+          "064A83:Hunterborn.esp": 1
+        },
+        {
+          "01CD6F:Dragonborn.esm": 2,
+          "064A81:Hunterborn.esp": 1,
+          "064A83:Hunterborn.esp": 2
+        },
+        {
+          "0256A5:Hunterborn.esp": 2,
+          "03F291:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "MountedRiekling",
+      "ProperName": "",
+      "SortName": "Riekling, Mounted",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "4",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "03BD14:Dragonborn.esm",
+      "NegativeTreasure": [
+        "03BD14:Dragonborn.esm"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "0208DC:Dragonborn.esm"
+    },
+    {
+      "Mats": [],
+      "Type": "Monster",
+      "Name": "Gargoyle",
+      "ProperName": "",
+      "SortName": "Gargoyle",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "00F8AE:Dawnguard.esm"
+    },
+    {
+      "Mats": [
+        {
+          "00AA35:Hunterborn.esp": 1
+        },
+        {
+          "00AA35:Hunterborn.esp": 1
+        },
+        {
+          "00AA35:Hunterborn.esp": 2
+        },
+        {
+          "00AA35:Hunterborn.esp": 1,
+          "01AF1B:Hunterborn.esp": 2
+        }
+      ],
+      "Type": "Monster",
+      "Name": "DeathHound",
+      "ProperName": "Death Hound",
+      "SortName": "Death Hound",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "0EDB2E:Skyrim.esm",
+      "NegativeTreasure": [
+        "0EDB2E:Skyrim.esm"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "011681:Dawnguard.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03ADA4:Skyrim.esm": 1
+        },
+        {
+          "03ADA4:Skyrim.esm": 2,
+          "029DC5:Hunterborn.esp": 1
+        },
+        {
+          "03ADA4:Skyrim.esm": 3,
+          "029DC5:Hunterborn.esp": 2,
+          "029DCB:Hunterborn.esp": 1
+        },
+        {
+          "03ADA4:Skyrim.esm": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "DragonLava",
+      "ProperName": "Lava Dragon",
+      "SortName": "Dragon, Lava",
+      "AnimalSwitch": "0292CB:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 7,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029849:Hunterborn.esp",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "0292C4:Hunterborn.esp",
+      "Venom": "Null",
+      "Voice": "02992B:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "06BC02:Skyrim.esm": 1,
+          "00AA33:Hunterborn.esp": 1
+        },
+        {
+          "1016B3:Skyrim.esm": 1,
+          "06BC02:Skyrim.esm": 1,
+          "00AA33:Hunterborn.esp": 1,
+          "00AA1E:Hunterborn.esp": 1
+        },
+        {
+          "1016B3:Skyrim.esm": 1,
+          "06BC02:Skyrim.esm": 2,
+          "00AA33:Hunterborn.esp": 2,
+          "00AA1E:Hunterborn.esp": 2,
+          "00AA27:Hunterborn.esp": 1
+        },
+        {
+          "1016B3:Skyrim.esm": 1,
+          "06BC02:Skyrim.esm": 1,
+          "00AA33:Hunterborn.esp": 1,
+          "0256A5:Hunterborn.esp": 3,
+          "03F291:Hunterborn.esp": 1
+        },
+        {
+          "01CFAC:Hunterborn.esp": 1,
+          "01DA7B:Hunterborn.esp": 1
+        },
+        {
+          "03E7B0:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Werebear",
+      "ProperName": "Werebear",
+      "SortName": "Werebear",
+      "AnimalSwitch": "0292CF:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "014795:Hunterborn.esp",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "DC95C9:Hunterborn.esp",
+      "Venom": "Null",
+      "Voice": "01F2E6:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01771F:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01771F:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "017719:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "SpiderAlbino",
+      "ProperName": "Albino Spider",
+      "SortName": "Spider, Albino",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "0E41B8:Skyrim.esm",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "02B04E:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "02B04E:Dragonborn.esm": 1,
+          "01CD71:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "02B04E:Dragonborn.esm": 2,
+          "01CD71:Dragonborn.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "AshHopper",
+      "ProperName": "Ash Hopper",
+      "SortName": "Ash Hopper",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 20,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "03BD15:Dragonborn.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F17B:Dragonborn.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01CD72:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01CD72:Dragonborn.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Netch",
+      "ProperName": "Netch",
+      "SortName": "Netch",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 100,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "024C31:Dragonborn.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01CD72:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01CD72:Dragonborn.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "NetchCalf",
+      "ProperName": "Netch Calf",
+      "SortName": "Netch, Calf",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 50,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "024C31:Dragonborn.esm"
+    },
+    {
+      "Mats": [
+        {
+          "006A53:Gray Fox Cowl.esm": 1
+        },
+        {
+          "006A53:Gray Fox Cowl.esm": 1,
+          "006A57:Gray Fox Cowl.esm": 1
+        },
+        {
+          "006A53:Gray Fox Cowl.esm": 2,
+          "006A57:Gray Fox Cowl.esm": 2
+        },
+        {
+          "006A53:Gray Fox Cowl.esm": 1,
+          "0256A5:Hunterborn.esp": 3,
+          "03F291:Hunterborn.esp": 1
+        },
+        {
+          "006A53:Gray Fox Cowl.esm": 1
+        },
+        {
+          "03E7B1:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Cheetah",
+      "ProperName": "Ancestral Cheetah",
+      "SortName": "Cheetah, Ancestral",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 50,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01920C:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD57:Skyrim.esm": 1
+        },
+        {
+          "03AD56:Skyrim.esm": 1,
+          "03AD57:Skyrim.esm": 1
+        },
+        {
+          "03AD56:Skyrim.esm": 2,
+          "03AD57:Skyrim.esm": 1
+        },
+        {
+          "03AD56:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1,
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Duneripper",
+      "ProperName": "Duneripper",
+      "SortName": "Chaurus, Duneripper",
+      "AnimalSwitch": "0292CA:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "027783:Hunterborn.esp",
+      "NegativeTreasure": [
+        "043B9A:Gray Fox Cowl.esm"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "043B9A:Gray Fox Cowl.esm",
+      "Venom": "027CE6:Hunterborn.esp",
+      "Voice": "01F152:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Rivercrab",
+      "ProperName": "Rivercrab",
+      "SortName": "Mudcrab, Rivercrab",
+      "AnimalSwitch": "017896:Hunterborn.esp",
+      "CarcassMessageBox": "0178A3:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 5,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "03E8A6:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "JungleQueen",
+      "ProperName": "Jungle Queen",
+      "SortName": "Spider, Jungle Queen",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "02AFD9:Skyrim.esm"
+    },
+    {
+      "Mats": [],
+      "Type": "Animal",
+      "Name": "Hyena",
+      "ProperName": "Hyena",
+      "SortName": "Hyena",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 10,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F6A7:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD56:Skyrim.esm": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1,
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Siligonder",
+      "ProperName": "Siligonder",
+      "SortName": "Siligonder",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F152:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1,
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Guar",
+      "ProperName": "Guar",
+      "SortName": "Guar",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 10,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F2E6:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Spider",
+      "ProperName": "Spider",
+      "SortName": "Spider",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "17E326:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "17E326:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "SpiderGiant",
+      "ProperName": "Giant Spider",
+      "SortName": "Spider, Giant",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "17E326:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "17E326:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD57:Skyrim.esm": 1
+        },
+        {
+          "1A0E18:Skyrim Immersive Creatures Special Edition.esp": 1,
+          "03AD57:Skyrim.esm": 1,
+          "1A0E15:Skyrim Immersive Creatures Special Edition.esp": 1
+        },
+        {
+          "1A0E18:Skyrim Immersive Creatures Special Edition.esp": 2,
+          "03AD57:Skyrim.esm": 1,
+          "1A0E15:Skyrim Immersive Creatures Special Edition.esp": 2
+        },
+        {
+          "1A0E18:Skyrim Immersive Creatures Special Edition.esp": 1,
+          "01AF1B:Hunterborn.esp": 1,
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "ChaurusSwampWarrior",
+      "ProperName": "Swamp Warrior Chaurus",
+      "SortName": "Chaurus, Swamp Warrior",
+      "AnimalSwitch": "0292CA:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "027783:Hunterborn.esp",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "027CE6:Hunterborn.esp",
+      "Voice": "01F152:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD57:Skyrim.esm": 1
+        },
+        {
+          "03AD56:Skyrim.esm": 1,
+          "03AD57:Skyrim.esm": 1,
+          "1A0E17:Skyrim Immersive Creatures Special Edition.esp": 1
+        },
+        {
+          "03AD56:Skyrim.esm": 2,
+          "03AD57:Skyrim.esm": 1,
+          "1A0E17:Skyrim Immersive Creatures Special Edition.esp": 2
+        },
+        {
+          "03AD56:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1,
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "ChaurusWarrior",
+      "ProperName": "Warrior Chaurus",
+      "SortName": "Chaurus, Warrior",
+      "AnimalSwitch": "0292CA:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "027783:Hunterborn.esp",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "027CE6:Hunterborn.esp",
+      "Voice": "01F152:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "00AA35:Hunterborn.esp": 1
+        },
+        {
+          "00AA35:Hunterborn.esp": 1
+        },
+        {
+          "00AA35:Hunterborn.esp": 2
+        },
+        {
+          "00AA35:Hunterborn.esp": 1,
+          "01AF1B:Hunterborn.esp": 2
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Huskey",
+      "ProperName": "Husky",
+      "SortName": "Dog, Husky",
+      "AnimalSwitch": "017894:Hunterborn.esp",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 10,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "0EDB2E:Skyrim.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "011687:Dawnguard.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "TundraSpider",
+      "ProperName": "Tundra Spider",
+      "SortName": "Spider, Tundra",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "5EB861:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "5EB861:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "TundraSpiderGiant",
+      "ProperName": "Giant Tundra Spider",
+      "SortName": "Spider, Giant Tundra",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "5EB861:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "5EB861:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "SwampSpider",
+      "ProperName": "Swamp Spider",
+      "SortName": "Spider, Swamp",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "5EB860:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "5EB860:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "SwampSpiderGiant",
+      "ProperName": "Giant Swamp Spider",
+      "SortName": "Spider, Giant Swamp",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "5EB860:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "5EB860:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "IcebiteSpider",
+      "ProperName": "Icebite Spider",
+      "SortName": "Spider, Icebite",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "601DEA:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "601DEA:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "IcebiteSpiderGiant",
+      "ProperName": "Giant Icebite Spider",
+      "SortName": "Spider, Giant Icebite",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "601DEA:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "601DEA:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "06BC00:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "06BC00:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "06BC00:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "06BC00:Skyrim.esm": 1,
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Dreugh",
+      "ProperName": "Dreugh",
+      "SortName": "Dreugh",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "014D22:Hunterborn.esp",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "03E8A6:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "SnowbiteSpider",
+      "ProperName": "Snowbite Spider",
+      "SortName": "Spider, Snowbite",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "601DEB:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "601DEB:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "09151B:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "SnowbiteSpiderGiant",
+      "ProperName": "Giant Snowbite Spider",
+      "SortName": "Spider, Giant Snowbite",
+      "AnimalSwitch": "0292CC:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "029846:Hunterborn.esp",
+      "NegativeTreasure": [
+        "601DEB:Skyrim Immersive Creatures Special Edition.esp"
+      ],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "601DEB:Skyrim Immersive Creatures Special Edition.esp",
+      "Voice": "01F21D:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "6AA550:Skyrim Immersive Creatures Special Edition.esp": 1,
+          "01AF1B:Hunterborn.esp": 2,
+          "0256A5:Hunterborn.esp": 1
+        },
+        {
+          "6AA550:Skyrim Immersive Creatures Special Edition.esp": 1,
+          "01AF1B:Hunterborn.esp": 3,
+          "0256A5:Hunterborn.esp": 2
+        },
+        {
+          "0256A5:Hunterborn.esp": 3,
+          "03F291:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Rhino",
+      "ProperName": "Rhino",
+      "SortName": "Rhino",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1000,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "065C99:Skyrim.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F287:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "02B04E:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "02B04E:Dragonborn.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "03AD5B:Skyrim.esm": 1,
+          "02B04E:Dragonborn.esm": 3,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "DramanFelalnir",
+      "ProperName": "Draman Felalnir",
+      "SortName": "Draman Felalnir",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "02992B:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "02B04E:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "02B04E:Dragonborn.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "03AD5B:Skyrim.esm": 1,
+          "02B04E:Dragonborn.esm": 3,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "DramanBrute",
+      "ProperName": "Draman Brute",
+      "SortName": "Draman Brute",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "00F8AE:Dawnguard.esm"
+    },
+    {
+      "Mats": [
+        {
+          "02B04E:Dragonborn.esm": 1,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "02B04E:Dragonborn.esm": 2,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "03AD5B:Skyrim.esm": 1,
+          "02B04E:Dragonborn.esm": 3,
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "DramanNorokdir",
+      "ProperName": "Draman Norokdir",
+      "SortName": "Draman Norokdir",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "02992B:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD6F:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "1016B3:Skyrim.esm": 1,
+          "03AD6F:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "1016B3:Skyrim.esm": 1,
+          "03AD6F:Skyrim.esm": 2,
+          "01AF1B:Hunterborn.esp": 4
+        },
+        {
+          "1016B3:Skyrim.esm": 1,
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Wereskeever",
+      "ProperName": "Wereskeever",
+      "SortName": "Wereskeever",
+      "AnimalSwitch": "0292CF:Hunterborn.esp",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "014796:Hunterborn.esp",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F2E6:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "1016B3:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "1016B3:Skyrim.esm": 1,
+          "01AF1B:Hunterborn.esp": 4
+        },
+        {
+          "0256A5:Hunterborn.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Daedroth",
+      "ProperName": "Daedroth",
+      "SortName": "Daedroth",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F2E6:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "00AA35:Hunterborn.esp": 1
+        },
+        {
+          "00AA35:Hunterborn.esp": 1,
+          "03AD5E:Skyrim.esm": 1
+        },
+        {
+          "00AA35:Hunterborn.esp": 2,
+          "03AD5E:Skyrim.esm": 2
+        }
+      ],
+      "Type": "Monster",
+      "Name": "HellHound",
+      "ProperName": "Hell Hound",
+      "SortName": "Hell Hound",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "Meat": "0EDB2E:Skyrim.esm",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F6A7:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD64:Skyrim.esm": 1,
+          "00F5E7:Skyrim Immersive Creatures Special Edition.esp": 1
+        },
+        {
+          "03AD64:Skyrim.esm": 2,
+          "00F5E7:Skyrim Immersive Creatures Special Edition.esp": 2
+        }
+      ],
+      "Type": "Monster",
+      "Name": "CaveGiant",
+      "ProperName": "",
+      "SortName": "Giant, Cave",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F225:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD64:Skyrim.esm": 1,
+          "00F5E7:Skyrim Immersive Creatures Special Edition.esp": 1
+        },
+        {
+          "03AD64:Skyrim.esm": 2,
+          "00F5E7:Skyrim Immersive Creatures Special Edition.esp": 2
+        }
+      ],
+      "Type": "Monster",
+      "Name": "FrostGiant",
+      "ProperName": "",
+      "SortName": "Giant, Frost",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F225:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "6C809A:Skyrim Immersive Creatures Special Edition.esp": 1
+        },
+        {
+          "6C809A:Skyrim Immersive Creatures Special Edition.esp": 2
+        },
+        {
+          "6C809A:Skyrim Immersive Creatures Special Edition.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Ogre",
+      "ProperName": "",
+      "SortName": "Ogre",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F225:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "00F5E5:Skyrim Immersive Creatures Special Edition.esp": 1
+        },
+        {
+          "00F5E5:Skyrim Immersive Creatures Special Edition.esp": 2,
+          "00F5E3:Skyrim Immersive Creatures Special Edition.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "RieklingMelee",
+      "ProperName": "",
+      "SortName": "Riekling, Melee",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "0208DC:Dragonborn.esm"
+    },
+    {
+      "Mats": [
+        {
+          "00F5E5:Skyrim Immersive Creatures Special Edition.esp": 1
+        },
+        {
+          "00F5E5:Skyrim Immersive Creatures Special Edition.esp": 2,
+          "00F5E3:Skyrim Immersive Creatures Special Edition.esp": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "RieklingMissile",
+      "ProperName": "",
+      "SortName": "Riekling, Missile",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "0208DC:Dragonborn.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD5B:Skyrim.esm": 1
+        },
+        {
+          "03AD5B:Skyrim.esm": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "DarkSeducer",
+      "ProperName": "",
+      "SortName": "Dark Seducer",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "0176F8:Dawnguard.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD5B:Skyrim.esm": 1
+        },
+        {
+          "03AD5B:Skyrim.esm": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "GoldenSaint",
+      "ProperName": "",
+      "SortName": "Golden Saint",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "0176F8:Dawnguard.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD5B:Skyrim.esm": 1
+        },
+        {
+          "03AD5B:Skyrim.esm": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "WingedTwilight",
+      "ProperName": "",
+      "SortName": "Winged Twilight",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F22C:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "001833:Skyrim Immersive Creatures Special Edition.esp": 1
+        },
+        {
+          "001833:Skyrim Immersive Creatures Special Edition.esp": 2
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Gehenoth",
+      "ProperName": "",
+      "SortName": "Gehenoth",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F289:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD5B:Skyrim.esm": 1
+        },
+        {
+          "03AD5B:Skyrim.esm": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Dremora",
+      "ProperName": "",
+      "SortName": "Dremora",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F1CE:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD5D:Skyrim.esm": 1
+        },
+        {
+          "03AD5D:Skyrim.esm": 2
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Falmer",
+      "ProperName": "",
+      "SortName": "Falmer",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F1D2:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD64:Skyrim.esm": 1
+        },
+        {
+          "03AD64:Skyrim.esm": 2
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Giant",
+      "ProperName": "",
+      "SortName": "Giant",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 5,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F225:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "03AD66:Skyrim.esm": 1
+        },
+        {
+          "06B689:Skyrim.esm": 1,
+          "03AD66:Skyrim.esm": 2
+        },
+        {
+          "06B689:Skyrim.esm": 2,
+          "03AD66:Skyrim.esm": 3
+        },
+        {
+          "03AD66:Skyrim.esm": 1
+        }
+      ],
+      "Type": "Monster",
+      "Name": "Hagraven",
+      "ProperName": "",
+      "SortName": "Hagraven",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "Null",
+      "CarcassSize": 3,
+      "CarcassWeight": 1,
+      "CarcassValue": 1,
+      "PeltCount": [
+        "4",
+        "2",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "2",
+        "4",
+        "8",
+        "16"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F22C:Skyrim.esm"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "01AF1B:Hunterborn.esp": 5
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Pig",
+      "ProperName": "Pig",
+      "SortName": "Pig",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 50,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "Null"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "01AF1B:Hunterborn.esp": 5
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Goose",
+      "ProperName": "Goose",
+      "SortName": "Goose",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0178A2:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 5,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "Null"
+    },
+    {
+      "Mats": [
+        {
+          "01AF1B:Hunterborn.esp": 1
+        },
+        {
+          "01AF1B:Hunterborn.esp": 2
+        },
+        {
+          "01AF1B:Hunterborn.esp": 3
+        },
+        {
+          "01AF1B:Hunterborn.esp": 5
+        }
+      ],
+      "Type": "Animal",
+      "Name": "Sheep",
+      "ProperName": "Sheep",
+      "SortName": "Sheep",
+      "AnimalSwitch": "Null",
+      "CarcassMessageBox": "0038D1:Hunterborn.esp",
+      "CarcassSize": 1,
+      "CarcassWeight": 1,
+      "CarcassValue": 50,
+      "PeltCount": [
+        "2",
+        "1",
+        "2",
+        "2"
+      ],
+      "FurPlateCount": [
+        "1",
+        "1",
+        "2",
+        "3"
+      ],
+      "Meat": "Null",
+      "NegativeTreasure": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "01F22A:Skyrim.esm"
+    }
+  ]
+}
