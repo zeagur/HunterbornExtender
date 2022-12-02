@@ -7,9 +7,6 @@ namespace HunterbornExtender {
     sealed public record FormKeys
     {
         static readonly public ModKey HBMODKEY = new("Hunterborn", type : ModType.Plugin);
-        //static readonly ModKey UPDATE = ModKey.FromNameAndExtension("Update.esm");
-        //static readonly ModKey DLC1 = ModKey.FromNameAndExtension("Dawnguard.esm");
-        //static readonly ModKey DLC2 = ModKey.FromNameAndExtension("Dragonborn.esm");
 
         static readonly public FormLink<IQuestGetter> _DS_Hunterborn = new(new FormKey(HBMODKEY, 0x003367));
 
