@@ -17,11 +17,7 @@ using Microsoft.CodeAnalysis;
 using DynamicData;
 using HunterbornExtenderUI;
 using SynthEBD;
-using Autofac.Core;
-using System.Windows.Markup;
-using static Mutagen.Bethesda.Skyrim.Furniture;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
-using static System.Windows.Forms.AxHost;
+using Mutagen.Bethesda.Plugins.Exceptions;
 
 #pragma warning disable IDE1006 // Naming Styles
 
@@ -35,6 +31,18 @@ sealed internal class Program
     //static private Dictionary<PluginEntry, IMiscItemGetter> PluginTokens = new();
     //static private List<DeathItemSelection> MonsterTypes = new();
     //static private List<DeathItemSelection> AnimalTypes = new();
+
+    static readonly string Divider = "================================================";
+    static String CreateTitle(String title)
+    {
+        int dividerLength = Divider.Length;
+        int titleLength = title.Length;
+        int leftLength = (dividerLength - titleLength) / 2;
+        int rightLength = (dividerLength - titleLength + 1) / 2;
+        String left = Divider.Substring(0, leftLength);
+        String right = Divider.Substring(0, rightLength);
+        return $"{left}{title}{right}";
+    }
 
     record CreatureData(INpcGetter Target, ILeveledItemGetter DeathItem, String InternalName, PluginEntry Prototype, bool IsAnimal);
     static readonly Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses = new();
@@ -57,42 +65,15 @@ sealed internal class Program
             .Run(args);
     }
 
-    record JsonData(List<DeathItemSelection> DeathItems, List<PluginEntry> CreatureData);
 
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
     {
-        try
-        {
-            var p1 = JSONhandler<PluginEntry>.LoadJSONFile("HunterbornPlugin.json");
-            Console.WriteLine($" o Success p1 {p1?.Name ?? "NULL"}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(" x p1 failed.");
-            Console.WriteLine("=================================");
-            Console.WriteLine(ex);
-            Console.WriteLine("=================================");
-        }
-
-        try
-        {
-            var ps = JSONhandler<List<PluginEntry>>.LoadJSONFile("HunterbornPlugins.json");
-            Console.WriteLine($" o Success ps {ps?.Count ?? -1}");
-
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(" x ps failed.");
-            Console.WriteLine("=================================");
-            Console.WriteLine(ex);
-            Console.WriteLine("=================================");
-        }
-
-        JsonData jsonData;
+        /*
+        PatcherSettings jsonData;
         try
         {
             Console.WriteLine("Trying to load stored DeathItem selections.");
-            jsonData = JSONhandler<JsonData>.LoadJSONFile("DeathItemSelectionSample.json") ?? new(new(), new());
+            jsonData = JSONhandler<PatcherSettings>.LoadJSONFile("settings.json") ?? new();
             Console.WriteLine($"\tRead {jsonData.DeathItems.Count} selections and {jsonData.CreatureData.Count} plugins.");
 
             if (jsonData.DeathItems.Count > 0 || jsonData.CreatureData.Count > 0)
@@ -107,49 +88,79 @@ sealed internal class Program
             Console.WriteLine(ex);
             Console.WriteLine("=================================");
             return;
-        }
+        }*/
+
+        Console.WriteLine("========================");
+        Console.WriteLine("Importing plugins.");
+        var plugins = LegacyConverter.ImportAndConvert(state);
+        Console.WriteLine($" o Success:{plugins.Count} creature types imported.");
 
         StandardRecords std;
 
         try
         {
+            Console.WriteLine("========================");
             Console.WriteLine("Trying to resolve required forms from Hunterborn.esp, and preparing the patch structure.");
             std = CreateStandardRecords(state);
-            Console.WriteLine($" ✓ Success: {std.PatchMod}");
+            Console.WriteLine($" o Success: {std.PatchMod}");
+        }
+        catch (RecordException ex)
+        {
+            Console.WriteLine(" x Failed to resolve required forms because of unresolved reference [{ex.FormKey}].");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.StackTrace);
+            return;
         }
         catch (Exception ex)
         {
             Console.WriteLine(" x Failed to resolve required forms.");
-            Console.WriteLine("=================================");
             Console.WriteLine(ex);
+            Console.WriteLine(ex.StackTrace);
             return;
         }
 
-        Plugin corePlugin;
+        List<PluginEntry> corePlugins;
         
         try
         {
+            Console.WriteLine("========================");
             Console.WriteLine("Trying to recreate the hard-coded core plugin from Hunterborn.esp.");
-            corePlugin = RecreateCorePlugin(std);
-            Console.WriteLine($" ✓ Success: {corePlugin.Entries.Count} plugin entries found.");
+            corePlugins = RecreateCorePlugins(std);
+
+            if (corePlugins.Count > 0)
+            {
+                Console.WriteLine($" o Success: {corePlugins.Count} hard-coded creature types found.");
+                plugins.AddRange(corePlugins, 0);
+                Console.WriteLine($" o Add-on creatures and hard-coded creatures merged; {plugins.Count} total.");
+            } 
+            else
+            {
+                Console.WriteLine($" x No hard-coded creature types found. Check your Hunterborn installation.");
+                return;
+            }
+        }
+        catch (RecordException ex)
+        {
+            Console.WriteLine($" x Failed to recreate core plugin because of unresolved reference [{ex.FormKey}].");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.StackTrace);
+            return;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(" x Failed to recreate core plugin..");
-            Console.WriteLine("=================================");
-            Console.WriteLine(ex);
-            Console.WriteLine("=================================");
+            Console.WriteLine(" x Failed to recreate core plugin.");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.StackTrace);
             return;
         }
 
-        List<PluginEntry> plugins = new(jsonData.CreatureData);
+        //List<PluginEntry> plugins = new(jsonData.CreatureData);
 
         var PICKS = MakeBootstrapSelection(plugins, state);
-        return;
 
         foreach (var dis in PICKS.Keys)
         {
-            Console.WriteLine($"=== {dis.CreatureEntryName} ===");
+            Console.WriteLine(CreateTitle(dis.CreatureEntryName));
 
             PluginEntry? prototype = PICKS[dis];
 
@@ -171,15 +182,16 @@ sealed internal class Program
 
             try
             {
-                Console.WriteLine($"\tCreating CreatureData structure for {dis.CreatureEntryName}.");
                 var data = CreateCreatureData(dis.AssignedNPCs.First(), prototype, std);
+                Console.WriteLine($"\tCreating creature Data structure.");
+
                 if (BlacklistedDeathItems.Contains(data.DeathItem.ToLink()))
                 {
-                    Console.WriteLine($"\tSkipped {dis.CreatureEntryName}: DeathItem blacklisted.");
+                    Console.WriteLine($"\t\tSkipped {dis.CreatureEntryName}: DeathItem blacklisted.");
                 }
                 else if (KnownDeathItems.Contains(data.DeathItem))
                 {
-                    Console.WriteLine($"\tSkipped {dis.CreatureEntryName}: DeathItem already processed.");
+                    Console.WriteLine($"\t\tSkipped {dis.CreatureEntryName}: DeathItem already processed.");
                 } 
                 else
                 {
@@ -252,9 +264,9 @@ sealed internal class Program
         return PICKS;
     }
 
-    static Plugin RecreateCorePlugin(StandardRecords std)
+    static List<PluginEntry> RecreateCorePlugins(StandardRecords std)
     {
-        Plugin core = new();
+        List<PluginEntry> core = new();
 
         foreach (var type in new List<EntryType>() { EntryType.Animal, EntryType.Monster })
         {
@@ -270,7 +282,7 @@ sealed internal class Program
             for (int index = 0; index < count; index++)
             {
                 PluginEntry entry = RecreateCorePluginEntry(type, index, std);
-                core.Entries.Add(entry);
+                core.Add(entry);
             }
         }
 
@@ -279,77 +291,127 @@ sealed internal class Program
 
     static PluginEntry RecreateCorePluginEntry(EntryType type, int index, StandardRecords std)
     {
-        PluginEntry entry = new();
+        String name = std.GetCCFor(type).RaceIndex.Data[index];
 
-        entry.Type = type;
-        entry.Name = std.GetCCFor(type).RaceIndex.Data[index];
-        entry.SortName = SortingNames.GetValueOrDefault(entry.Name, entry.Name);
-        entry.AnimalSwitch = std.GetCCFor(type).Switches.Objects[index].Object.FormKey;
-        entry.CarcassMessageBox = std.GetCCFor(type).CarcassMessages.Objects[index].Object.FormKey;
-        entry.CarcassSize = std.GetCCFor(type).CarcassSizes.Data[index];
-
-        if (type == EntryType.Animal)
+        try
         {
-            entry.CarcassWeight = (int)std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(std.LinkCache).Weight;
-            entry.CarcassValue = (int)std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(std.LinkCache).Value;
-        }
-        else
+            PluginEntry entry = new(type, name);
+            entry.ProperName = name;
+            entry.SortName = name;
+
+            var toggle = std.GetCCFor(type).Switches.Objects[index].Object;
+            if (toggle.IsNull) entry.Toggle = new FormLink<IGlobalGetter>();
+            else entry.Toggle = toggle.Resolve<IGlobalGetter>(std.LinkCache).ToLink();
+
+            var msg = std.GetCCFor(type).CarcassMessages.Objects[index].Object;
+            if (msg.IsNull) entry.CarcassMessageBox = new FormLink<IMessageGetter>();
+            else entry.CarcassMessageBox = msg.Resolve<IMessageGetter>(std.LinkCache).ToLink();
+
+            var meat = std.GetCCFor(type).MeatType.Objects[index].Object;
+            if (meat.IsNull) entry.Meat = new FormLink<IItemGetter>();
+            else entry.Meat = meat.Resolve<IItemGetter>(std.LinkCache).ToLink();
+
+            var shared = std.GetCCFor(type).SharedDeathItems.Objects[index].Object;
+            if (shared.IsNull) entry.SharedDeathItems = new FormLink<IFormListGetter>();
+            else entry.SharedDeathItems = shared.Resolve<IFormListGetter>(std.LinkCache).ToLink();
+
+            entry.CarcassSize = std.GetCCFor(type).CarcassSizes.Data[index];
+
+            if (type == EntryType.Monster)
+            {
+                var venom = std.Monsters.VenomItems.Objects[index].Object;
+                if (venom.IsNull) entry.Venom = new FormLink<IIngestibleGetter>();
+                else entry.Venom = venom.Resolve<IIngestibleGetter>(std.LinkCache).ToLink();
+
+                var blood = std.Monsters.BloodItems.Objects[index].Object;
+                if (blood.IsNull) entry.BloodType = new FormLink<IItemGetter>();
+                else entry.BloodType = blood.Resolve<IItemGetter>(std.LinkCache).ToLink();
+
+                entry.CarcassWeight = 0;
+                entry.CarcassValue = 0;
+            }
+            else if (type == EntryType.Animal)
+            {
+                entry.Venom = new FormLink<IIngestibleGetter>();
+                entry.BloodType = new FormLink<IItemGetter>();
+
+                var carcass = std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(std.LinkCache);
+                entry.CarcassWeight = (int)carcass.Weight;
+                entry.CarcassValue = (int)carcass.Value;
+            }
+
+            entry.Discard = type != EntryType.Monster
+                ? new()
+                : std.Monsters.Discards.Objects[index].Object
+                .Resolve<IFormListGetter>(std.LinkCache).Items
+                .Select(item => item as IFormLinkGetter<IItemGetter>)
+                .Where(item => item != null)
+                .Select(item => item!).ToList();
+
+            entry.PeltCount = Array.Empty<int>();
+            entry.FurPlateCount = Array.Empty<int>();
+            entry.Materials = new();
+
+
+            // The voice field is unnecessary because the core voices are hard-coded.
+            // But it's nice to have it just in case.
+            // 
+            // We could scan through all NPCs looking for the matching DeathItem and grab the voice of
+            // the first match.
+            //
+            // BUT
+            // 
+            // Vanilla voices are named very predictably, so just use that.
+            //
+            std.LinkCache.TryResolve<VoiceType>($"Cr{entry.Name}Voice", out var voice);
+            entry.Voice = voice == null
+                ? new FormLink<IVoiceTypeGetter>()
+                : voice.ToLink();
+
+
+            /*
+             * @TODO Finish recreating these from recipes.
+            entry.Pelts;
+            entry.Mats;
+            entry.PeltCount;
+            entry.FurPlateCount;
+            */
+
+            // Populate the KnownDeathItems, KnownCarcasses, and KnownPelts.
+            // Having these means that when new Pelts, DeathItems, and Carcasses get created, they
+            // can copy the models and keywords from existing ones.
+
+            // Get the DeathItem link from the formlist, resolve it, and put it in KnownDeathItems.
+            if (std.GetCCFor(entry.Type)._DS_FL_DeathItems.Items[index].Resolve(std.LinkCache) is not ILeveledItemGetter deathItem)
+                throw new CoreRecordMissing(std.GetCCFor(entry.Type)._DS_FL_DeathItems.Items[index]);
+            KnownDeathItems.Add(deathItem);
+
+            // Get the Carcass link from the formlist, resolve it, and put it in KnownCarcasses.
+            // Only animals have carcasses. I guess you can't carry monster corpses around.
+            if (type == EntryType.Animal)
+            {
+                if (std.Animals._DS_FL_CarcassObjects.Items[index].Resolve(std.LinkCache) is not IMiscItemGetter carcass)
+                    throw new CoreRecordMissing(std.Animals._DS_FL_CarcassObjects.Items[index]);
+                KnownCarcasses.Add(entry, carcass);
+            }
+
+            // Get the Pelts link from the formlist, resolve it, transform it into an array, and put it in KnownPelts.
+            if (std.GetCCFor(entry.Type)._DS_FL_PeltLists.Items[index].Resolve(std.LinkCache) is not IFormListGetter pelts)
+                throw new CoreRecordMissing(std.GetCCFor(entry.Type)._DS_FL_PeltLists.Items[index]);
+
+            IFormLinkGetter<IItemGetter>[] peltsArray = pelts.Items.OfType<IFormLinkGetter<IItemGetter>>().ToArray();
+            if (peltsArray.Length != 0 && peltsArray.Length != 4)
+                throw new InvalidOperationException($"Wrong length for pelts: {entry.Name} -- {std.GetCCFor(entry.Type)._DS_FL_PeltLists.Items[index]}");
+            KnownPelts.Add(entry, peltsArray);
+
+            return entry;
+
+        } catch(Exception)
         {
-            entry.CarcassWeight = 0;
-            entry.CarcassValue = 0;
+            Console.WriteLine(CreateTitle($"Problem with {type} {name}"));
+            throw;
         }
-
-        entry.Meat = std.GetCCFor(entry.Type).MeatType.Objects[index].Object.FormKey;
-        entry.SharedDeathItems = std.GetCCFor(entry.Type).SharedDeathItems.Objects[index].Object.FormKey;
-
-        if (type == EntryType.Monster)
-        {
-            entry.BloodType = std.Monsters.BloodItems.Objects[index].Object.FormKey;
-            entry.Venom = std.Monsters.VenomItems.Objects[index].Object.FormKey;
-
-            IFormListGetter discard = std.Monsters.NegativeTreasure.Objects[index].Object.Resolve<IFormListGetter>(std.LinkCache);
-            entry.NegativeTreasure = new(discard.Items.Select(item => item.FormKey));
-        }
-        else
-        {
-            entry.NegativeTreasure = new();
-            entry.BloodType = new FormKey();
-            entry.Venom = new FormKey();
-        }
-
-        /*
-         * @TODO Finish recreating these from recipes.
-        entry.Pelts;
-        entry.Mats;
-        entry.PeltCount;
-        entry.FurPlateCount;
-        */
-
-        // @TODO What to do with the Voice field?
-        // entry.Voice;
-
-        if (std.GetCCFor(entry.Type)._DS_FL_DeathItems.Items[index].Resolve(std.LinkCache) is not ILeveledItemGetter deathItem)
-            throw new CoreRecordMissing(std.GetCCFor(entry.Type)._DS_FL_DeathItems.Items[index]);
-        KnownDeathItems.Add(deathItem);
-
-        if (std.GetCCFor(entry.Type)._DS_FL_PeltLists.Items[index].Resolve(std.LinkCache) is not IFormListGetter pelts)
-            throw new CoreRecordMissing(std.GetCCFor(entry.Type)._DS_FL_PeltLists.Items[index]);
-
-        if (type == EntryType.Animal)
-        {
-            if (std.Animals._DS_FL_CarcassObjects.Items[index].Resolve(std.LinkCache) is not IMiscItemGetter carcass)
-                throw new CoreRecordMissing(std.Animals._DS_FL_CarcassObjects.Items[index]);
-            KnownCarcasses.Add(entry, carcass);
-        }
-
-        IFormLinkGetter<IItemGetter>[] peltsArray = pelts.Items.OfType<IFormLinkGetter<IItemGetter>>().ToArray();
-        if (peltsArray.Length != 0 && peltsArray.Length != 4)
-            throw new InvalidOperationException($"Wrong length for pelts: {entry.Name} -- {std.GetCCFor(entry.Type)._DS_FL_PeltLists.Items[index]}");
-        KnownPelts.Add(entry, peltsArray);
-
-        return entry;
     }
-
 
     /// <summary>
     /// Things that have to be done for each race:
@@ -396,7 +458,7 @@ sealed internal class Program
 
         if (_settings.Value.DebuggingMode)
         {
-            Console.WriteLine($"\tCreated new forms");
+            Console.WriteLine($"\tCreated new forms with {data.Prototype.Type} plugin {data.Prototype}.");
             Console.WriteLine($"\t\tID Token: {token}");
             Console.WriteLine($"\t\tCarcass item: {carcass}");
             Console.WriteLine($"\t\tMaterials: {mats}");
@@ -424,7 +486,7 @@ sealed internal class Program
     /// 
     static String CreateInternalName(ILeveledItemGetter deathItem)
     {
-        String internalName = $"{deathItem.FormKey}{deathItem.EditorID ?? ""}";
+        String internalName = $"{deathItem.EditorID ?? deathItem.FormKey.ToString()}";
         return NAME_FILTER.Replace(internalName, "");
     }
     readonly static private Regex NAME_FILTER = new("[^a-zA-Z0-9_]", RegexOptions.IgnoreCase);
@@ -509,17 +571,18 @@ sealed internal class Program
         mats.EditorID = $"_DS_FL_Mats_{data.InternalName}";
 
 
-        for (int index = 0; index < data.Prototype.Mats.Count; index++)
+        for (int index = 0; index < data.Prototype.Materials.Count; index++)
         {
-            var template = data.Prototype.Mats[index];
+            var template = data.Prototype.Materials[index];
             var mat = std.PatchMod.LeveledItems.AddNew();
             if (mat == null) throw new InvalidOperationException();
 
             mat.EditorID = $"{mats.EditorID}{index:D2}";
             var entries = mat.Entries = new();
 
-            foreach (var te in template) {
-                entries.Add(CreateLeveledItemEntry(te.Key.ToLink<IItemGetter>() ?? throw new AddonRecordMissing(te.Key), 1, te.Value));
+            foreach (var subTemplate in template) {
+                var item = new FormLink<IItemGetter>(subTemplate.Key.FormKey);
+                entries.Add(CreateLeveledItemEntry(item, 1, subTemplate.Value));
             }
 
             mats.Items.Add(mat);
@@ -890,7 +953,7 @@ sealed internal class Program
         CreatureClass proto, 
         ScriptObjectListProperty BloodItems, 
         ScriptObjectListProperty VenomItems, 
-        ScriptObjectListProperty NegativeTreasure) : CreatureClass(proto);
+        ScriptObjectListProperty Discards) : CreatureClass(proto);
 
 
     /// <summary>
@@ -900,7 +963,7 @@ sealed internal class Program
     static StandardRecords CreateStandardRecords(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
     {
         Quest hunterbornQuest = state.PatchMod.Quests.GetOrAddAsOverride(_DS_Hunterborn.Resolve(state.LinkCache));
-        if (_settings.Value.DebuggingMode) QueryImportantProperties(hunterbornQuest);
+        //if (_settings.Value.DebuggingMode) QueryImportantProperties(hunterbornQuest);
 
         var animals = new AnimalClass(new(
                     //new(GetKnownDeathItemsAnimals(state.LinkCache)),
@@ -1156,11 +1219,10 @@ sealed internal class Program
 
     sealed class ScriptMissing : Exception    {
         public ScriptMissing(String questname, String scriptName) : base($"Missing script: {questname}.{scriptName}") { }
-
     }
     sealed class PropertyMissing : Exception
     {
         public PropertyMissing(String questname, String scriptName, String propertyName) : base($"Missing property: {questname}.{scriptName}.{propertyName}") { }
-
     }
+
 }
