@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:HunterbornExtenderUI"
+             xmlns:patcher="clr-namespace:HunterbornExtender"
              xmlns:plugins="clr-namespace:Mutagen.Bethesda.WPF.Plugins;assembly=Mutagen.Bethesda.WPF"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              d:DataContext="{d:DesignInstance Type=local:VM_PluginEntry}"
@@ -45,10 +46,10 @@
         <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SortName, UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Row="3" Grid.Column="0" Text="Type"/>
-        <ComboBox Grid.Row="3" Grid.Column="1" Width="auto" HorizontalAlignment="Left" SelectedValue="{Binding Type}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type local:EntryType}}}" IsSynchronizedWithCurrentItem="True"/>
+        <ComboBox Grid.Row="3" Grid.Column="1" Width="auto" HorizontalAlignment="Left" SelectedValue="{Binding Type}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type local:EntryTypeClone}}}" IsSynchronizedWithCurrentItem="True"/>
 
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="Animal Switch"/>
-        <plugins:FormKeyPicker Grid.Row="4" Grid.Column="1" FormKey="{Binding AnimalSwitch}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding AnimalSwitchType}" MaxHeight="250"/>
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Toggle"/>
+        <plugins:FormKeyPicker Grid.Row="4" Grid.Column="1" FormKey="{Binding Toggle}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding AnimalSwitchType}" MaxHeight="250"/>
 
         <TextBlock Grid.Row="5" Grid.Column="0" Text="Carcass Message Box"/>
         <plugins:FormKeyPicker Grid.Row="5" Grid.Column="1" FormKey="{Binding CarcassMessageBox}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding CarcassMessageBoxType}" MaxHeight="250"/>
@@ -78,9 +79,9 @@
         <TextBlock Grid.Row="10" Grid.Column="0" Text="Meat"/>
         <plugins:FormKeyPicker Grid.Row="10" Grid.Column="1" FormKey="{Binding Meat}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding MeatType}" MaxHeight="250"/>
 
-        <TextBlock Grid.Row="11" Grid.Column="0" Text="Mats"/>
-        <Button Grid.Row="11" Grid.Column="0" Foreground="LightGreen" VerticalAlignment="Top" HorizontalAlignment="Right" Command="{Binding AddMat}" Margin="0 1 0 0">Add Entry</Button>
-        <ItemsControl Grid.Row="11" Grid.Column="1" ItemsSource="{Binding Mats}">
+        <TextBlock Grid.Row="11" Grid.Column="0" Text="Materials"/>
+        <Button Grid.Row="11" Grid.Column="0" Foreground="LightGreen" VerticalAlignment="Top" HorizontalAlignment="Right" Command="{Binding AddMaterial}" Margin="0 1 0 0">Add Entry</Button>
+        <ItemsControl Grid.Row="11" Grid.Column="1" ItemsSource="{Binding Materials}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border BorderThickness="2" BorderBrush="White" Margin="0 10 0 0">
@@ -115,7 +116,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <StackPanel Orientation="Horizontal">
-                                <Button Foreground="LightGreen" Command="{Binding AddItem}">Add Mat</Button>
+                                <Button Foreground="LightGreen" Command="{Binding AddItem}">Add Material</Button>
                                 <Button Margin="5 0 0 0" Foreground="FireBrick" Command="{Binding DeleteMe}">Remove Entry</Button>
                             </StackPanel>
                         </StackPanel>
@@ -124,7 +125,7 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <TextBlock Grid.Row="12" Grid.Column="0" Text="Negative Treasure"/>
+        <TextBlock Grid.Row="12" Grid.Column="0" Text="Discard"/>
         <plugins:FormKeyMultiPicker MaxHeight="500" Grid.Row="12" Grid.Column="1" MinWidth="150" FormKeys="{Binding NegativeTreasure}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding NegativeTreasureType}" />
 
         <TextBlock Grid.Row="13" Grid.Column="0" Text="Shared Death Items"/>

@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using Noggog.WPF;
 using System.Windows.Input;
 using ReactiveUI;
+using HunterbornExtender.Settings;
 using static System.Windows.Forms.AxHost;
 using System;
 
@@ -20,8 +21,8 @@ public class VM_PluginEntry : ViewModel
         _state = state;
         LinkCache = state.LinkCache;
 
-        AddMat = ReactiveCommand.Create(
-            () => Mats.Add(new(_state.LinkCache, this)));
+        AddMaterial = ReactiveCommand.Create(
+            () => Materials.Add(new(_state.LinkCache, this)));
     }
 
     [Reactive]
@@ -33,7 +34,7 @@ public class VM_PluginEntry : ViewModel
     [Reactive]
     public string SortName { get; set; } = "";
     [Reactive]
-    public FormKey AnimalSwitch { get; set; }
+    public FormKey Toggle { get; set; }
     [Reactive]
     public FormKey CarcassMessageBox { get; set; }
     [Reactive]
@@ -49,9 +50,9 @@ public class VM_PluginEntry : ViewModel
     [Reactive]
     public FormKey Meat { get; set; }
     [Reactive]
-    public ObservableCollection<VM_MatEntry> Mats { get; set; } = new();
+    public ObservableCollection<VM_MaterialEntry> Materials { get; set; } = new();
     [Reactive]
-    public ObservableCollection<FormKey> NegativeTreasure { get; set; } = new();
+    public ObservableCollection<FormKey> Discard { get; set; } = new();
     [Reactive]
     public FormKey SharedDeathItems { get; set; }
     [Reactive]
@@ -72,7 +73,7 @@ public class VM_PluginEntry : ViewModel
     public IEnumerable<Type> VenomType { get; } = typeof(IIngestibleGetter).AsEnumerable();
     public IEnumerable<Type> VoiceType { get; } = typeof(IVoiceTypeGetter).AsEnumerable();
 
-    public ICommand AddMat { get; }
+    public ICommand AddMaterial { get; }
 
     public void LoadFromModel(PluginEntry model)
     {
@@ -80,105 +81,104 @@ public class VM_PluginEntry : ViewModel
         Name = model.Name;
         ProperName = model.ProperName;
         SortName = model.SortName;
-        AnimalSwitch = model.AnimalSwitch;
-        CarcassMessageBox = model.CarcassMessageBox;
+        Toggle = model.Toggle.FormKey;
+        CarcassMessageBox = model.CarcassMessageBox.FormKey;
         CarcassSize = model.CarcassSize;
         CarcassValue = model.CarcassValue;
-        PeltCount = model.PeltCount;
-        FurPlateCount = model.FurPlateCount;
-        Meat = model.Meat;
-        foreach (var dict in model.Mats)
+        PeltCount = model.PeltCount.Select(x => x.ToString()).ToArray();
+        FurPlateCount = model.FurPlateCount.Select(x => x.ToString()).ToArray();
+        Meat = model.Meat.FormKey;
+        foreach (var dict in model.Materials)
         {
-            var matEntry = new VM_MatEntry(LinkCache, this);
+            var matEntry = new VM_MaterialEntry(LinkCache, this);
             matEntry.GetFromModel(dict);
-            Mats.Add(matEntry);
+            Materials.Add(matEntry);
         }
-        NegativeTreasure = new ObservableCollection<FormKey>(model.NegativeTreasure);
-        SharedDeathItems = model.SharedDeathItems;
-        BloodType = model.BloodType;
-        Venom = model.Venom;
-        Voice = model.Voice;
+        Discard = new ObservableCollection<FormKey>(model.Discard.Select(x => x.FormKey));
+        SharedDeathItems = model.SharedDeathItems.FormKey;
+        BloodType = model.BloodType.FormKey;
+        Venom = model.Venom.FormKey;
+        Voice = model.Voice.FormKey;
     }
 
     public PluginEntry DumpToModel()
     {
-        var model = new PluginEntry();
-        model.Type = Type;
-        model.Name = Name;
+        var model = new PluginEntry(Type, Name);
         model.ProperName = ProperName;
         model.SortName = SortName;
-        model.AnimalSwitch = AnimalSwitch;
-        model.CarcassMessageBox = CarcassMessageBox;
+        model.Toggle = Toggle.ToLinkGetter<IGlobalGetter>();
+        model.CarcassMessageBox = CarcassMessageBox.ToLinkGetter<IMessageGetter>();
         model.CarcassSize = CarcassSize;
         model.CarcassValue = CarcassValue;
-        model.PeltCount = PeltCount;
-        model.FurPlateCount = FurPlateCount;
-        model.Meat = Meat;
-        foreach (var entry in Mats)
+        model.PeltCount = PeltCount.Select(x => Convert.ToInt32(x)).ToArray();
+        model.FurPlateCount = FurPlateCount.Select(x => Convert.ToInt32(x)).ToArray();
+        model.Meat = Meat.ToLinkGetter<IItemGetter>();
+        foreach (var entry in Materials)
         {
-            model.Mats.Add(entry.DumpToModel());
+            model.Materials.Add(entry.DumpToModel());
         }
-        model.NegativeTreasure = NegativeTreasure.ToList();
-        model.SharedDeathItems = SharedDeathItems;
-        model.BloodType = BloodType;
-        model.Venom = Venom;
-        model.Voice = Voice;;
+        model.Discard = Discard.Select(x => x.ToLinkGetter<IItemGetter>()).ToList();
+        model.SharedDeathItems = SharedDeathItems.ToLinkGetter<IFormListGetter>();
+        model.BloodType = BloodType.ToLinkGetter<IItemGetter>();
+        model.Venom = Venom.ToLinkGetter<IItemGetter>();
+        model.Voice = Voice.ToLinkGetter<IVoiceTypeGetter>();
         return model;
     }
 }
 
-public class VM_MatEntry : ViewModel
+public class VM_MaterialEntry : ViewModel
 {
     [Reactive]
-    public ObservableCollection<VM_Mat> Items { get; set; } = new();
+    public ObservableCollection<VM_Material> Items { get; set; } = new();
     public ILinkCache LinkCache { get; set; }
     public ICommand AddItem { get; }
     public ICommand DeleteMe { get; }
     public VM_PluginEntry Parent { get; set; }
 
-    public VM_MatEntry(ILinkCache linkCache, VM_PluginEntry parent)
+    public VM_MaterialEntry(ILinkCache linkCache, VM_PluginEntry parent)
     {
         LinkCache = linkCache;
         Parent = parent;
         AddItem = ReactiveCommand.Create(
             () => Items.Add(new(linkCache, this)));
         DeleteMe = ReactiveCommand.Create(
-            () => Parent.Mats.Remove(this));
+            () => Parent.Materials.Remove(this));
     }
 
-    public void GetFromModel(Dictionary<FormKey, int> model)
+    public void GetFromModel(Dictionary<IFormLinkGetter<IItemGetter>, int> model)
     {
         foreach (var key in model.Keys)
         {
-            VM_Mat mat = new(LinkCache, this);
-            mat.Key = key;
+            VM_Material mat = new(LinkCache, this);
+            mat.Key = key.FormKey;
             mat.Value = model[key];
             Items.Add(mat);
         }
     }
 
-    public Dictionary<FormKey, int> DumpToModel()
+    public Dictionary<IFormLinkGetter<IItemGetter>, int> DumpToModel()
     {
-        Dictionary<FormKey, int> model = new();
+        Dictionary<IFormLinkGetter<IItemGetter>, int> model = new();
         foreach (var item in Items)
         {
-            if (!model.ContainsKey(item.Key))
+            var keyLink = item.Key.ToLinkGetter<IItemGetter>();
+            if (!model.ContainsKey(keyLink))
             {
-                model.Add(item.Key, item.Value);
+                model.Add(keyLink, item.Value);
             }
         }
         return model;
     }
 }
 
-public class VM_Mat : ViewModel
+public class VM_Material : ViewModel
 {
     public ILinkCache LinkCache { get; set; }
     public IEnumerable<Type> MatType { get; } = typeof(IMiscItemGetter).AsEnumerable().And(typeof(IIngredientGetter));
-    public VM_MatEntry Parent { get; set; }
+    public VM_MaterialEntry Parent { get; set; }
     public ICommand DeleteMe { get; }
 
-    public VM_Mat(ILinkCache linkCache, VM_MatEntry parent)
+    public VM_Material(ILinkCache linkCache, VM_MaterialEntry parent)
     {
         LinkCache = linkCache;
         Parent = parent;
@@ -192,4 +192,10 @@ public class VM_Mat : ViewModel
     [Reactive]
     public int Value { get; set; } = 1;
 
+}
+
+public enum EntryTypeClone// duplicated here until I can figure out how to reference the one in HunterbornExtender.Settings in xaml
+{
+    Animal,
+    Monster
 }

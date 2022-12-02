@@ -1,4 +1,5 @@
 ﻿namespace HunterbornExtenderUI;
+using HunterbornExtender.Settings;
 
 public class EntryTypeConverter
 {
