@@ -5,6 +5,7 @@ using Noggog;
 using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using HunterbornExtender.Settings;
 
 namespace HunterbornExtenderUI;
 
@@ -18,7 +19,7 @@ public class MainWindowVM : ViewModel
     private readonly VMLoader_DeathItems _vmDeathItemLoader;
     private readonly VM_DeathItemSelectionList _deathItemSelectionList;
 
-    private PatcherSettings _patcherSettings;
+    private Settings _patcherSettings;
 
     [Reactive]
     public object DisplayedSubView { get; set; }
@@ -54,7 +55,7 @@ public class MainWindowVM : ViewModel
         PluginEditorPage = pluginEditorPage;
         DeathItemMenu = deathItemMenu;
 
-        _patcherSettings = PatcherSettings.LoadFromDisk(WelcomePage.SettingsDir); // change this to state.ExtraDataSettingsFolder when it becomes exposed
+        _patcherSettings = PatcherSettingsIO.LoadFromDisk(WelcomePage.SettingsDir); // change this to state.ExtraDataSettingsFolder when it becomes exposed
 
         Init();
 
@@ -68,10 +69,10 @@ public class MainWindowVM : ViewModel
 
         SaveSettings = ReactiveCommand.Create(() =>
         {
-            var settings = PatcherSettings.DumpToSettings(deathItemSelectionList, pluginList);
+            var settings = PatcherSettingsIO.DumpToSettings(deathItemSelectionList, pluginList);
             if (WelcomePage.SettingsDir != string.Empty && System.IO.Directory.Exists(WelcomePage.SettingsDir))
             {
-                settings.SaveToDisk(WelcomePage.SettingsDir);
+                PatcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir, PatcherSettingsIO.DumpToSettings(deathItemSelectionList, pluginList));
                 MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));
             }
             else
@@ -92,6 +93,6 @@ public class MainWindowVM : ViewModel
             _vmDeathItemLoader.GetDeathItemVMs(
                 _deathItemLoader.LoadDeathItemSettings()));
         */
-        DeathItemMenu.Initialize(_patcherSettings.DeathItems);
+        DeathItemMenu.Initialize(_patcherSettings.DeathItemSelections);
     }
 }

@@ -7,6 +7,7 @@ using Mutagen.Bethesda;
 using DynamicData;
 using Noggog;
 using HunterbornExtenderUI.App_Core.Death_Item_Selection;
+using HunterbornExtender.Settings;
 
 namespace HunterbornExtenderUI;
 
@@ -43,10 +44,10 @@ public class VM_DeathItemAssignmentPage : ViewModel
         CreatureTypes.Insert(0, "Skip");
     }
 
-    public void Initialize(List<DeathItemSelection> deathItemSettings)
+    public void Initialize(DeathItemSelection[] deathItemSelections)
     {
         ScanForPluginEntries();
-        ScanForDeathItems(deathItemSettings);
+        ScanForDeathItems(deathItemSelections.ToList());
     }
         
     private void ScanForPluginEntries()

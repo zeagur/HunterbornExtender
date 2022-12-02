@@ -61,4 +61,12 @@
     <PackageReference Include="Noggog.Autofac" Version="2.50.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\HunterbornExtender\HunterbornExtender.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="App Core\Death Item Selection\Models\" />
+  </ItemGroup>
+
 </Project>

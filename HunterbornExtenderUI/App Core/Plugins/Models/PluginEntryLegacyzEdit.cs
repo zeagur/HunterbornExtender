@@ -5,11 +5,12 @@ using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Plugins.Cache;
 using Mutagen.Bethesda.Skyrim;
 using Noggog;
+using HunterbornExtender.Settings;
 using System.Windows.Forms;
 
 namespace HunterbornExtenderUI;
 
-public class PluginEntryLegacyzEdit
+public class PluginEntryLegacyzEdit // do not rename these properties - they correspond to the original zEdit patcher format
 {
     public string type { get; set; } = "";
     public string name { get; set; } = "";
@@ -32,67 +33,61 @@ public class PluginEntryLegacyzEdit
 
     public PluginEntry ToPluginEntry(ILinkCache linkCache)
     {
-        PluginEntry plugin = new();
-        plugin.Type = EntryTypeConverter.EntryStringToEnum(type);
-        plugin.Name = name;
-        plugin.ProperName = properName;
-        plugin.SortName = sortName;
-        if (linkCache.TryResolve<IGlobalGetter>(animalSwitch, out var animalSwitchGetter))
+        PluginEntry entry = new(EntryTypeConverter.EntryStringToEnum(type), name);
+        entry.ProperName = properName;
+        entry.SortName = sortName;
+        if (linkCache.TryResolve<IGlobalGetter>(animalSwitch, out var ToggleGetter))
         {
-            plugin.AnimalSwitch = animalSwitchGetter.FormKey;
+            entry.Toggle = ToggleGetter.ToLinkGetter();
         }
         if (linkCache.TryResolve<IMessageGetter>(carcassMessageBox, out var carcassMessageBoxGetter))
         {
-            plugin.CarcassMessageBox = carcassMessageBoxGetter.FormKey;
+            entry.CarcassMessageBox = carcassMessageBoxGetter.ToLinkGetter();
         }
         if (int.TryParse(carcassSize, out var size))
         {
-            plugin.CarcassSize = Convert.ToInt32(size);
+            entry.CarcassSize = Convert.ToInt32(size);
         }
         else
         {
-            plugin.CarcassSize = 1;
+            entry.CarcassSize = 1;
         }
         if (int.TryParse(carcassWeight, out var weight))
         {
-            plugin.CarcassWeight = Convert.ToInt32(weight);
+            entry.CarcassWeight = Convert.ToInt32(weight);
         }
         else
         {
-            plugin.CarcassWeight = 1;
+            entry.CarcassWeight = 1;
         }
         if (int.TryParse(carcassValue, out var value))
         {
-            plugin.CarcassValue = Convert.ToInt32(value);
+            entry.CarcassValue = Convert.ToInt32(value);
         }
         else
         {
-            plugin.CarcassValue = 1;
+            entry.CarcassValue = 1;
         }
-        plugin.PeltCount = peltCount;
-        plugin.FurPlateCount = furPlateCount;
+        entry.PeltCount = peltCount.Select(x => Convert.ToInt32(x)).ToArray();
+        entry.FurPlateCount = furPlateCount.Select(x => Convert.ToInt32(x)).ToArray();
         if (linkCache.TryResolve<IIngestibleGetter>(meat, out var meatGetter))
         {
-            plugin.Meat = meatGetter.FormKey;
+            entry.Meat = meatGetter.ToLinkGetter();
         }
 
         foreach (var mat in mats)
         {
-            Dictionary<FormKey, int> dict = new();
+            Dictionary<IFormLinkGetter<IItemGetter>, int> dict = new();
             foreach (var keyStr in mat.Keys)
             {
-                if (linkCache.TryResolve<IMiscItemGetter>(keyStr, out var matKeyGetter))
+                if (linkCache.TryResolve<IItemGetter>(keyStr, out var matKeyGetter))
                 {
-                    dict.Add(matKeyGetter.FormKey, mat[keyStr]);
-                }
-                else if (linkCache.TryResolve<IIngredientGetter>(keyStr, out var matKeyGetter2))
-                {
-                    dict.Add(matKeyGetter2.FormKey, mat[keyStr]);
+                    dict.Add(matKeyGetter.ToLinkGetter(), mat[keyStr]);
                 }
             }
             if (dict.Keys.Any())
             {
-                plugin.Mats.Add(dict);
+                entry.Materials.Add(dict);
             }
         }
 
@@ -100,30 +95,30 @@ public class PluginEntryLegacyzEdit
         {
             if (linkCache.TryResolve<IIngestibleGetter>(nt, out var ntGetter))
             {
-                plugin.NegativeTreasure.Add(ntGetter.FormKey);
+                entry.Discard.Add(ntGetter.FormKey);
             }
         }
 
-        if (linkCache.TryResolve<ILeveledItem>(sharedDeathItems, out var sharedDeathItemGetter))
+        if (linkCache.TryResolve<IFormListGetter>(sharedDeathItems, out var sharedDeathItemGetter))
         {
-            plugin.SharedDeathItems = sharedDeathItemGetter.FormKey;
+            entry.SharedDeathItems = sharedDeathItemGetter.ToLinkGetter();
         }
 
-        if (linkCache.TryResolve<IIngestibleGetter>(bloodType, out var bloodTypeGetter))
+        if (linkCache.TryResolve<IItemGetter>(bloodType, out var bloodTypeGetter))
         {
-            plugin.BloodType = bloodTypeGetter.FormKey;
+            entry.BloodType = bloodTypeGetter.ToLinkGetter();
         }
 
-        if (linkCache.TryResolve<IIngestibleGetter>(venom, out var venomGetter))
+        if (linkCache.TryResolve<IItemGetter>(venom, out var venomGetter))
         {
-            plugin.Venom = venomGetter.FormKey;
+            entry.Venom = venomGetter.ToLinkGetter();
         }
 
         if (linkCache.TryResolve<IVoiceTypeGetter>(voice, out var voiceGetter))
         {
-            plugin.Voice = voiceGetter.FormKey;
+            entry.Voice = voiceGetter.ToLinkGetter();
         }
 
-        return plugin;
+        return entry;
     }
 }

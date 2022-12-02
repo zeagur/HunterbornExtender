@@ -15,10 +15,10 @@ using System.Text.RegularExpressions;
 using Mutagen.Bethesda.Plugins.Records;
 using Microsoft.CodeAnalysis;
 using DynamicData;
-using HunterbornExtenderUI;
-using SynthEBD;
+using HunterbornExtender.Settings;
 using Mutagen.Bethesda.Plugins.Exceptions;
-using System.Xml.XPath;
+using AssemblyVersionGenerator;
+
 
 #pragma warning disable IDE1006 // Naming Styles
 
@@ -83,6 +83,17 @@ sealed internal class Program
         //
         // However we do it, this is where we get a List<PluginEntry> from the addon jsons.
         //
+        var settings = _settings.Value;
+
+        // link death item selection to corresponding creature entry
+        foreach (var deathItem in settings.DeathItemSelections)
+        {
+            deathItem.Selection = settings.CreatureData.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault();
+        }
+
+        Console.WriteLine("Imported death plugin support for {0} creatures", settings.CreatureData.Count);
+        Console.WriteLine("Imported {0} death item selections", settings.DeathItemSelections.Length);
+
         Console.WriteLine("========================");
         Console.WriteLine("Importing plugins.");
         var plugins = LegacyConverter.ImportAndConvert(state);

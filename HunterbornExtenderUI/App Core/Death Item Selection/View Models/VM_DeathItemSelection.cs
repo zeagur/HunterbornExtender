@@ -1,6 +1,7 @@
 ﻿using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Skyrim;
 using System.Collections.ObjectModel;
+using HunterbornExtender.Settings;
 
 namespace HunterbornExtenderUI
 {
