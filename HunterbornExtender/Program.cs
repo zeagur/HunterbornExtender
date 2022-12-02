@@ -477,6 +477,9 @@ sealed internal class Program
         var pelts = CreatePelts(data, std);
         var deathDescriptor = CreateDeathDescriptor(data, std, pelts, mats);
 
+        std.GetCCFor(data).RaceIndex.Data.Add(data.InternalName);
+
+
         if (_settings.Value.DebuggingMode)
         {
             Console.WriteLine($"\tCreated new forms with {data.Prototype.Type} plugin {data.Prototype}.");
