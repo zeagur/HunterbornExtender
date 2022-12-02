@@ -18,6 +18,7 @@ using DynamicData;
 using HunterbornExtenderUI;
 using SynthEBD;
 using Mutagen.Bethesda.Plugins.Exceptions;
+using System.Xml.XPath;
 
 #pragma warning disable IDE1006 // Naming Styles
 
@@ -31,18 +32,6 @@ sealed internal class Program
     //static private Dictionary<PluginEntry, IMiscItemGetter> PluginTokens = new();
     //static private List<DeathItemSelection> MonsterTypes = new();
     //static private List<DeathItemSelection> AnimalTypes = new();
-
-    static readonly string Divider = "================================================";
-    static String CreateTitle(String title)
-    {
-        int dividerLength = Divider.Length;
-        int titleLength = title.Length;
-        int leftLength = (dividerLength - titleLength) / 2;
-        int rightLength = (dividerLength - titleLength + 1) / 2;
-        String left = Divider.Substring(0, leftLength);
-        String right = Divider.Substring(0, rightLength);
-        return $"{left}{title}{right}";
-    }
 
     record CreatureData(INpcGetter Target, ILeveledItemGetter DeathItem, String InternalName, PluginEntry Prototype, bool IsAnimal);
     static readonly Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses = new();
@@ -90,11 +79,18 @@ sealed internal class Program
             return;
         }*/
 
+
+        //
+        // However we do it, this is where we get a List<PluginEntry> from the addon jsons.
+        //
         Console.WriteLine("========================");
         Console.WriteLine("Importing plugins.");
         var plugins = LegacyConverter.ImportAndConvert(state);
         Console.WriteLine($" o Success:{plugins.Count} creature types imported.");
 
+        //
+        // Resolve and locate all the FormLists and ScriptProperties that need patching.
+        // 
         StandardRecords std;
 
         try
@@ -119,6 +115,10 @@ sealed internal class Program
             return;
         }
 
+        //
+        // Create a List<PluginEntry> for the hard-coded creatures.
+        // Merge it into the previous list.
+        //
         List<PluginEntry> corePlugins;
         
         try
@@ -154,62 +154,72 @@ sealed internal class Program
             return;
         }
 
-        //List<PluginEntry> plugins = new(jsonData.CreatureData);
-
+        //
+        // This should come from the UI, but for now this nasty function will generate 
+        // a bunch of selections.
+        //
         var PICKS = MakeBootstrapSelection(plugins, state);
 
-        foreach (var dis in PICKS.Keys)
-        {
-            Console.WriteLine(CreateTitle(dis.CreatureEntryName));
 
-            PluginEntry? prototype = PICKS[dis];
+        foreach (var selection in PICKS.Keys)
+        {
+            var name = selection.CreatureEntryName;
+            Console.WriteLine(CreateTitle(name));
+
+            PluginEntry? prototype = PICKS[selection];
 
             // null is used to indicate "SKIP".
             if (prototype == null)
             {
-                Console.WriteLine($"\tSkipped {dis.CreatureEntryName}: User selection is SKIP.");
+                Console.WriteLine($"\tSkipped {name}: User selection is SKIP.");
                 continue;
             }
+
+            // Filter the NPCs.
+            var NPCs = selection.AssignedNPCs
+                .Where(npc => npc.EditorID != null && !ForbiddenNpcEditorIds
+                .Contains(npc.EditorID))
+                .ToList();
 
             // Why does the original patcher scan ALL the npcs??
             //p.Key.AssignedNPCs.ForEach(npc =>
             //dis.AssignedNPCs.Take(1).ForEach(npc =>
-            if (dis.AssignedNPCs.Count == 0)
+            if (NPCs.Count == 0)
             {
-                Console.WriteLine($"\tSkipped {dis.CreatureEntryName}: No creatures found.");
+                Console.WriteLine($"\tSkipped {name}: No creatures found.");
                 continue;
             }
 
             try
             {
-                var data = CreateCreatureData(dis.AssignedNPCs.First(), prototype, std);
+                var data = CreateCreatureData(NPCs.First(), prototype, std);
                 Console.WriteLine($"\tCreating creature Data structure.");
 
-                if (BlacklistedDeathItems.Contains(data.DeathItem.ToLink()))
+                if (ForbiddenDeathItems.Contains(data.DeathItem.ToLink()))
                 {
-                    Console.WriteLine($"\t\tSkipped {dis.CreatureEntryName}: DeathItem blacklisted.");
+                    Console.WriteLine($"\t\tSkipped {name}: DeathItem blacklisted.");
                 }
                 else if (KnownDeathItems.Contains(data.DeathItem))
                 {
-                    Console.WriteLine($"\t\tSkipped {dis.CreatureEntryName}: DeathItem already processed.");
+                    Console.WriteLine($"\t\tSkipped {name}: DeathItem already processed.");
                 } 
                 else
                 {
-                    AddRecord(data, std);
                     KnownDeathItems.Add(data.DeathItem);
+                    AddRecord(data, std);
                 }
             }
             catch (DeathItemAlreadyAddedException)
             {
-                Console.WriteLine($"\tSkipped {dis.CreatureEntryName}: DeathItem already processed.");
+                Console.WriteLine($"\tSkipped {name}: DeathItem already processed.");
             }
             catch (NoDeathItemException)
             {
-                Console.WriteLine($"\tSkipped {dis.CreatureEntryName}: No DeathItem.");
+                Console.WriteLine($"\tSkipped {name}: No DeathItem.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\tSkipped {dis.CreatureEntryName}: {ex.Message}");
+                Console.WriteLine($"\tSkipped {name}: {ex.Message}");
             }
         }
     }
@@ -218,7 +228,7 @@ sealed internal class Program
         Dictionary<DeathItemSelection, Dictionary<PluginEntry, int>> PICKS_COLLECTION = new();
         Dictionary<ILeveledItemGetter, DeathItemSelection> KNOWN = new();
 
-        foreach (var npcGetter in state.LoadOrder.PriorityOrder.Npc().WinningOverrides())
+        foreach (var npcGetter in state.LoadOrder.PriorityOrder.Npc().WinningOverrides().Where(IsCreature))
         {
             var edid = npcGetter.EditorID;
             if (edid == null) continue;
@@ -742,6 +752,12 @@ sealed internal class Program
         return deathDescriptor;
     }
 
+    /// <summary>
+    /// To be recognized as a creature by the patcher, an Npc must not belong to any of these factions.
+    /// 
+    /// @TODO Addons should be allowed to add to this list.
+    /// 
+    /// </summary>
     readonly static private List<FormLink<IFactionGetter>> ForbiddenFactions = new(new FormLink<IFactionGetter>[] {
         Dawnguard.Faction.DLC1VampireFaction,
         Dragonborn.Faction.DLC2AshSpawnFaction,
@@ -754,7 +770,16 @@ sealed internal class Program
         Skyrim.Faction.WispFaction
     });
 
-    readonly static private List<FormLink<IVoiceTypeGetter>> AllowedVoice = new(new FormLink<IVoiceTypeGetter>[]{
+    /// <summary>
+    /// Voices of creatures. To be recognized as a creature by the patcher, an Npc must have a voiceType from
+    /// this list.
+    /// 
+    /// VoiceTypes from addons will get added to this list at runtime.
+    /// Isn't that forward thinking? Why don't the other Forbidden/Allowed lists get
+    /// populated from addons?
+    /// 
+    /// </summary>
+    readonly static private HashSet<IFormLinkGetter<IVoiceTypeGetter>> AllowedVoices = new(new IFormLinkGetter<IVoiceTypeGetter>[]{
         Skyrim.VoiceType.CrBearVoice,
         Skyrim.VoiceType.CrChickenVoice,
         Skyrim.VoiceType.CrCowVoice,
@@ -783,8 +808,32 @@ sealed internal class Program
         Dawnguard.VoiceType.CrChaurusInsectVoice
     });
 
-    static readonly private List<String> BlacklistedRecords = new() { "HISLCBlackWolf", "BSKEncRat" };
+    /// <summary>
+    /// A list of EditorIDs of creatures that should never be processed.
+    /// I wish this was explained.
+    /// 
+    /// @TODO Addons should be allowed to add to this list.
+    /// 
+    /// </summary>
+    static readonly private List<String> ForbiddenNpcEditorIds = new() { "HISLCBlackWolf", "BSKEncRat" };
 
+    /// <summary>
+    /// A list of DeathItems that should never be processed. 
+    /// Creatures with one of these DeathItems should be ignored by Hunterborn and by this patcher.
+    /// 
+    /// @TODO Addons should be allowed to add to this list.
+    /// 
+    /// </summary>
+    private static readonly List<FormLink<ILeveledItemGetter>> ForbiddenDeathItems = new() {
+        Skyrim.LeveledItem.DeathItemDragonBonesOnly,
+        Skyrim.LeveledItem.DeathItemVampire,
+        Skyrim.LeveledItem.DeathItemForsworn,
+        Dawnguard.LeveledItem.DLC1DeathItemDragon06,
+        Dawnguard.LeveledItem.DLC1DeathItemDragon07,
+        new(new FormKey(new("Skyrim Immersive Creatures Special Edition", type : ModType.Plugin), 0x11B217))
+    };
+
+    /*
     static readonly private Dictionary<string, string> SortingNames = new() {
         { "BearCave", "Bear, Cave" },
         { "BearSnow", "Bear, Snow" },
@@ -805,16 +854,6 @@ sealed internal class Program
         { "TrollFrost", "Troll, Frost" }
     };
 
-    private static readonly List<FormLink<ILeveledItemGetter>> BlacklistedDeathItems = new(new FormLink<ILeveledItemGetter>[] {
-        Skyrim.LeveledItem.DeathItemDragonBonesOnly,
-        Skyrim.LeveledItem.DeathItemVampire,
-        Skyrim.LeveledItem.DeathItemForsworn,
-        Dawnguard.LeveledItem.DLC1DeathItemDragon06,
-        Dawnguard.LeveledItem.DLC1DeathItemDragon07,
-        new(new FormKey(new("Skyrim Immersive Creatures Special Edition", type : ModType.Plugin), 0x11B217))
-    });
-
-    /*
     static private Dictionary<string, string> VanillaToCaco = new Dictionary<string, string>() {
         { "_DS_Food_Raw_Bear", "CACO_FoodMeatBear" },
             { "_DS_Food_Raw_Chaurus", "CACO_FoodMeatChaurusMeat" },
@@ -849,58 +888,36 @@ sealed internal class Program
             { "HumanFlesh", "CACO_FoodMeatHumanoidFlesh" }
     };
     */
-    
+
     /*
-    static private bool HasFaction(INpcGetter creature, List<FormLink<IFactionGetter>> factions, StandardRecords std) {
-        return !creature.Factions
-            .Select(rank => rank.Faction.Resolve<IFactionGetter>(std.LinkCache))
-            .Where(faction => faction != null && factions.Contains(faction.ToLink()))
-            .Any();
-    }
-
-    static private bool HasVoice(INpcGetter creature, List<FormLink<IVoiceTypeGetter>> voices)
-    {
-        var creatureVoice = creature.Voice;
-        return voices.Any(v => v.Equals(creatureVoice));
-    }
-
-    static private bool IsCreature(INpcGetter actor, StandardRecords std) {
-        var deathItem = actor.DeathItem.Resolve(std.LinkCache);
-        var edid = actor.EditorID;
-        var edidLink = edid != null ? new EDIDLink<IRaceGetter>(edid) : null;
-
-        return !HasFaction(actor, ForbiddenFactions, std)
-            && HasVoice(actor, AllowedVoice)
-            && deathItem != null
-            && !std.CreatureClasses.Any(cls => cls.KnownDeathItems.Contains(deathItem))
-            && (edid == null || !BlacklistedRecords.Contains(edid))
-            && !BlacklistedDeathItems.Any(item => item.Equals(deathItem));
-    }
     */
 
-    /// <summary>
-    /// Copies the contents of the pre-existing deathitems formlists into Lists.
-    /// </summary>
-    /// <param name="cache"></param>
-    static private IEnumerable<ILeveledItemGetter> GetKnownDeathItemsAnimals(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
-    {
-        return _DS_FL_DeathItems.Resolve(linkCache).Items
-            .OfType<IFormLinkGetter<ILeveledItemGetter>>()
-            .Select(r => r.TryResolve(linkCache))
-            .Where(r => r != null)
-            .Select(r => r!);
-    }
-    static private IEnumerable<ILeveledItemGetter> GetKnownDeathItemsMonsters(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
-    {
-        return _DS_FL_DeathItems_Monsters.Resolve(linkCache).Items
-            .OfType<IFormLinkGetter<ILeveledItemGetter>>()
-            .Select(r => r.TryResolve(linkCache))
-            .Where(r => r != null)
-            .Select(r => r!);
+    static private bool IsCreature(INpcGetter actor) {
+        var deathItem = actor.DeathItem;
+        var edid = actor.EditorID;
+
+        //var edidLink = edid != null ? new EDIDLink<IRaceGetter>(edid) : null;
+
+        if (edid != null && HasForbiddenEditorId(edid)) return false;
+        else if (deathItem == null) return false;
+        else if (HasForbiddenFaction(actor)) return false;
+        else if (HasForbiddenDeathItem(deathItem)) return false;
+        else if (!HasAllowedVoice(actor)) return false;
+        //else if (!KnownDeathItems.Contains(deathItem)) return false;
+        else return true;
     }
 
+    static private bool HasForbiddenEditorId(String editorId) => ForbiddenNpcEditorIds.Any(edid => edid.EqualsIgnoreCase(editorId));
+
+    static private bool HasForbiddenFaction(INpcGetter creature) =>
+        creature.Factions.Where(placement => ForbiddenFactions.Contains(placement.Faction)).Any();
+
+    static private bool HasAllowedVoice(INpcGetter creature) => AllowedVoices.Contains(creature.Voice);
+
+    static private bool HasForbiddenDeathItem(IFormLinkGetter<ILeveledItemGetter> deathItem) => ForbiddenDeathItems.Contains(deathItem);
+
     /// <summary>
-    /// The quest and formlists needed by the patching methods, already resolved.
+    /// The quest and formlists needed by the patching methods, resolved and ready.
     /// </summary>
     readonly record struct StandardRecords(
         Quest _DS_Hunterborn,
@@ -910,23 +927,30 @@ sealed internal class Program
         MonsterClass Monsters,
         List<CreatureClass> CreatureClasses)
     {
-        public CreatureClass GetCCFor(EntryType t)
-        {
-            return t switch
-            {
-                EntryType.Animal => Animals,
-                EntryType.Monster => Monsters,
-                _ => throw new InvalidOperationException("Unknown CreatureClass requested."),
-            };
-        }
 
-        public CreatureClass GetCCFor(CreatureData d) 
-        {
-            return GetCCFor(d.Prototype.Type);
-        }
+        /// <summary>
+        /// Retrieves the CreatureClass for a specified CreatureData.
+        /// </summary>
+        /// <param name="d">The CreatureData whose CreatureClass should be returned.</param>
+        /// <returns>The CreatureClass.</returns>
+        public CreatureClass GetCCFor(CreatureData d) => GetCCFor(d.Prototype.Type);
 
+        /// <summary>
+        /// Retrieves the CreatureClass for a specified EntryType.
+        /// </summary>
+        /// <param name="d">The EntryType whose CreatureClass should be returned.</param>
+        /// <returns>The CreatureClass.</returns>
+        public CreatureClass GetCCFor(EntryType t) => t switch
+        {
+            EntryType.Animal => Animals,
+            EntryType.Monster => Monsters,
+            _ => throw new InvalidOperationException("Unknown CreatureClass requested."),
+        };
     }
 
+    /// <summary>
+    /// FormLists and script properties needed for patching creatures.
+    /// </summary>
     record CreatureClass(
         //List<ILeveledItemGetter> KnownDeathItems,
         FormList _DS_FL_Mats__Lists,
@@ -945,10 +969,18 @@ sealed internal class Program
         ScriptIntListProperty CarcassSizes
         );
 
+    /// <summary>
+    /// FormLists and script properties needed for patching Animals,
+    /// which is just the FormList of carcasses.
+    /// </summary>
     record AnimalClass(
         CreatureClass proto,
         FormList _DS_FL_CarcassObjects) : CreatureClass(proto);
 
+    /// <summary>
+    /// FormLists and script properties needed for patching Monsters,
+    /// which includes blood, venom, and discards.
+    /// </summary>
     record MonsterClass(
         CreatureClass proto, 
         ScriptObjectListProperty BloodItems, 
@@ -1069,71 +1101,34 @@ sealed internal class Program
         return property;
     }
 
-    static Func<ScriptEntry, bool> ScriptFilter(String name)
-    {
-        return (ScriptEntry s) => EqualsIgnoreCase(name, s?.Name);
-    }
-
-    static Func<ScriptProperty, bool> PropertyFilter(String name)
-    {
-        return (ScriptProperty s) => EqualsIgnoreCase(name, s?.Name);
-    }
-
-    static bool EqualsIgnoreCase(String? s1, String? s2)
-    {
-        if (s1 == s2) return true;
-        else if (s1 == null || s2 == null) return false;
-        else return s1.ToLower().Equals(s2.ToLower());
-    }
-
+    /// <summary>
+    /// A predicate for matching scripts by name.
+    /// </summary>
+    /// <param name="name">The name to match.</param>
+    /// <returns>A predicate that matches the specified name.</returns>
+    /// 
+    static Func<ScriptEntry, bool> ScriptFilter(String name) => (ScriptEntry s) => name.EqualsIgnoreCase(s?.Name);
 
     /// <summary>
-    /// Scans a plugin for all records of a given type and outputs named FormLink definitions for them.
-    /// 
-    /// They take the general form:
-    /// static readonly public ModKey MY_MOD = new ModKey(FILENAME, ModType.Plugin);
-    /// static readonly public FormLink<IMiscItemGetter> EDITORID = new (new FormKey(MY_MOD, 0x000000));
-    /// 
+    /// A predicate for matching script properties by name.
     /// </summary>
-    /// <typeparam name="T">The type of record to scan and make FormLink definitions for.</typeparam>
-    /// <param name="filename">The name of the mod to scan.</param>
-
-    public static void PrintFormKeysDefinitions<T>(String filename, IPatcherState<ISkyrimMod, ISkyrimModGetter> state) where T : IMajorRecordGetter
-    {
-        state.LoadOrder.TryGetIfEnabledAndExists(new ModKey(filename, ModType.Plugin), out var mod);
-        var group = mod?.GetTopLevelGroup<T>();
-        if (mod == null || group == null || group.Count == 0) return;
-
-        String modname = $"{Regex.Replace(filename.ToUpper(), "[^a-zA-Z0-9_]", "")}";
-        String typeName = typeof(T).FullName ?? "TYPENAME";
-
-        System.Console.WriteLine($"static readonly public ModKey {modname} = new ModKey(\"{filename}\"), ModType.Plugin);");
-
-        group.Where(rec => rec.EditorID != null).ForEach(rec => {
-            var edid = rec.EditorID;
-            var formID = rec.FormKey.ID.ToString("x");
-            Console.WriteLine($"static readonly public FormLink<I{typeName}Getter> {edid} = new (new FormKey({modname}, 0x{formID}));");
-        });
-
-    }
+    /// <param name="name">The name to match.</param>
+    /// <returns>A predicate that matches the specified name.</returns>
+    /// 
+    static Func<ScriptProperty, bool> PropertyFilter(String name) => (ScriptProperty s) => name.EqualsIgnoreCase(s?.Name);
 
     /// <summary>
-    /// Convenience method for making entries for a LeveledItem.
+    /// Convenience method for creating new LeveledItemEntry.
+    /// No extra data is added.
     /// </summary>
-    /// 
-    static LeveledItemEntry CreateLeveledItemEntry(IFormLink<IItemGetter> item, int level, int count)
-    {
-        return new LeveledItemEntry
-        {
-            Data = new LeveledItemEntryData
-            {
-                Reference = item,
-                Level = (short)level,
-                Count = (short)count
-            }
-        };
-    }
-
+    /// <param name="item">The item.</param>
+    /// <param name="level">The player level.</param>
+    /// <param name="count">The item count.</param>
+    /// <returns></returns>
+    static LeveledItemEntry CreateLeveledItemEntry(IFormLink<IItemGetter> item, int level, int count) =>
+        new LeveledItemEntry {Data = new LeveledItemEntryData { Reference = item, Level = (short)level, Count = (short)count }};
+    
+    /*
     readonly static private Dictionary<string, string> NameSubstitutions = new() {
         { "BearCave", "Bear, Cave" },
         { "BearSnow", "Bear, Snow" },
@@ -1152,8 +1147,9 @@ sealed internal class Program
         { "SabrecatVale", "Sabrecat, Vale" },
         { "WolfIce", "Wolf, Ice" },
         { "TrollFrost", "Troll, Frost" }
-    };
+    };*/
 
+    /*
     readonly static private List<String> DeathItemNameMatches = new(new String[] {
         "Werebear",
         "Bear",
@@ -1194,35 +1190,134 @@ sealed internal class Program
         "Werewolf",
         "WolfIce",
         "Wolf"
-    });
+    });*/
 
 
+    /// <summary>
+    /// For printing dividers in the console output.
+    /// </summary>
+    static private readonly string Divider = "====================================================";
+
+    /// <summary>
+    /// For printing titled-dividers in the console output.
+    /// </summary>
+    static String CreateTitle(String title)
+    {
+        int dividerLength = Divider.Length;
+        int titleLength = title.Length;
+        int leftLength = (dividerLength - titleLength) / 2;
+        int rightLength = (dividerLength - titleLength + 1) / 2;
+        String left = Divider.Substring(0, leftLength);
+        String right = Divider.Substring(0, rightLength);
+        return $"{left}{title}{right}";
+    }
+
+    /// <summary>
+    /// Scans a plugin for all records of a given type and outputs named FormLink definitions for them.
+    /// 
+    /// They take the general form:
+    /// static readonly public ModKey MY_MOD = new ModKey(FILENAME, ModType.Plugin);
+    /// static readonly public FormLink<IMiscItemGetter> EDITORID = new (new FormKey(MY_MOD, 0x000000));
+    /// 
+    /// </summary>
+    /// <typeparam name="T">The type of record to scan and make FormLink definitions for.</typeparam>
+    /// <param name="filename">The name of the mod to scan.</param>
+    /// <param name="state">The patcher state.</param>
+    /// 
+    public static void PrintFormKeysDefinitions<T>(String filename, IPatcherState<ISkyrimMod, ISkyrimModGetter> state) where T : IMajorRecordGetter
+    {
+        state.LoadOrder.TryGetIfEnabledAndExists(new ModKey(filename, ModType.Plugin), out var mod);
+        var group = mod?.GetTopLevelGroup<T>();
+        if (mod == null || group == null || group.Count == 0) return;
+
+        String modname = $"{Regex.Replace(filename.ToUpper(), "[^a-zA-Z0-9_]", "")}";
+        String typeName = typeof(T).FullName ?? "TYPENAME";
+
+        System.Console.WriteLine($"static readonly public ModKey {modname} = new ModKey(\"{filename}\"), ModType.Plugin);");
+
+        group.Where(rec => rec.EditorID != null).ForEach(rec => {
+            var edid = rec.EditorID;
+            var formID = rec.FormKey.ID.ToString("x");
+            Console.WriteLine($"static readonly public FormLink<I{typeName}Getter> {edid} = new (new FormKey({modname}, 0x{formID}));");
+        });
+
+    }
+
+    /// <summary>
+    /// Thrown to indicate that an Npc has no DeathItem and therefore can't be processed by Hunterborn.
+    /// @TODO Create a PO3-enhanced Taxonomy spell that can add DeathItems to creatures.
+    /// </summary>
     sealed class NoDeathItemException : Exception
     {
         public NoDeathItemException(FormKey form) : base($"No DeathItem: {form}") { }
     }
 
+    /// <summary>
+    /// Thrown to indicate that an Npc's DeathItem has already been processed. 
+    /// </summary>
     sealed class DeathItemAlreadyAddedException : Exception
     {
         public DeathItemAlreadyAddedException(FormKey form) : base($"DeathItem already processed: {form}") { }
     }
 
+    /// <summary>
+    /// Thrown to indicate that one of the forms in Hunterborn.esp couldn't be loaded.
+    /// If this happens then something is terribly wrong with Hunterborn.esp.
+    /// </summary>
     sealed class CoreRecordMissing : Exception
     {
-        public CoreRecordMissing(IFormLinkGetter<ISkyrimMajorRecordGetter> form) : base($"Missing core record: {form}") { }
+        public CoreRecordMissing(IFormLinkGetter<ISkyrimMajorRecordGetter> form) : base($"Missing core record: {form} from Hunterborn.esp.") {
+        }
     }
 
-    sealed class AddonRecordMissing : Exception
-    {
-        public AddonRecordMissing(FormKey form) : base($"Missing addon record: {form}") { }
-    }
-
+    /// <summary>
+    /// Thrown to indicate that one of the scripts in the main Hunterborn quest couldn't be found.
+    /// If this happens then something is terribly wrong with Hunterborn.esp.
+    /// </summary>
     sealed class ScriptMissing : Exception    {
         public ScriptMissing(String questname, String scriptName) : base($"Missing script: {questname}.{scriptName}") { }
     }
+
+    /// <summary>
+    /// Thrown to indicate that one of the properties on one of the scripts in the main Hunterborn quest couldn't be found.
+    /// If this happens then something is terribly wrong with Hunterborn.esp.
+    /// </summary>
     sealed class PropertyMissing : Exception
     {
         public PropertyMissing(String questname, String scriptName, String propertyName) : base($"Missing property: {questname}.{scriptName}.{propertyName}") { }
     }
 
 }
+
+/// <summary>
+/// Adds an EqualsIgnoreCase method to String.
+/// </summary>
+public static class StringEqualsIgnoreCase
+{
+    /// <summary>
+    /// Equivalent to s1.ToLower().Equals(s2.ToLower()) with identity and null checking.
+    /// </summary>
+    public static bool EqualsIgnoreCase(this String s1, String? s2)
+    {
+        if (s1 == s2) return true;
+        else if (s1 == null || s2 == null) return false;
+        else return s1.ToLower().Equals(s2.ToLower());
+    }
+
+}
+
+/// <summary>
+/// Adds pretty-printing methods to lists, arrays, dictionaries, and lists of dictionaries.
+/// </summary>
+public static class GenericPrettyPrinting
+{
+    public static string Pretty<T>(this T[] array) where T : notnull => "[" + string.Join(", ", array) + "]";
+
+    public static string Pretty<T>(this List<T> list) where T : notnull => "[" + string.Join(", ", list) + "]";
+
+    public static string Pretty<S, T>(this Dictionary<S, T> dict) where S : notnull => "{" + string.Join(", ", dict) + "}";
+
+    public static string Pretty<S, T>(this List<Dictionary<S, T>> listOfDicts) where S : notnull => "[" + string.Join(", ", listOfDicts.Select(l => l.PPrint())) + "]";
+
+}
+
