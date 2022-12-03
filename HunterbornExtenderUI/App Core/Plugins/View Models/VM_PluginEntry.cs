@@ -103,7 +103,7 @@ public class VM_PluginEntry : ViewModel
 
     public PluginEntry DumpToModel()
     {
-        var model = new PluginEntry(Type, Name);
+        var model = new AddonPluginEntry(Type, Name);
         model.ProperName = ProperName;
         model.SortName = SortName;
         model.Toggle = Toggle.ToLinkGetter<IGlobalGetter>();

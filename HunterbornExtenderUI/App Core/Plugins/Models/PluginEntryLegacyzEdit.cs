@@ -33,7 +33,7 @@ public class PluginEntryLegacyzEdit // do not rename these properties - they cor
 
     public PluginEntry ToPluginEntry(ILinkCache linkCache)
     {
-        PluginEntry entry = new(EntryTypeConverter.EntryStringToEnum(type), name);
+        AddonPluginEntry entry = new(EntryTypeConverter.EntryStringToEnum(type), name);
         entry.ProperName = properName;
         entry.SortName = sortName;
         if (linkCache.TryResolve<IGlobalGetter>(animalSwitch, out var ToggleGetter))
