@@ -87,7 +87,7 @@ public class PluginEntryLegacyzEdit // do not rename these properties - they cor
             }
             if (dict.Keys.Any())
             {
-                entry.Materials.Add(dict);
+                entry.Materials.Add(new MaterialLevel() { Materials = dict});
             }
         }
 

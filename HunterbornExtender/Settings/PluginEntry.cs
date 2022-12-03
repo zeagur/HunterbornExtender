@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace HunterbornExtender.Settings
 {
-
     abstract public class PluginEntry
     {
         public EntryType Type { get; set; } = EntryType.Animal;
@@ -23,7 +22,7 @@ namespace HunterbornExtender.Settings
         public int CarcassValue { get; set; } = 10;
         public int[] PeltCount { get; set; } = new int[] { 1, 1, 1, 1 };
         public int[] FurPlateCount { get; set; } = new int[] { 1, 1, 1, 1 };
-        public List<Dictionary<IFormLinkGetter<IItemGetter>, int>> Materials { get; set; } = new();
+        public List<MaterialLevel> Materials { get; set; } = new();
         public List<IFormLinkGetter<IItemGetter>> Discard { get; set; } = new();
         public IFormLinkGetter<IFormListGetter> SharedDeathItems { get; set; } = new FormLink<IFormListGetter>();
         public IFormLinkGetter<IItemGetter> BloodType { get; set; } = new FormLink<IItemGetter>();
@@ -99,4 +98,10 @@ namespace HunterbornExtender.Settings
         }
 
     }
+
+    public sealed class MaterialLevel
+    {
+        public Dictionary<IFormLinkGetter<IItemGetter>, int> Materials { get; set; } = new();
+    }
+
 }

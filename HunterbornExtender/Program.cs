@@ -793,7 +793,7 @@ sealed internal class Program
             mat.EditorID = $"{mats.EditorID}{index:D2}";
             var entries = mat.Entries = new();
 
-            foreach (var subTemplate in template) {
+            foreach (var subTemplate in template.Materials) {
                 var item = new FormLink<IItemGetter>(subTemplate.Key.FormKey);
                 entries.Add(CreateLeveledItemEntry(item, 1, subTemplate.Value));
             }
