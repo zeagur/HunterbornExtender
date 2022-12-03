@@ -11,7 +11,7 @@ using HunterbornExtender.Settings;
 
 namespace HunterbornExtenderUI;
 
-public class VM_DeathItemAssignmentPage : ViewModel
+sealed public class VM_DeathItemAssignmentPage : ViewModel
 {
     private StateProvider _stateProvider;
     private VM_PluginList _pluginList;
@@ -70,7 +70,7 @@ public class VM_DeathItemAssignmentPage : ViewModel
         foreach (var npc in _stateProvider.LoadOrder.PriorityOrder.OnlyEnabledAndExisting().WinningOverrides<INpcGetter>().Where(x => x.DeathItem != null))
         {
             var deathItemListFormLink = npc.DeathItem;
-            var existingEntry = deathItemSettings.Where(x => x.DeathItemList.Equals(deathItemListFormLink.FormKey)).FirstOrDefault();
+            var existingEntry = deathItemSettings.Where(x => x.DeathItem.Equals(deathItemListFormLink.FormKey)).FirstOrDefault();
             if (existingEntry != null) 
             {
                 // Record NPC 
@@ -80,7 +80,7 @@ public class VM_DeathItemAssignmentPage : ViewModel
             {
                 // Add new entry
                 var newEntry = new DeathItemSelection();
-                newEntry.DeathItemList = deathItemListFormLink.FormKey;
+                newEntry.DeathItem = deathItemListFormLink.FormKey;
                 newEntry.CreatureEntryName = correspondingCreatureName;
                 newEntry.AssignedNPCs.Add(npc);
                 deathItemSettings.Add(newEntry);

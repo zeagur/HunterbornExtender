@@ -276,7 +276,7 @@ sealed internal class Program
                 {
                     indexer[deathItem] = new DeathItemSelection()
                     {
-                        DeathItemList = deathItem.FormKey,
+                        DeathItem = deathItem.FormKey,
                         CreatureEntryName = deathItem.EditorID ?? npc.EditorID ?? npc.Name?.ToString() ?? Guid.NewGuid().ToString()
                     };
                     selectionWeights[indexer[deathItem]] = new();
@@ -296,13 +296,13 @@ sealed internal class Program
         }
 
         DeathItemSelection[] selections = selectionWeights.Keys.ToArray();
-        Dictionary<FormKey, PluginEntry?> savedSelections = _settings.Value.DeathItemSelections.ToDictionary(v => v.DeathItemList, v => v.Selection);
+        Dictionary<FormKey, PluginEntry?> savedSelections = _settings.Value.DeathItemSelections.ToDictionary(v => v.DeathItem, v => v.Selection);
 
         foreach (var selection in selections)
         {
-            if (_settings.Value.ReuseSelections && savedSelections.ContainsKey(selection.DeathItemList))
+            if (_settings.Value.ReuseSelections && savedSelections.ContainsKey(selection.DeathItem))
             {
-                selection.Selection = savedSelections[selection.DeathItemList];
+                selection.Selection = savedSelections[selection.DeathItem];
                 if (_settings.Value.DebuggingMode) Console.WriteLine($"\t\t\tPreviously selected {selection.Selection}.");
             }
             else

@@ -5,7 +5,7 @@ using HunterbornExtender.Settings;
 
 namespace HunterbornExtenderUI
 {
-    public class VM_DeathItemSelection
+    sealed public class VM_DeathItemSelection
     {
         private StateProvider _state;
         public ILeveledItemGetter? DeathItemList { get; set; }
@@ -22,7 +22,7 @@ namespace HunterbornExtenderUI
 
         public void LoadFromModel(DeathItemSelection model)
         {
-            if (_state.LinkCache.TryResolve<ILeveledItemGetter>(model.DeathItemList, out var deathItemList))
+            if (_state.LinkCache.TryResolve<ILeveledItemGetter>(model.DeathItem, out var deathItemList))
             {
                 DeathItemList = deathItemList;
                 CreatureEntryName = ParentMenu.CreatureTypes.Where(x => x.Equals(model.CreatureEntryName, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? "Skip";
@@ -33,7 +33,7 @@ namespace HunterbornExtenderUI
         public DeathItemSelection DumpToModel()
         {
             DeathItemSelection model = new();
-            model.DeathItemList = DeathItemList?.FormKey ?? FormKey.Null;
+            model.DeathItem = DeathItemList?.FormKey ?? FormKey.Null;
             model.CreatureEntryName = CreatureEntryName;
             return model;
         }
