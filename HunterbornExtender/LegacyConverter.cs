@@ -11,14 +11,14 @@ namespace HunterbornExtender
 {
     sealed public class LegacyConverter
     {
-        static public List<PluginEntry> ImportAndConvert(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        static public List<AddonPluginEntry> ImportAndConvert(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             // LOAD JSONS
             Console.WriteLine($"\tCurrent directory: {Directory.GetCurrentDirectory()}");
             Directory.SetCurrentDirectory("c:\\users\\Mark\\source\\repos\\HunterbornExtender\\HunterbornExtender\\Zedit");
             Console.WriteLine($"\tChanged directory to: {Directory.GetCurrentDirectory()}");
 
-            List<PluginEntry> plugins = new();
+            List<AddonPluginEntry> plugins = new();
             var serializationOptions = new JsonSerializerOptions { WriteIndented = true };
 
             foreach (var fileName in Directory.EnumerateFiles(".", "*.json"))
@@ -40,7 +40,7 @@ namespace HunterbornExtender
             return plugins;
         }
 
-        static List<PluginEntry> ReadFile(String fileName, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        static List<AddonPluginEntry> ReadFile(String fileName, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string jsonString = File.ReadAllText(fileName);
             Console.WriteLine($"\t\t o Successfully read {fileName}");
@@ -52,7 +52,7 @@ namespace HunterbornExtender
                 return new();
             }
 
-            List<PluginEntry> plugins = new();
+            List<AddonPluginEntry> plugins = new();
             foreach (var legacy in jsonLegacy)
             {
                 try
@@ -121,7 +121,7 @@ namespace HunterbornExtender
             public string? voice { get; set; }
             public List<Dictionary<string, int>> mats { get; set; } = new();
 
-            public PluginEntry ToPlugin(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+            public AddonPluginEntry ToPlugin(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
             {
                 var materials = mats.Select(lvl => {
                     Dictionary<IFormLinkGetter<IItemGetter>, int> Materials_Level = new();
@@ -133,7 +133,7 @@ namespace HunterbornExtender
                     return Materials_Level;
                 }).ToList();
 
-                PluginEntry plugin = new(type.ContainsInsensitive("anim") ? EntryType.Animal : EntryType.Monster, name);
+                AddonPluginEntry plugin = new(type.ContainsInsensitive("anim") ? EntryType.Animal : EntryType.Monster, name);
                 plugin.ProperName = properName ?? name;
                 plugin.SortName = sortName ?? name;
                 plugin.Toggle = animalSwitch.IsNullOrWhitespace() ? new FormLink<IGlobalGetter>() : state.LinkCache.Resolve<IGlobalGetter>(animalSwitch).ToLink();
