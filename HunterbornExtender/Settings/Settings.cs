@@ -4,7 +4,7 @@ sealed public class Settings
 {
     public List<PluginEntry> CreatureData { get; set; } = new();
 
-    public DeathItemSelection[] DeathItemSelections { get; set; } = new DeathItemSelection[0];
+    public Dictionary<DeathItemSelection, PluginEntry?> DeathItemSelections { get; set; } = new();
 
     public bool DebuggingMode { get; set; } = true;
 
