@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 
 namespace HunterbornExtender.Settings
 {
-    sealed public class PluginEntry
+
+    abstract public class PluginEntry
     {
         public EntryType Type { get; set; } = EntryType.Animal;
-        public String Name { get; set; } = "Critter";
-        public String ProperName { get; set; } = "Critter";
-        public String SortName { get; set; } = "Critter";
+        public string Name { get; set; } = "Critter";
+        public string ProperName { get; set; } = "Critter";
+        public string SortName { get; set; } = "Critter";
         public IFormLinkGetter<IGlobalGetter> Toggle { get; set; } = new FormLink<IGlobalGetter>();
         public IFormLinkGetter<IMessageGetter> CarcassMessageBox { get; set; } = new FormLink<IMessageGetter>();
         public IFormLinkGetter<IItemGetter> Meat { get; set; } = new FormLink<IItemGetter>();
@@ -33,13 +34,16 @@ namespace HunterbornExtender.Settings
         {
 
         }
+
         public PluginEntry(EntryType type, string name)
         {
             Type = type;
             Name = name;
+            ProperName = name;
+            SortName = name;
         }
 
-        public PluginEntry(EntryType type, string name, string properName, string sortName, IFormLinkGetter<IGlobalGetter> toggle, IFormLinkGetter<IMessageGetter> carcassMessageBox, IFormLinkGetter<IItemGetter> meat, int carcassSize, int carcassWeight, int carcassValue, int[] peltCount, int[] furPlateCount, List<Dictionary<IFormLinkGetter<IItemGetter>, int>> materials, List<IFormLinkGetter<IItemGetter>> discard, IFormLinkGetter<IFormListGetter> sharedDeathItems, IFormLinkGetter<IItemGetter> bloodType, IFormLinkGetter<IItemGetter> venom, IFormLinkGetter<IVoiceTypeGetter> voice)
+        /*public PluginEntry(EntryType type, string name, string properName, string sortName, IFormLinkGetter<IGlobalGetter> toggle, IFormLinkGetter<IMessageGetter> carcassMessageBox, IFormLinkGetter<IItemGetter> meat, int carcassSize, int carcassWeight, int carcassValue, int[] peltCount, int[] furPlateCount, List<Dictionary<IFormLinkGetter<IItemGetter>, int>> materials, List<IFormLinkGetter<IItemGetter>> discard, IFormLinkGetter<IFormListGetter> sharedDeathItems, IFormLinkGetter<IItemGetter> bloodType, IFormLinkGetter<IItemGetter> venom, IFormLinkGetter<IVoiceTypeGetter> voice)
         {
             Type = type;
             Name = name;
@@ -59,6 +63,40 @@ namespace HunterbornExtender.Settings
             BloodType = bloodType;
             Venom = venom;
             Voice = voice;
+        }*/
+    }
+
+    /// <summary>
+    /// Used to describe plugins that get loaded from JSon files.
+    /// They each have a name and can have required mods.
+    /// 
+    /// @TODO Add required mods to the JSon files. This will reduce unresolved record issues.
+    /// For now it's fine if it's empty and unused.
+    /// 
+    /// </summary>
+    sealed public class AddonPluginEntry : PluginEntry
+    {
+        //public ModKey[] RequiredMods { get; set; } = Array.Empty<ModKey>();
+
+        public AddonPluginEntry() { }
+
+        public AddonPluginEntry(EntryType type, string name) : base(type, name) { }
+    }
+
+
+    /// <summary>
+    /// Used to describe the hard-coded plugins from Hunterborn.esp.
+    /// They each have a KnownDeathItem used as a prototype.
+    /// </summary>
+    sealed public class InternalPluginEntry : PluginEntry
+    {
+        public FormKey KnownDeathItem { get; set; } = new();
+
+        public InternalPluginEntry() { }
+
+        public InternalPluginEntry(EntryType type, string name, FormKey deathItem) : base(type, name) { 
+            KnownDeathItem = deathItem;
         }
+
     }
 }
