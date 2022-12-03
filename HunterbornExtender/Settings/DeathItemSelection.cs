@@ -9,7 +9,20 @@ using Newtonsoft.Json;
 
 namespace HunterbornExtender.Settings
 {
-    public class DeathItemSelection
+    /// <summary>
+    /// Maps DeathItems (the leveleditems in the INAM field of NPCs) to instances of PluginEntry.
+    /// The patcher uses the PluginEntry to create the forms and array property entries for creatures with 
+    /// that deathitem.
+    /// 
+    /// Only the DeathItem and the PluginEntry name (CreatureEntryName) are serialized.
+    /// 
+    /// CreatureEntryName is used to restore the Selection field after deserialization.
+    /// 
+    /// AssignedNPCs is only used during the heuristic matching set and in the UI. 
+    /// It is NOT needed during patching.
+    /// 
+    /// </summary>
+    sealed public class DeathItemSelection
     {
         public FormKey DeathItem { get; set; }
         public string CreatureEntryName { get; set; } = String.Empty;
