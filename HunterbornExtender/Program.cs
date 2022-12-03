@@ -64,10 +64,10 @@ sealed internal class Program
         {
             Console.WriteLine("Trying to load stored DeathItem selections.");
             jsonData = JSONhandler<PatcherSettings>.LoadJSONFile("settings.json") ?? new();
-            Console.WriteLine($"\tRead {jsonData.DeathItems.Count} selections and {jsonData.CreatureData.Count} plugins.");
+            Console.WriteLine($"\tRead {jsonData.DeathItems.Count} selections and {jsonData.Plugins.Count} plugins.");
 
-            if (jsonData.DeathItems.Count > 0 || jsonData.CreatureData.Count > 0)
-                Console.WriteLine($" ✓ Success: {jsonData.DeathItems.Count} selections and {jsonData.CreatureData.Count} plugins loaded.");
+            if (jsonData.DeathItems.Count > 0 || jsonData.Plugins.Count > 0)
+                Console.WriteLine($" ✓ Success: {jsonData.DeathItems.Count} selections and {jsonData.Plugins.Count} plugins loaded.");
 
             else throw new InvalidOperationException("No data.");
         }
@@ -89,10 +89,10 @@ sealed internal class Program
         // link death item selection to corresponding creature entry
         foreach (var deathItem in settings.DeathItemSelections)
         {
-            deathItem.Selection = settings.CreatureData.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault();
+            deathItem.Selection = settings.Plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault();
         }
 
-        Console.WriteLine("Imported death plugin support for {0} creatures", settings.CreatureData.Count);
+        Console.WriteLine("Imported death plugin support for {0} creatures", settings.Plugins.Count);
         Console.WriteLine("Imported {0} death item selections", settings.DeathItemSelections.Length);
 
         Console.WriteLine("========================");
@@ -130,7 +130,7 @@ sealed internal class Program
         // 
         // Import allowed and forbidden values from plugins.
         //
-        foreach (var plugin in settings.CreatureData)
+        foreach (var plugin in settings.Plugins)
         {
             if (!plugin.Voice.IsNull) AllowedVoices.Add(plugin.Voice);
         }
@@ -1057,9 +1057,9 @@ sealed internal class Program
     {
 
         /// <summary>
-        /// Retrieves the CreatureClass for a specified CreatureData.
+        /// Retrieves the CreatureClass for a specified Plugins.
         /// </summary>
-        /// <param name="d">The CreatureData whose CreatureClass should be returned.</param>
+        /// <param name="d">The Plugins whose CreatureClass should be returned.</param>
         /// <returns>The CreatureClass.</returns>
         public CreatureClass GetCCFor(CreatureData d) => GetCCFor(d.Prototype.Type);
 
