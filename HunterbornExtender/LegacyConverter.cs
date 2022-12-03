@@ -7,7 +7,7 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Plugins.Exceptions;
 using HunterbornExtender.Settings;
 
-namespace HunterbornExtender.Zedit
+namespace HunterbornExtender
 {
     sealed public class LegacyConverter
     {
@@ -40,7 +40,7 @@ namespace HunterbornExtender.Zedit
             return plugins;
         }
 
-        static List<PluginEntry> ReadFile(string fileName, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        static List<PluginEntry> ReadFile(String fileName, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string jsonString = File.ReadAllText(fileName);
             Console.WriteLine($"\t\t o Successfully read {fileName}");
@@ -60,7 +60,7 @@ namespace HunterbornExtender.Zedit
                     var plugin = legacy.ToPlugin(state);
                     plugins.Add(plugin);
                     Console.WriteLine($"\t\t\t o Added plugin for {plugin.Name}.");
-
+    
                     /*
                     if (legacy.name.ToLower().Equals("giant"))
                     {
@@ -123,8 +123,7 @@ namespace HunterbornExtender.Zedit
 
             public PluginEntry ToPlugin(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
             {
-                var materials = mats.Select(lvl =>
-                {
+                var materials = mats.Select(lvl => {
                     Dictionary<IFormLinkGetter<IItemGetter>, int> Materials_Level = new();
                     foreach (var lvl_mats in lvl)
                     {
@@ -134,7 +133,7 @@ namespace HunterbornExtender.Zedit
                     return Materials_Level;
                 }).ToList();
 
-                AddonPluginEntry plugin = new(type.ContainsInsensitive("anim") ? EntryType.Animal : EntryType.Monster, name);
+                PluginEntry plugin = new(type.ContainsInsensitive("anim") ? EntryType.Animal : EntryType.Monster, name);
                 plugin.ProperName = properName ?? name;
                 plugin.SortName = sortName ?? name;
                 plugin.Toggle = animalSwitch.IsNullOrWhitespace() ? new FormLink<IGlobalGetter>() : state.LinkCache.Resolve<IGlobalGetter>(animalSwitch).ToLink();
@@ -158,32 +157,32 @@ namespace HunterbornExtender.Zedit
         static public string print<T>(List<T> list) where T : notnull
         {
             var printed = list.Select(i => print(i));
-            var joined = string.Join(", ", printed);
+            var joined = String.Join(", ", printed);
             return $"[{joined}]";
         }
 
         static public string print<T>(T[] list) where T : notnull
         {
             var printed = list.Select(i => print(i));
-            var joined = string.Join(", ", printed);
+            var joined = String.Join(", ", printed);
             return $"[{joined}]";
         }
 
         static public string print<S, T>(Dictionary<S, T> dict) where S : notnull
         {
             var printed = dict.Select(i => print(i));
-            var joined = string.Join(", ", printed);
+            var joined = String.Join(", ", printed);
             return $"{{{joined}}}";
         }
 
-        static public string print(object o)
+        static public string print(object o) 
         {
             return $"{o}";
         }
 
         static public void TestImportConversion(HBJsonDataLegacy legacy, PluginEntry plugin)
         {
-            List<Dictionary<string, int>> expected = new() {
+            List<Dictionary<String, int>> expected = new() { 
                 new() {},
                 new() {{ "GiantToes", 1} },
                 new() {{ "GiantToes", 2} },
@@ -200,7 +199,7 @@ namespace HunterbornExtender.Zedit
             TestField("Voice", "[CrGiantVoice]", legacy.voice, plugin.Voice.ToString());
         }
 
-        static void TestField(string field, string? expected, string? legacy, string? plugin)
+        static void TestField(String field, String? expected, String? legacy, String? plugin)
         {
             Console.WriteLine($"{field,-8}   Expected: {expected,-12}  Legacy {legacy,-12}  Plugin {plugin,-12}");
         }
@@ -215,7 +214,7 @@ namespace HunterbornExtender.Zedit
 
         public static string PPrint<S, T>(this Dictionary<S, T> dict) where S : notnull => "{" + string.Join(", ", dict) + "}";
 
-        public static string PPrint<S, T>(this List<Dictionary<S, T>> listOfDicts) where S : notnull => "[" + string.Join(", ", listOfDicts.Select(l => l.PPrint())) + "]";
+        public static string PPrint<S,T>(this List<Dictionary<S,T>> listOfDicts) where S : notnull => "[" + string.Join(", ", listOfDicts.Select(l => l.PPrint())) + "]";
 
     }
 
