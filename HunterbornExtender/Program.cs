@@ -175,27 +175,30 @@ sealed internal class Program
         }
 
         //
-        // This should come from the UI, but for now this nasty function will generate 
-        // a bunch of selections.
+        // Scan the load order and update the selections.
+        // 
         //
-        Dictionary<DeathItemSelection, PluginEntry?> PICKS = MakeHeuristicSelections(plugins, state);
+        DeathItemSelection[] SELECTIONS = MakeHeuristicSelections(plugins, state);
+        settings.DeathItemSelections = SELECTIONS;
 
         //================
         //================
         // @TODO THIS IS WHERE THE UI WOULD BE DISPLAYED.
-        // The UI should be given this structure the heuristic picks and the list of plugins, and allow the assignments to be changed.
+        // The UI should give the user the chance to change the Selection fields of the DeathItemSelections.
         //
+        //================
         // Rui_UI_On(PICKS, settings.plugins);
+
         //
         //================
         //================
 
-        foreach (var selection in PICKS.Keys)
+        foreach (var selection in SELECTIONS)
         {
             var name = selection.CreatureEntryName;
             Console.WriteLine(CreateTitle(name));
 
-            PluginEntry? prototype = PICKS[selection];
+            PluginEntry? prototype = selection.Selection;
 
             // null is used to indicate "SKIP".
             if (prototype == null)
@@ -256,7 +259,7 @@ sealed internal class Program
     }
 
 
-    static Dictionary<DeathItemSelection, PluginEntry?> MakeHeuristicSelections(List<PluginEntry> plugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+    static DeathItemSelection[] MakeHeuristicSelections(List<PluginEntry> plugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
     {
         // For each DeathItem, there will be a weighted set of plausible Plugins.
         // HeuristicMatcher assigns the weights.
@@ -292,18 +295,27 @@ sealed internal class Program
             }
         }
 
-        Dictionary<DeathItemSelection, PluginEntry?> selections = new();
-        foreach (var deathItemSelection in selectionWeights.Keys)
+        DeathItemSelection[] selections = selectionWeights.Keys.ToArray();
+        Dictionary<FormKey, PluginEntry?> savedSelections = _settings.Value.DeathItemSelections.ToDictionary(v => v.DeathItemList, v => v.Selection);
+
+        foreach (var selection in selections)
         {
-            var itemWeights = selectionWeights[deathItemSelection];
-            List<PluginEntry> options = new(itemWeights.Keys);
-            if (options.Count == 0) continue;
+            if (_settings.Value.ReuseSelections && savedSelections.ContainsKey(selection.DeathItemList))
+            {
+                selection.Selection = savedSelections[selection.DeathItemList];
+                if (_settings.Value.DebuggingMode) Console.WriteLine($"\t\t\tPreviously selected {selection.Selection}.");
+            }
+            else
+            {
+                var itemWeights = selectionWeights[selection];
+                List<PluginEntry> options = new(itemWeights.Keys);
+                if (options.Count == 0) continue;
 
-            options.Sort((a, b) => itemWeights[b].CompareTo(itemWeights[a]));
-            selections[deathItemSelection] = options.First();
-
-            if (_settings.Value.DebuggingMode) Console.WriteLine($"\t\t\t{itemWeights.Pretty()}");
-            if (_settings.Value.DebuggingMode) Console.WriteLine($"\t\t\tSelected {options.First()}.");
+                options.Sort((a, b) => itemWeights[b].CompareTo(itemWeights[a]));
+                selection.Selection = options.First();
+                if (_settings.Value.DebuggingMode) Console.WriteLine($"\t\t\t{itemWeights.Pretty()}");
+                if (_settings.Value.DebuggingMode) Console.WriteLine($"\t\t\tHeuristic selected {selection.Selection}.");
+            }
         }
 
         return selections;
