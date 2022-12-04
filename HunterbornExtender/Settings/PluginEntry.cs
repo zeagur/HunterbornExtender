@@ -17,6 +17,7 @@ namespace HunterbornExtender.Settings
         public IFormLinkGetter<IGlobalGetter> Toggle { get; set; } = new FormLink<IGlobalGetter>();
         public IFormLinkGetter<IMessageGetter> CarcassMessageBox { get; set; } = new FormLink<IMessageGetter>();
         public IFormLinkGetter<IItemGetter> Meat { get; set; } = new FormLink<IItemGetter>();
+        //public IFormLinkGetter<IItemGetter> DefaultPelt { get; set; } = new FormLink<IItemGetter>();
         public int CarcassSize { get; set; } = 1;
         public int CarcassWeight { get; set; } = 10;
         public int CarcassValue { get; set; } = 10;
@@ -42,27 +43,10 @@ namespace HunterbornExtender.Settings
             SortName = name;
         }
 
-        /*public PluginEntry(EntryType type, string name, string properName, string sortName, IFormLinkGetter<IGlobalGetter> toggle, IFormLinkGetter<IMessageGetter> carcassMessageBox, IFormLinkGetter<IItemGetter> meat, int carcassSize, int carcassWeight, int carcassValue, int[] peltCount, int[] furPlateCount, List<Dictionary<IFormLinkGetter<IItemGetter>, int>> materials, List<IFormLinkGetter<IItemGetter>> discard, IFormLinkGetter<IFormListGetter> sharedDeathItems, IFormLinkGetter<IItemGetter> bloodType, IFormLinkGetter<IItemGetter> venom, IFormLinkGetter<IVoiceTypeGetter> voice)
+        override public string ToString()
         {
-            Type = type;
-            Name = name;
-            ProperName = properName;
-            SortName = sortName;
-            Toggle = toggle;
-            CarcassMessageBox = carcassMessageBox;
-            Meat = meat;
-            CarcassSize = carcassSize;
-            CarcassWeight = carcassWeight;
-            CarcassValue = carcassValue;
-            PeltCount = peltCount;
-            FurPlateCount = furPlateCount;
-            Materials = materials;
-            Discard = discard;
-            SharedDeathItems = sharedDeathItems;
-            BloodType = bloodType;
-            Venom = venom;
-            Voice = voice;
-        }*/
+            return ProperName;
+        }
     }
 
     /// <summary>
@@ -101,7 +85,7 @@ namespace HunterbornExtender.Settings
 
     public sealed class MaterialLevel
     {
-        public Dictionary<IFormLinkGetter<IItemGetter>, int> Materials { get; set; } = new();
+        public Dictionary<IFormLinkGetter<IItemGetter>, int> Items { get; set; } = new();
     }
 
 }
