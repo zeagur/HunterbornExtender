@@ -130,10 +130,7 @@ namespace HunterbornExtender
                         var item = state.LinkCache.Resolve<IItemGetter>(lvl_mats.Key).ToLink();
                         Materials_Level[item] = lvl_mats.Value;
                     }
-                    return new MaterialLevel()
-                    {
-                        Materials = Materials_Level
-                    };
+                    return new MaterialLevel() { Items = Materials_Level };
                 }).ToList();
 
                 AddonPluginEntry plugin = new(type.ContainsInsensitive("anim") ? EntryType.Animal : EntryType.Monster, name);
