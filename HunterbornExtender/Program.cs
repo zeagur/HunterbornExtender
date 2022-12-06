@@ -20,21 +20,18 @@ using Noggog;
 using HunterbornExtender.Settings;
 using static HunterbornExtender.FormKeys;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
+using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Mutagen.Bethesda.Skyrim.FormList>;
+using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
+using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter>;
+using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
+using System.Collections.Immutable;
+using System.Xml.XPath;
 
 
 #pragma warning disable IDE1006 // Naming Styles
 
 sealed internal class Program
 {
-
-    public record CreatureData(DeathItemGetter DeathItem, String InternalName, PluginEntry Prototype, bool IsAnimal, bool IsMonster);
-    
-    static readonly Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses = new();
-    static readonly Dictionary<PluginEntry, IFormLinkGetter<IMiscItemGetter>[]> KnownPelts = new();
-    //static readonly Dictionary<DeathItemGetter, PluginEntry> KnownDeathItems = new();
-    static readonly OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems = new();
-    private static Lazy<Settings.Settings> _settings = null!;
-
 
     public static Task<int> Main(string[] args)
     {
@@ -75,22 +72,44 @@ sealed internal class Program
         // However we do it, this is where we get a List<PluginEntry> from the addon jsons.
         //
         var settings = _settings.Value;
-        
+        Program program = new(settings, state);
+        program.Initialize();
+        program.Patch();
+    }
+
+    /// <summary>
+    /// Creates a new instance of Program.
+    /// </summary>
+    /// <param name="settings"></param>
+    /// <param name="state"></param>
+    public Program(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+    {
+        Settings = settings;
+        State = state;
+        FormLinkSubstitution = Substitutions.GetCACOSub(State.LoadOrder.ContainsKey(CACO_MODKEY));
+        ItemSubstitution = Substitutions.GetCACOSubResolved(State.LoadOrder.ContainsKey(CACO_MODKEY), State.LinkCache);
+
+}
+
+public void Initialize()
+    {
         Write.Divider(0);
         Write.Action(0, "Importing plugins.");
-        var addonPlugins = LegacyConverter.ImportAndConvert(state);
+        var addonPlugins = LegacyConverter.ImportAndConvert(State);
         Write.Success(0, $"{addonPlugins.Count} creature types imported.");
 
         //
         // Resolve and locate all the FormLists and ScriptProperties that need patching.
         // 
-        StandardRecords std;
+        //PatchingRecords std;
+        ViewingRecords std_readonly;
+
         try
         {
             Write.Divider(0);
             Write.Action(0, "Trying to resolve required forms from Hunterborn.esp, and preparing the patch structure.");
-            std = StandardRecords.CreateInstance(state, settings);
-            Write.Success(0, $"Success: {std.PatchMod}");
+            std_readonly = ViewingRecords.CreateViewingInstance(State, Settings);
+            Write.Success(0, $"Success.");
         }
         catch (RecordException ex)
         {
@@ -112,17 +131,17 @@ sealed internal class Program
         // Merge it into the previous list.
         //
         List<InternalPluginEntry> internalPlugins;
-        
+
         try
         {
             Write.Divider(0);
             Write.Action(0, "Trying to recreate the hard-coded core plugin from Hunterborn.esp.");
-            internalPlugins = RecreateCorePlugins(std /*, CreateParentRecords(state)*/);
+            internalPlugins = RecreateCorePlugins(std_readonly);
 
             if (internalPlugins.Count > 0)
             {
                 Write.Success(0, $"Success: {internalPlugins.Count} hard-coded creature types found.");
-            } 
+            }
             else
             {
                 Write.Fail(0, $"No hard-coded creature types found. Check your Hunterborn installation.");
@@ -147,7 +166,7 @@ sealed internal class Program
         List<PluginEntry> plugins = new();
         plugins.AddRange(internalPlugins);
         plugins.AddRange(addonPlugins);
-        settings.Plugins = plugins;
+        Settings.Plugins = plugins;
         Write.Success(0, $"Add-on creatures and hard-coded creatures merged; {plugins.Count} total.");
 
         // 
@@ -163,7 +182,7 @@ sealed internal class Program
         //
         try
         {
-            PopulateKnown(plugins, std);
+            PopulateKnown(plugins, std_readonly);
         }
         catch (RecordException ex)
         {
@@ -185,13 +204,13 @@ sealed internal class Program
         //
         // Link death entryItem selection to corresponding creature entry
         //
-        foreach (var deathItem in settings.DeathItemSelections)
+        foreach (var deathItem in Settings.DeathItemSelections)
         {
             deathItem.Selection = plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault();
         }
 
         Write.Success(0, $"Imported death plugin support for {plugins.Count} creatures");
-        Write.Success(0, $"Imported {settings.DeathItemSelections.Length} death item selections");
+        Write.Success(0, $"Imported {Settings.DeathItemSelections.Length} death item selections");
 
         // Heuristic matching and user selections should already be done.
         //
@@ -200,8 +219,8 @@ sealed internal class Program
         try
         {
             Write.Action(0, $"Running heuristics.");
-            var npcs = state.LoadOrder.PriorityOrder.Npc().WinningOverrides();
-            int heuristics = MakeHeuristicSelections(plugins, npcs, std);
+            var npcs = State.LoadOrder.PriorityOrder.Npc().WinningOverrides();
+            int heuristics = MakeHeuristicSelections(plugins, npcs, std_readonly);
             Write.Success(0, $"Heuristics assigned {heuristics} creatures.");
         }
         catch (RecordException ex)
@@ -218,22 +237,46 @@ sealed internal class Program
             Console.WriteLine(ex.StackTrace);
             return;
         }
+    }
 
+    public void Patch()
+    {
         //
-        //================
-        //================
+        // Resolve and locate all the FormLists and ScriptProperties that need patching.
+        // 
+        PatchingRecords std;
 
-        foreach (var selection in settings.DeathItemSelections)
+        try
+        {
+            Write.Divider(0);
+            Write.Action(0, "Trying to resolve required forms from Hunterborn.esp, and preparing the patch structure.");
+            std = PatchingRecords.CreatePatchingInstance(State, Settings);
+            Write.Success(0, $"Success.");
+        }
+        catch (RecordException ex)
+        {
+            Write.Fail(0, $"Failed to resolve required forms because of unresolved reference [{ex.FormKey} {ex.EditorID}].");
+            Write.Fail(0, ex.Message);
+            Console.WriteLine(ex.StackTrace);
+            return;
+        }
+        catch (Exception ex)
+        {
+            Write.Fail(0, "Failed to resolve required forms.");
+            Write.Fail(0, ex.Message);
+            Console.WriteLine(ex.StackTrace);
+            return;
+        }
+
+        foreach (var selection in Settings.DeathItemSelections)
         {
             var name = selection.CreatureEntryName;
-            //WriteTitle(0, CreateTitle(internalName));
-
             PluginEntry? prototype = selection.Selection;
 
             // null is used to indicate "SKIP".
             if (prototype == null)
             {
-                if (settings.DebuggingMode) Write.Title(0, $"(SKIPPED) {name}");
+                if (Settings.DebuggingMode) Write.Title(0, $"(SKIPPED) {name}");
                 continue;
             }
 
@@ -241,9 +284,9 @@ sealed internal class Program
 
             try
             {
-                var deathItem = state.LinkCache.Resolve<DeathItemGetter>(selection.DeathItem);
+                var deathItem = State.LinkCache.Resolve<DeathItemGetter>(selection.DeathItem);
                 var data = CreateCreatureData(deathItem, prototype, std);
-                if (settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
+                if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
 
                 if (ForbiddenDeathItems.Contains(data.DeathItem.ToLink()))
                 {
@@ -256,7 +299,7 @@ sealed internal class Program
                 else
                 {
                     KnownDeathItems.Add(data.DeathItem, prototype);
-                    AddRecord(data, std);
+                    AddRecordFor(data, std);
                 }
             }
             catch (RecordException ex)
@@ -280,41 +323,6 @@ sealed internal class Program
     }
 
     /// <summary>
-    /// Prepares a set of DeathItemSelections for the UI.
-    /// The data is stored in the settings parameter.
-    /// </summary>
-    /// <param name="settings"></param>
-    /// <param name="state"></param>
-    /// 
-    static public void PrepareSelectionsForUI(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
-    {
-        var addonPlugins = LegacyConverter.ImportAndConvert(state);
-        var std = StandardRecords.CreateInstance(state, settings);
-        var internalPlugins = RecreateCorePlugins(std);
-        List<PluginEntry> plugins = new();
-        plugins.AddRange(internalPlugins);
-        plugins.AddRange(addonPlugins);
-        settings.Plugins = plugins;
-
-        foreach (var plugin in plugins)
-        {
-            if (!plugin.Voice.IsNull) AllowedVoices.Add(plugin.Voice);
-        }
-
-        PopulateKnown(plugins, std);
-
-        foreach (var deathItem in settings.DeathItemSelections)
-        {
-            deathItem.Selection = plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault();
-        }
-
-        var npcs = state.LoadOrder.PriorityOrder.Npc().WinningOverrides();
-        int heuristics = MakeHeuristicSelections(plugins, npcs, std);
-        settings.Plugins = plugins;
-    }
-
-
-    /// <summary>
     /// This should be called from the UI to pre-select the choices for each deathitem.
     /// 
     /// If Settings.ReuseSelections is enabled then selections in the settings will be preferred.
@@ -324,7 +332,7 @@ sealed internal class Program
     /// 
     /// </summary>
     /// 
-    static int MakeHeuristicSelections(List<PluginEntry> plugins, IEnumerable<INpcGetter> npcs, StandardRecords std)
+    private int MakeHeuristicSelections(List<PluginEntry> plugins, IEnumerable<INpcGetter> npcs, ViewingRecords std)
     {
         // For each DeathItem, there will be a weighted set of plausible Plugins.
         // HeuristicMatcher assigns the weights.
@@ -333,7 +341,7 @@ sealed internal class Program
 
         // Tokenize the names of the plugins.
         foreach (var plugin in plugins) plugin.Tokens = TokenizeNames(plugin.Name, plugin.SortName, plugin.ProperName);
-        if (std.Settings.DebuggingMode) 
+        if (DebuggingMode) 
         {
             Write.Title(1, "Tokenizing plugin names.");
             plugins.ForEach(p => Write.Action(2, $"Plugin: {p.Name} -> {p.Tokens.Pretty()}"));
@@ -346,7 +354,7 @@ sealed internal class Program
             //if (settings.DebuggingMode) Write.Action(2, $"Heuristics examining {npc}");
             if (npc.DeathItem?.IsNull ?? true) continue;
             
-            var deathItem = npc.DeathItem.Resolve(std.LinkCache);
+            var deathItem = npc.DeathItem.Resolve(State.LinkCache);
             if (KnownDeathItems.ContainsKey(deathItem)) continue;
 
             // If there is no DeathItemSelection record for the NPC's DeathItem, create it.
@@ -366,7 +374,7 @@ sealed internal class Program
             deathItemSelection.AssignedNPCs.Add(npc);
 
             // Run the heuristic matcher.
-            var npcWeights = HeuristicNpcMatcher(npc, plugins, std);
+            var npcWeights = HeuristicNpcMatcher(npc);
             var itemWeights = selectionWeights[deathItemSelection];
 
             foreach (PluginEntry plugin in npcWeights.Keys)
@@ -374,15 +382,15 @@ sealed internal class Program
         }
 
         DeathItemSelection[] selections = selectionWeights.Keys.ToArray();
-        Dictionary<FormKey, PluginEntry?> savedSelections = std.Settings.DeathItemSelections.ToDictionary(v => v.DeathItem, v => v.Selection);
+        Dictionary<FormKey, PluginEntry?> savedSelections = Settings.DeathItemSelections.ToDictionary(v => v.DeathItem, v => v.Selection);
         int modifiedCount = 0;
 
         foreach (var selection in selections)
         {
-            if (std.Settings.ReuseSelections && savedSelections.ContainsKey(selection.DeathItem))
+            if (Settings.ReuseSelections && savedSelections.ContainsKey(selection.DeathItem))
             {
                 selection.Selection = savedSelections[selection.DeathItem];
-                if (std.Settings.DebuggingMode) Write.Action(3, $"Previously selected {selection.Selection?.ProperName}.");
+                if (DebuggingMode) Write.Action(3, $"Previously selected {selection.Selection?.ProperName}.");
             }
             else
             {
@@ -392,20 +400,20 @@ sealed internal class Program
 
                 options.Sort((a, b) => itemWeights[b].CompareTo(itemWeights[a]));
                 selection.Selection = options.First();
-                if (std.Settings.DebuggingMode && !selection.DeathItem.IsNull)
+                if (DebuggingMode && !selection.DeathItem.IsNull)
                 {
-                    selection.DeathItem.ToLink<DeathItemGetter>().TryResolve(std.LinkCache, out var deathItem);
+                    selection.DeathItem.ToLink<DeathItemGetter>().TryResolve(State.LinkCache, out var deathItem);
                     Write.Action(2, $"{deathItem?.EditorID ?? deathItem?.ToString() ?? "NO DEATH ITEM"}: heuristic selected {selection.Selection?.SortName}.");
                     Write.Action(3, $"From: {itemWeights.Pretty()}");
 
-                    var npcNames = selection.AssignedNPCs.Take(6).Select(n => NpcNamerFallback(n, std.LinkCache)).ToArray().Pretty();
+                    var npcNames = selection.AssignedNPCs.Take(6).Select(n => NpcNamer(n)).ToArray().Pretty();
                     Write.Action(3, $"Archetypes: {npcNames}");
                 }
                 modifiedCount = 0;
             }
         }
 
-        std.Settings.DeathItemSelections = selections;
+        Settings.DeathItemSelections = selections;
         return modifiedCount;
     }
 
@@ -413,17 +421,17 @@ sealed internal class Program
     /// 
     /// </summary>
     /// <returns></returns>
-    static Dictionary<PluginEntry, int> HeuristicNpcMatcher(INpcGetter npc, List<PluginEntry> plugins, StandardRecords std)
+    private Dictionary<PluginEntry, int> HeuristicNpcMatcher(INpcGetter npc)
     {
         Dictionary<PluginEntry, int> candidates = new();
-        String name = NpcNamerFallback(npc, std.LinkCache);
+        String name = NpcNamer(npc);
 
         var clicker = DictionaryIncrementer(candidates);
 
         // Try to match the voice.
         if (!npc.Voice.IsNull)
         {
-            plugins
+            Settings.Plugins
                 .Where(plugin => !plugin.Voice.IsNull)
                 .Where(plugin => plugin.Voice.Equals(npc.Voice))
                 .ForEach(clicker(10));
@@ -431,18 +439,19 @@ sealed internal class Program
 
         // Match the creature's editorId, internalName, and race internalName to the names of plugins.
         var nameMatches = new HashSet<PluginEntry>();
-        var race = npc.Race.Resolve(std.LinkCache);
+        var race = npc.Race.Resolve(State.LinkCache);
+        npc.DeathItem.TryResolve(State.LinkCache, out var deathItem);
 
-        if (npc.EditorID is string npcEditorId) plugins.Where(PluginNameMatch(npcEditorId)).ForEach(clicker(1));
-        if (npc.Name?.ToString() is string npcName) plugins.Where(PluginNameMatch(npcName)).ForEach(clicker(1));
-        if (race.EditorID is string raceEditorId) plugins.Where(PluginNameMatch(raceEditorId)).ForEach(clicker(1));
-        if (race.Name?.ToString() is string raceName) plugins.Where(PluginNameMatch(raceName)).ForEach(clicker(1));
+        if (npc.EditorID is string npcEditorId) Settings.Plugins.Where(PluginNameMatch(npcEditorId)).ForEach(clicker(1));
+        if (npc.Name?.ToString() is string npcName) Settings.Plugins.Where(PluginNameMatch(npcName)).ForEach(clicker(1));
+        if (race.EditorID is string raceEditorId) Settings.Plugins.Where(PluginNameMatch(raceEditorId)).ForEach(clicker(1));
+        if (race.Name?.ToString() is string raceName) Settings.Plugins.Where(PluginNameMatch(raceName)).ForEach(clicker(1));
 
         // Try this tokenizing matcher to break ties.
-        var npcTokens = TokenizeNames(new List<string?>() { NpcNamer(npc), RaceNamer(race), NpcDeathItemNamer(npc, std.LinkCache) });
-        if (std.Settings.DebuggingMode) Write.Action(2, $"Tokens for {name}: {npcTokens.Pretty()}");
+        var npcTokens = TokenizeNames(new List<string?>() { npc.Name?.ToString(), npc.EditorID, race.Name?.ToString(), race.EditorID, deathItem?.EditorID });
+        if (DebuggingMode) Write.Action(2, $"Tokens for {name}: {npcTokens.Pretty()}");
 
-        foreach (var plugin in plugins)
+        foreach (var plugin in Settings.Plugins)
         {
             int intersection = plugin.Tokens.Intersect(npcTokens).Count();
             if (intersection > 0) clicker(intersection)(plugin);
@@ -451,7 +460,7 @@ sealed internal class Program
         // @TODO Add matching for distinctive keywords?
         // @TODO Add exclusion terms?
 
-        if (std.Settings.DebuggingMode)
+        if (DebuggingMode)
         {
             Write.Success(2, $"Candidates for {name}:");
             Write.Success(3, candidates.Pretty());
@@ -459,25 +468,6 @@ sealed internal class Program
 
         return candidates;
     }
-
-    /// <summary>
-    /// Matcher for plugin names. 
-    /// A match occurs if the plugin internalName is contained in the target string.
-    /// Case-insensitive.
-    /// 
-    /// </summary>
-    /// <param internalName="str">The string against which to match the plugin names.</param>
-    /// <returns>The matcher.</returns>
-    /// 
-    static Func<PluginEntry,bool> PluginNameMatch(String str) => plugin => str.ContainsInsensitive(plugin.Name);
-
-    /// <summary>
-    /// This thing is ridiculous but convenient. Can you say "Currying"?
-    /// 
-    /// </summary>
-    /// 
-    static Func<int, Action<T>> DictionaryIncrementer<T>(Dictionary<T, int> dict) where T : notnull
-        => val => plugin => { if (val > 0) dict[plugin] = dict.GetValueOrDefault(plugin, 0) + val; };
 
     /// <summary>
     /// Populate the KnownDeathItems, KnownCarcasses, and KnownPelts.
@@ -491,7 +481,7 @@ sealed internal class Program
     /// <exception cref="CoreRecordMissing"></exception>
     /// <exception cref="InvalidOperationException"></exception>
     /// 
-    static void PopulateKnown(List<PluginEntry> plugins, StandardRecords std)
+    private void PopulateKnown(List<PluginEntry> plugins, ViewingRecords std)
     {
 
         Dictionary<FormKey, InternalPluginEntry> internalPlugins = new();
@@ -521,7 +511,7 @@ sealed internal class Program
                     var name = std.GetCCFor(type).RaceIndex.Data[index];
 
                     // Get the DeathItem link from the formlist and resolve it.
-                    std.GetCCFor(type)._DS_FL_DeathItems.Items[index].TryResolve<DeathItemGetter>(std.LinkCache, out var deathItem);
+                    std.GetCCFor(type)._DS_FL_DeathItems.Items[index].TryResolve<DeathItemGetter>(State.LinkCache, out var deathItem);
 
                     if (deathItem == null) throw new DataConsistencyError(type, name, index, "No DeathItem.");
                     if (KnownDeathItems.ContainsKey(deathItem)) continue;
@@ -542,13 +532,13 @@ sealed internal class Program
                     // Only animals have carcasses. I guess you can't carry monster corpses around.
                     if (type == EntryType.Animal)
                     {
-                        if (std.Animals._DS_FL_CarcassObjects.Items[index].Resolve(std.LinkCache) is not IMiscItemGetter carcass)
+                        if (std.Animals._DS_FL_CarcassObjects.Items[index].Resolve(State.LinkCache) is not IMiscItemGetter carcass)
                             throw new CoreRecordMissing(std.Animals._DS_FL_CarcassObjects.Items[index]);
                         KnownCarcasses.Add(plugin, carcass);
                     }
 
                     // Get the Pelts link from the formlist, resolve it, transform it into an array, and put it in KnownPelts.
-                    if (std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index].Resolve(std.LinkCache) is not IFormListGetter pelts)
+                    if (std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index].Resolve(State.LinkCache) is not IFormListGetter pelts)
                         throw new CoreRecordMissing(std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index]);
 
                     IFormLinkGetter<IMiscItemGetter>[] peltsArray = pelts.Items.Select(item => item.FormKey.ToLinkGetter<IMiscItemGetter>()).ToArray();
@@ -571,7 +561,7 @@ sealed internal class Program
     /// </summary>
     /// <param internalName="std"></param>
     /// <returns></returns>
-    static List<InternalPluginEntry> RecreateCorePlugins(StandardRecords std)
+    private List<InternalPluginEntry> RecreateCorePlugins(ViewingRecords std)
     {
         List<InternalPluginEntry> plugins = new();
 
@@ -580,7 +570,7 @@ sealed internal class Program
             int count = std.GetCCFor(type).RaceIndex.Data.Count;
             Write.Action(1, $"Recreating {count} {type} plugin entries.");
 
-            if (std.Settings.DebuggingMode)
+            if (DebuggingMode)
             {
                 if (type == EntryType.Animal) Console.WriteLine($"\tChecks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}, carcasses={std.Animals._DS_FL_CarcassObjects.Items.Count}");
                 else Write.Action(1, $"Checks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}");
@@ -604,7 +594,7 @@ sealed internal class Program
         return plugins;
     }
 
-    static InternalPluginEntry RecreateCorePluginEntry(EntryType type, int index, StandardRecords std)
+    private InternalPluginEntry RecreateCorePluginEntry(EntryType type, int index, ViewingRecords std)
     {
         String internalName = std.GetCCFor(type).RaceIndex.Data[index];
         if (internalName.IsNullOrWhitespace()) throw new DataConsistencyError(type, internalName, index, "No name.");
@@ -614,7 +604,7 @@ sealed internal class Program
             var deathItemLink = std.GetCCFor(type)._DS_FL_DeathItems.Items[index];
             if (deathItemLink.IsNull) throw new DataConsistencyError(type, internalName, index, "No DeathItem.");
 
-            deathItemLink.TryResolve<DeathItemGetter>(std.LinkCache, out var deathItem);
+            deathItemLink.TryResolve<DeathItemGetter>(State.LinkCache, out var deathItem);
             if (deathItem == null) throw new DataConsistencyError(type, internalName, index, "DeathItem could not be resolved.");
             if (deathItem.EditorID == null) throw new DataConsistencyError(type, internalName, index, $"DeathItem {deathItem.FormKey} has no editor id.");
 
@@ -622,19 +612,19 @@ sealed internal class Program
             var renaming = RecreatePluginName(plugin, deathItem);
 
             if (!renaming.Equals(NoRename)) (internalName, plugin.ProperName, plugin.SortName) = renaming;
-            if (std.Settings.DebuggingMode) Write.Action(2, $"Recreating {plugin.Name} from {DeathItemNamerFallback(deathItem)} (proper name '{plugin.ProperName}', sort name '{plugin.SortName}')");
+            if (DebuggingMode) Write.Action(2, $"Recreating {plugin.Name} from {DeathItemNamer(deathItem)} (proper name '{plugin.ProperName}', sort name '{plugin.SortName}')");
 
             var toggle = std.GetCCFor(type).Switches.Objects[index].Object;
             if (toggle.IsNull) plugin.Toggle = new FormLink<IGlobalGetter>();
-            else plugin.Toggle = toggle.Resolve<IGlobalGetter>(std.LinkCache).ToLink();
+            else plugin.Toggle = toggle.Resolve<IGlobalGetter>(State.LinkCache).ToLink();
 
             var meat = std.GetCCFor(type).MeatType.Objects[index].Object;
             if (meat.IsNull) plugin.Meat = new FormLink<IItemGetter>();
-            else plugin.Meat = meat.Resolve<IItemGetter>(std.LinkCache).ToLink();
+            else plugin.Meat = meat.Resolve<IItemGetter>(State.LinkCache).ToLink();
 
             var shared = std.GetCCFor(type).SharedDeathItems.Objects[index].Object;
             if (shared.IsNull) plugin.SharedDeathItems = new FormLink<IFormListGetter>();
-            else plugin.SharedDeathItems = shared.Resolve<IFormListGetter>(std.LinkCache).ToLink();
+            else plugin.SharedDeathItems = shared.Resolve<IFormListGetter>(State.LinkCache).ToLink();
 
             plugin.CarcassSize = std.GetCCFor(type).CarcassSizes.Data[index];
 
@@ -642,11 +632,11 @@ sealed internal class Program
             {
                 var venom = std.Monsters.VenomItems.Objects[index].Object;
                 if (venom.IsNull) plugin.Venom = new FormLink<IIngestibleGetter>();
-                else plugin.Venom = venom.Resolve<IIngestibleGetter>(std.LinkCache).ToLink();
+                else plugin.Venom = venom.Resolve<IIngestibleGetter>(State.LinkCache).ToLink();
 
                 var blood = std.Monsters.BloodItems.Objects[index].Object;
                 if (blood.IsNull) plugin.BloodType = new FormLink<IItemGetter>();
-                else plugin.BloodType = blood.Resolve<IItemGetter>(std.LinkCache).ToLink();
+                else plugin.BloodType = blood.Resolve<IItemGetter>(State.LinkCache).ToLink();
 
                 plugin.CarcassWeight = 0;
                 plugin.CarcassValue = 0;
@@ -655,12 +645,12 @@ sealed internal class Program
             {
                 var msg = std.Animals.CarcassMessages.Objects[index].Object;
                 if (msg.IsNull) plugin.CarcassMessageBox = new FormLink<IMessageGetter>();
-                else plugin.CarcassMessageBox = msg.Resolve<IMessageGetter>(std.LinkCache).ToLink();
+                else plugin.CarcassMessageBox = msg.Resolve<IMessageGetter>(State.LinkCache).ToLink();
 
                 plugin.Venom = new FormLink<IIngestibleGetter>();
                 plugin.BloodType = new FormLink<IItemGetter>();
 
-                var carcass = std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(std.LinkCache);
+                var carcass = std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(State.LinkCache);
                 plugin.CarcassWeight = (int)carcass.Weight;
                 plugin.CarcassValue = (int)carcass.Value;
             }
@@ -668,12 +658,12 @@ sealed internal class Program
             plugin.Discard = type != EntryType.Monster
                 ? new()
                 : std.Monsters.Discards.Objects[index].Object
-                .Resolve<IFormListGetter>(std.LinkCache).Items
+                .Resolve<IFormListGetter>(State.LinkCache).Items
                 .Select(item => item as IFormLinkGetter<IItemGetter>)
                 .Where(item => item is not null)
                 .Select(item => item!).ToList();
 
-            var mats = std.GetCCFor(type)._DS_FL_Mats__Lists.Items[index].Resolve<IFormListGetter>(std.LinkCache);
+            var mats = std.GetCCFor(type)._DS_FL_Mats__Lists.Items[index].Resolve<IFormListGetter>(State.LinkCache);
             plugin.Materials = RecreateMaterials(mats, std);
             // Console.WriteLine($"===RECREATED MATS FOR {plugin.ProperName}: {plugin.Materials.Pretty()}");
 
@@ -691,9 +681,9 @@ sealed internal class Program
             // Vanilla voices are named very predictably, so just use that.
             //
             string voiceEdid = $"Cr{plugin.Name}Voice";
-            std.LinkCache.TryResolve<IVoiceTypeGetter>(voiceEdid, out var voice);
+            State.LinkCache.TryResolve<IVoiceTypeGetter>(voiceEdid, out var voice);
             plugin.Voice = voice == null ? new FormLink<IVoiceTypeGetter>() : voice.ToLink();
-            //if (std.Settings.DebuggingMode) Write.Action(2, $"Internal plugin {plugin.Name} searching for voice {voiceEdid}: found {plugin.Voice}.");
+            //if (DebuggingMode) Write.Action(2, $"Internal plugin {plugin.Name} searching for voice {voiceEdid}: found {plugin.Voice}.");
 
             FindRecipes(plugin, internalName, deathItem, std);
 
@@ -716,7 +706,7 @@ sealed internal class Program
     /// 
     /// </summary>
     /// 
-    static private void FindRecipes(PluginEntry plugin, string internalName, DeathItemGetter deathItem, StandardRecords std)
+    private void FindRecipes(PluginEntry plugin, string internalName, DeathItemGetter deathItem, ViewingRecords std)
     {
         // Search for the standard recipes using naming conventions in the order of
         // CACO->CCOR->Campfire->Hunterborn->Vanilla.
@@ -744,7 +734,7 @@ sealed internal class Program
         if (plugin.Name.ContainsInsensitive("Mudcrab")) names.Add("Mudcrab");
         if (plugin.Name.ContainsInsensitive("Bristleback")) names.Add("Boar");
 
-        var recipes = Edid_Lookups_Fallbacks(names, patterns, std);
+        var recipes = Edid_Lookups_Fallbacks(names, patterns);
 
         // Extract the results to nicely named variables.
         var pelts0 = recipes[0];
@@ -769,16 +759,16 @@ sealed internal class Program
         {
             if (foundPelt is not null && !foundPelt.IsNull)
             {
-                if (std.Settings.DebuggingMode) Write.Success(3, $"Found default pelt from tanning recipe {pelts1.EditorID}.");
+                if (DebuggingMode) Write.Success(3, $"Found default pelt from tanning recipe {pelts1.EditorID}.");
                 plugin.DefaultPelt = foundPelt.FormKey.ToLink<IMiscItemGetter>();
             }
         }
         else
         {
-            var defaultPelt = GetDefaultPelt(deathItem, std);
+            var defaultPelt = GetDefaultPelt(deathItem);
             if (defaultPelt is not null)
             {
-                if (std.Settings.DebuggingMode) Write.Success(3, $"Found default pelt from DeathItem {deathItem.EditorID}.");
+                if (DebuggingMode) Write.Success(3, $"Found default pelt from DeathItem {deathItem.EditorID}.");
                 plugin.DefaultPelt = defaultPelt.ToLink();
             }
         }
@@ -788,27 +778,27 @@ sealed internal class Program
 
         if (pelts0 is not null && pelts1 is not null && pelts2 is not null && pelts3 is not null)
         {
-            if (std.Settings.DebuggingMode) Write.Success(2, "Found a full set of leather-making recipes.");
+            if (DebuggingMode) Write.Success(2, "Found a full set of leather-making recipes.");
             plugin.Recipes.PeltRecipes = (pelts0, pelts1, pelts2, pelts3);
             plugin.PeltCount = new int[] { pelts0.CreatedObjectCount ?? 2, pelts1.CreatedObjectCount ?? 2, pelts2.CreatedObjectCount ?? 2, pelts3.CreatedObjectCount ?? 2 };
         }
         else if (pelts0 is not null || pelts1 is not null || pelts2 is not null || pelts3 is not null)
         {
-            if (std.Settings.DebuggingMode) Write.Fail(2, "Found inconsistent set of leather-making recipes.");
+            if (DebuggingMode) Write.Fail(2, "Found inconsistent set of leather-making recipes.");
         }
 
         if (furs0 is not null && furs1 is not null && furs2 is not null)
         {
-            if (std.Settings.DebuggingMode) Write.Success(2, "Found a full set of fur-plating recipes.");
+            if (DebuggingMode) Write.Success(2, "Found a full set of fur-plating recipes.");
             plugin.Recipes.FurPlateRecipes = (furs0, furs1, furs2);
             plugin.FurPlateCount = new int[] { furs0.CreatedObjectCount ?? 1, furs1.CreatedObjectCount ?? 2, furs2.CreatedObjectCount ?? 4 };
         }
         else if (furs0 is not null || furs1 is not null || furs2 is not null)
         {
-            if (std.Settings.DebuggingMode) Write.Fail(2, "Found inconsistent set of fur-plating recipes.");
+            if (DebuggingMode) Write.Fail(2, "Found inconsistent set of fur-plating recipes.");
         }
 
-        if (std.Settings.DebuggingMode)
+        if (DebuggingMode)
         {
             if (!plugin.DefaultPelt.IsNull) Write.Success(2, $"Found standard pelt: {plugin.DefaultPelt}");
             else if (plugin.PeltCount.Length > 0) Write.Fail(2, $"No pelt found but pelt counts are specified.");
@@ -817,13 +807,13 @@ sealed internal class Program
         if (meatCooked is not null || meatCampfire is not null || meatPrimitive is not null || meatJerky is not null)
         {
             plugin.Recipes.MeatRecipes = (meatCooked, meatCooked, meatPrimitive, meatJerky);
-            if (std.Settings.DebuggingMode) Write.Success(2, $"Found meat recipes: {plugin.Recipes.MeatRecipes.Pretty()}");
+            if (DebuggingMode) Write.Success(2, $"Found meat recipes: {plugin.Recipes.MeatRecipes.Pretty()}");
         }
-        else if (!plugin.Meat.IsNull && std.Settings.DebuggingMode) Write.Fail(2, $"No meat recipes found.");
+        else if (!plugin.Meat.IsNull && DebuggingMode) Write.Fail(2, $"No meat recipes found.");
 
     }
 
-    static private List<IConstructibleObjectGetter?> Edid_Lookups_Fallbacks(List<string> names, List<List<string>> patterns, StandardRecords std)
+    private List<IConstructibleObjectGetter?> Edid_Lookups_Fallbacks(List<string> names, List<List<string>> patterns)
     {
         List<IConstructibleObjectGetter?> results = new();
 
@@ -834,9 +824,9 @@ sealed internal class Program
             {
                 foreach (var pattern in group)
                 {
-                    std.LinkCache.TryResolve<IConstructibleObjectGetter>(String.Format(pattern, name), out result);
+                    State.LinkCache.TryResolve<IConstructibleObjectGetter>(String.Format(pattern, name), out result);
 
-                    /*if (std.Settings.DebuggingMode)
+                    /*if (DebuggingMode)
                     {
                         if (names.Contains("Fox"))
                         {
@@ -854,10 +844,10 @@ sealed internal class Program
         return results;
     }
 
-    static private T? EdidLookupFallback<T>(string template, string name1, string name2, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache) where T : SkyrimMajorRecord
+    private T? EdidLookupFallback<T>(string template, string name1, string name2) where T : SkyrimMajorRecord
     {
-        linkCache.TryResolve<T>(String.Format(template, name1), out var result);
-        if (result == null) linkCache.TryResolve<T>(String.Format(template, name2), out result);
+        State.LinkCache.TryResolve<T>(String.Format(template, name1), out var result);
+        if (result == null) State.LinkCache.TryResolve<T>(String.Format(template, name2), out result);
         return result;
     }
 
@@ -939,12 +929,12 @@ sealed internal class Program
     /// 
     /// </summary>
     /// 
-    static void AddRecord(CreatureData data, StandardRecords std)
+    private void AddRecordFor(CreatureData data, PatchingRecords std)
     {
         var token = CreateToken(data, std);
         var mats = CreateMaterials(data, std);
         var pelts = CreatePelts(data, std);
-        var deathDescriptor = CreateDeathDescriptor(data, std, pelts, mats);
+        var deathDescriptor = CreateDeathDescriptor(data, pelts, mats, std);
         if (data.IsAnimal) CreateCarcass(data, std);
         if (data.IsMonster) CreateDiscards(data, std);
 
@@ -955,7 +945,7 @@ sealed internal class Program
 
         if (GetDefaultMeat(data, std) is IItemGetter meat)
         {
-            meat = std.ItemSubstitution(meat);
+            meat = ItemSubstitution(meat);
             std.GetCCFor(data).MeatType.Objects.Add(CreateProperty(meat.ToLink()));
             std.GetCCFor(data).MeatWeights.Data.Add(meat is IWeightValueGetter w ? w.Weight : 0.0f);
         }
@@ -975,7 +965,7 @@ sealed internal class Program
             std.Animals.CarcassMessages.Objects.Add(CreateProperty(data.Prototype.CarcassMessageBox));
         }
 
-        if (std.Settings.DebuggingMode)
+        if (DebuggingMode)
         {
             Write.Success(1, $"Created new forms:");
             Write.Success(2, $"ID Token: {token}");
@@ -986,7 +976,14 @@ sealed internal class Program
         }
     }
 
-    static CreatureData CreateCreatureData(DeathItemGetter deathItem, PluginEntry prototype, StandardRecords std)
+    /// <summary>
+    /// Create a CreatureData record. Convenience class for passing multiple fields of data to methods.
+    /// </summary>
+    /// <param name="deathItem"></param>
+    /// <param name="prototype"></param>
+    /// <param name="std"></param>
+    /// <returns></returns>
+    static CreatureData CreateCreatureData(DeathItemGetter deathItem, PluginEntry prototype, PatchingRecords std)
     {
         CreatureData data = new(deathItem, CreateInternalName(deathItem), prototype, prototype.Type == EntryType.Animal, prototype.Type == EntryType.Monster);
         return data;
@@ -1002,10 +999,9 @@ sealed internal class Program
     /// 
     static string CreateInternalName(DeathItemGetter deathItem) 
     {
-        if (deathItem.EditorID.IsNullOrWhitespace()) return INTERNAL_NAME_FILTER.Replace(deathItem.FormKey.ToString(), "");
-        else return INTERNAL_NAME_FILTER.Replace(deathItem.EditorID, "");
+        if (deathItem.EditorID.IsNullOrWhitespace()) return EditorIdFilter.Replace(deathItem.FormKey.ToString(), "");
+        else return EditorIdFilter.Replace(deathItem.EditorID, "");
     }
-    readonly static private Regex INTERNAL_NAME_FILTER = new("[^a-zA-Z0-9_]", RegexOptions.IgnoreCase);
 
     /// <summary>
     /// Creates the Misc deathtoken for a creature.
@@ -1017,16 +1013,16 @@ sealed internal class Program
     /// Naming is done heuristically. 
     /// </summary>
     /// 
-    static private MiscItem CreateToken(CreatureData data, StandardRecords std)
+    private MiscItem CreateToken(CreatureData data, PatchingRecords std)
     {
         // Get a pre-existing token that already has the keywords and model set.
         // That way all that needs to be done is to change the internalName and editor ID.
         var existingTokenLink = data.IsAnimal ? DEFAULT_TOKEN_ANIMAL : DEFAULT_TOKEN_MONSTER;
-        existingTokenLink.TryResolve(std.LinkCache, out var existingToken);
+        existingTokenLink.TryResolve(State.LinkCache, out var existingToken);
         if (existingToken == null) throw new CoreRecordMissing(existingTokenLink);
 
         // Add the token to the patch.
-        var token = std.PatchMod.MiscItems.DuplicateInAsNewRecord(existingToken);
+        var token = State.PatchMod.MiscItems.DuplicateInAsNewRecord(existingToken);
         if (token == null) throw new InvalidOperationException();
 
         // Set the EditorID.
@@ -1039,14 +1035,14 @@ sealed internal class Program
         return token;
     }
 
-    static MiscItem CreateCarcass(CreatureData data, StandardRecords std)
+    private MiscItem CreateCarcass(CreatureData data, PatchingRecords std)
     {
         // Get a pre-existing carcass that already has the keywords set.
-        DEFAULT_CARCASS.TryResolve(std.LinkCache, out var existingCarcass);
+        DEFAULT_CARCASS.TryResolve(State.LinkCache, out var existingCarcass);
         if (existingCarcass == null) throw new CoreRecordMissing(DEFAULT_CARCASS);
 
         // Add the carcass to the patch.
-        var carcass = std.PatchMod.MiscItems.DuplicateInAsNewRecord(existingCarcass);
+        var carcass = State.PatchMod.MiscItems.DuplicateInAsNewRecord(existingCarcass);
         if (carcass == null) throw new InvalidOperationException();
 
         var oldName = carcass.Name?.String;
@@ -1068,7 +1064,7 @@ sealed internal class Program
         return carcass;
     }
 
-    static Model CreateDefaultCarcassModel()
+    static private Model CreateDefaultCarcassModel()
     {
         return new Model { File = "Clutter\\Containers\\MiscSackLarge.nif", AlternateTextures = null };
     }
@@ -1077,15 +1073,15 @@ sealed internal class Program
     /// Creates a FormList of LeveledItems from a list of MaterialLevels in a prototype.
     /// </summary>
     /// 
-    static FormList CreateMaterials(CreatureData data, StandardRecords std)
+    private FormList CreateMaterials(CreatureData data, PatchingRecords std)
     {
         //DEFAULT_MATS.TryResolve(state.LinkCache, out var existingMaterials);
         //if (existingMaterials == null) throw new CoreRecordMissing(DEFAULT_MATS.FormKey);
 
-        var matsFormList = std.PatchMod.FormLists.AddNew();
+        var matsFormList = State.PatchMod.FormLists.AddNew();
         if (matsFormList == null) throw new InvalidOperationException();
 
-        var matsPerfectLvld = std.PatchMod.LeveledItems.AddNew();
+        var matsPerfectLvld = State.PatchMod.LeveledItems.AddNew();
         if (matsPerfectLvld == null) throw new InvalidOperationException();
 
         matsFormList.EditorID = $"_DS_FL_Mats_{data.InternalName}";
@@ -1094,7 +1090,7 @@ sealed internal class Program
         for (int index = 0; index < data.Prototype.Materials.Count; index++)
         {
             var skillLevel = data.Prototype.Materials[index];
-            var mat = std.PatchMod.LeveledItems.AddNew();
+            var mat = State.PatchMod.LeveledItems.AddNew();
             if (mat == null) throw new InvalidOperationException();
 
             mat.EditorID = $"{matsFormList.EditorID}{index:D2}";
@@ -1102,7 +1098,7 @@ sealed internal class Program
 
             foreach (var itemEntry in skillLevel.Items) {
                 IFormLinkGetter<IItemGetter> item = new FormLink<IItemGetter>(itemEntry.Key.FormKey);
-                item = std.FormLinkSubstitution(item);
+                item = FormLinkSubstitution(item);
                 entries.Add(CreateLeveledItemEntry(item, 1, itemEntry.Value));
             }
 
@@ -1121,7 +1117,7 @@ sealed internal class Program
     /// The inverse of CreateMaterials.
     /// </summary>
     /// 
-    static List<MaterialLevel> RecreateMaterials(IFormListGetter matsFormList, StandardRecords std)
+    private List<MaterialLevel> RecreateMaterials(IFormListGetter matsFormList, ViewingRecords std)
     {
         List<MaterialLevel> materials = new();
         //Console.WriteLine($"===Recreating materials from {matsFormList}, {matsFormList.Items.Count} in formlist.===");
@@ -1129,7 +1125,7 @@ sealed internal class Program
 
         foreach (var level in matsFormList.Items)
         {
-            var asLeveled = level.FormKey.ToLinkGetter<ILeveledItemGetter>().Resolve(std.LinkCache);
+            var asLeveled = level.FormKey.ToLinkGetter<ILeveledItemGetter>().Resolve(State.LinkCache);
 
             MaterialLevel skillLevel = new();
             materials.Add(skillLevel);
@@ -1151,9 +1147,9 @@ sealed internal class Program
     }
 
 
-    static IFormListGetter CreatePelts(CreatureData data, StandardRecords std)
+    private IFormListGetter CreatePelts(CreatureData data, PatchingRecords std)
     {
-        var pelts = std.PatchMod.FormLists.AddNew();
+        var pelts = State.PatchMod.FormLists.AddNew();
         if (pelts == null) throw new InvalidOperationException();
         pelts.EditorID = $"_DS_FL_Pelts{data.InternalName}";
 
@@ -1168,19 +1164,19 @@ sealed internal class Program
 
         if (!KnownPelts.ContainsKey(data.Prototype))
         {
-            var standard = GetDefaultPelt(data, std);
+            var standard = GetDefaultPelt(data);
             bool createdDefaultPelt = standard is not null;
             if (standard == null) standard = CreateDefaultPelt(data, std);
  
-            if (std.Settings.DebuggingMode) Write.Action(3, "Creating new Pelt records in Misc.");
+            if (DebuggingMode) Write.Action(3, "Creating new Pelt records in Misc.");
 
-            var poor = std.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
-            var fine = std.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
-            var flawless = std.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
+            var poor = State.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
+            var fine = State.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
+            var flawless = State.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
 
-            if (std.Settings.DebuggingMode) Write.Success(3, "Created \"poor\".");
-            if (std.Settings.DebuggingMode) Write.Success(3, "Created \"standard\".");
-            if (std.Settings.DebuggingMode) Write.Success(3, "Created \"flawless\".");
+            if (DebuggingMode) Write.Success(3, "Created \"poor\".");
+            if (DebuggingMode) Write.Success(3, "Created \"standard\".");
+            if (DebuggingMode) Write.Success(3, "Created \"flawless\".");
 
             String edid = $"_DS_Pelt_{data.InternalName ?? data.InternalName}";
             poor.EditorID = $"{edid}_00";
@@ -1195,11 +1191,12 @@ sealed internal class Program
             poor.Value /= 2;
             fine.Value *= 2;
             flawless.Value *= 20;
+
+            PeltSet peltSet = (poor, standard, fine, flawless);
             KnownPelts[data.Prototype] = new IFormLinkGetter<IMiscItemGetter>[4] { poor.ToLink(), standard.ToLink(), fine.ToLink(), flawless.ToLink() };
 
             std.GetCCFor(data).PeltValues.Data.Add((int)standard.Value);
-
-            if (createdDefaultPelt) CreatePeltRecipes(data, (poor, standard, fine, flawless), createdDefaultPelt, std);
+            if (createdDefaultPelt) CreatePeltRecipes(data, peltSet, createdDefaultPelt, std);
         }
 
         // Add the pelts to the pelts formlist.
@@ -1208,7 +1205,7 @@ sealed internal class Program
         // Put the pelts formlist in the correct formlist.
         // Update the 
         std.GetCCFor(data)._DS_FL_PeltLists.Items.Add(pelts);
-        std.GetCCFor(data).PeltValues.Data.Add((int)KnownPelts[data.Prototype][1].Resolve(std.LinkCache).Value);
+        std.GetCCFor(data).PeltValues.Data.Add((int)KnownPelts[data.Prototype][1].Resolve(State.LinkCache).Value);
 
         return pelts;
     }
@@ -1220,10 +1217,10 @@ sealed internal class Program
     /// </summary>
     /// <returns>A pair consisting of the pelt Item and a flag indicating whether it was created.</returns>
     /// 
-    static IMiscItemGetter? GetDefaultPelt(CreatureData data, StandardRecords std)
+    private IMiscItemGetter? GetDefaultPelt(CreatureData data)
     {
-        if (!data.Prototype.DefaultPelt.IsNull) return data.Prototype.DefaultPelt.Resolve(std.LinkCache);
-        var defaultPelt = GetDefaultPelt(data.DeathItem, std);
+        if (!data.Prototype.DefaultPelt.IsNull) return data.Prototype.DefaultPelt.Resolve(State.LinkCache);
+        var defaultPelt = GetDefaultPelt(data.DeathItem);
         if (defaultPelt is IMiscItemGetter pelt) return pelt;
         else return null;
     }
@@ -1236,14 +1233,14 @@ sealed internal class Program
     /// 
     /// </summary>
     /// 
-    static IMiscItemGetter? GetDefaultPelt(ILeveledItemGetter data, StandardRecords std)
+    private IMiscItemGetter? GetDefaultPelt(DeathItemGetter data)
     {
         var entries = data.Entries;
         if (entries == null) return null;
 
         foreach (var entry in entries)
         {
-            var entryItem = entry.Data?.Reference.TryResolve(std.LinkCache);
+            var entryItem = entry.Data?.Reference.TryResolve(State.LinkCache);
             var edid = entryItem?.EditorID ?? "";
             if (entryItem == null || edid == null) continue;
 
@@ -1251,13 +1248,13 @@ sealed internal class Program
             {
                 if (entryItem is ILeveledItemGetter lvld)
                 {
-                    if (std.Settings.DebuggingMode) Write.Action(4, $"Pelt search recursing into {DeathItemNamerFallback(lvld)}");
-                    if (lvld.Entries is not null && lvld.Entries.Count == 1 && GetDefaultPelt(lvld, std) is IMiscItemGetter subItem)
+                    if (DebuggingMode) Write.Action(4, $"Pelt search recursing into {DeathItemNamer(lvld)}");
+                    if (lvld.Entries is not null && lvld.Entries.Count == 1 && GetDefaultPelt(lvld) is IMiscItemGetter subItem)
                         return subItem;
                 }
                 else if (entryItem is IMiscItemGetter item)
                 {
-                    if (std.Settings.DebuggingMode) Write.Action(4, $"Pelt search found {ItemNamerFallback(item)}");
+                    if (DebuggingMode) Write.Action(4, $"Pelt search found {ItemNamer(item)}");
                     return item;
                 }
             }
@@ -1265,11 +1262,6 @@ sealed internal class Program
 
         return null;
     }
-
-    /// <summary>
-    /// Matcher for pre-existing pelts items.
-    /// </summary>
-    static readonly Regex DefaultPeltRegex = new("Pelt|Hide|Skin|Fur|Wool|Leather", RegexOptions.IgnoreCase);
 
     /// <summary>
     /// Create a new default pelt for a creature using a pre-existing pelt as a template.
@@ -1280,14 +1272,14 @@ sealed internal class Program
     /// <returns></returns>
     /// <exception cref="CoreRecordMissing"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    static MiscItem CreateDefaultPelt(CreatureData data, StandardRecords std)
+    private MiscItem CreateDefaultPelt(CreatureData data, PatchingRecords std)
     {
-        if (std.Settings.DebuggingMode) Write.Action(3, $"Creating new pelt for {data.InternalName}");
+        if (DebuggingMode) Write.Action(3, $"Creating new pelt for {data.InternalName}");
 
-        DEFAULT_PELT.TryResolve(std.LinkCache, out var existingPelt);
+        DEFAULT_PELT.TryResolve(State.LinkCache, out var existingPelt);
         if (existingPelt == null) throw new CoreRecordMissing(DEFAULT_PELT);
 
-        var newPelt = std.PatchMod.MiscItems.DuplicateInAsNewRecord(DEFAULT_PELT.Resolve(std.LinkCache));
+        var newPelt = State.PatchMod.MiscItems.DuplicateInAsNewRecord(DEFAULT_PELT.Resolve(State.LinkCache));
         if (newPelt == null) throw new InvalidOperationException();
 
         newPelt.EditorID = $"_DS_Pelt_{data.InternalName}_01";
@@ -1296,7 +1288,7 @@ sealed internal class Program
         // @TODO Fill this in with something better.
         newPelt.Value = (uint)data.Prototype.CarcassValue / 2;
         
-        if (std.Settings.DebuggingMode) Write.Success(3, $"Created new default Pelt {newPelt}");
+        if (DebuggingMode) Write.Success(3, $"Created new default Pelt {newPelt}");
 
         return newPelt;
     }
@@ -1309,9 +1301,9 @@ sealed internal class Program
     /// 
     /// </summary>
     /// 
-    static IItemGetter? GetDefaultMeat(CreatureData data, StandardRecords std)
+    private IItemGetter? GetDefaultMeat(CreatureData data, PatchingRecords std)
     {
-        if (!data.Prototype.Meat.IsNull) return data.Prototype.Meat.Resolve(std.LinkCache);
+        if (!data.Prototype.Meat.IsNull) return data.Prototype.Meat.Resolve(State.LinkCache);
         else
         {
             var defaultMeat = GetDefaultMeat(data.DeathItem, std);
@@ -1329,14 +1321,14 @@ sealed internal class Program
     /// 
     /// </summary>
     /// 
-    static IItemGetter? GetDefaultMeat(ILeveledItemGetter data, StandardRecords std)
+    private IItemGetter? GetDefaultMeat(DeathItemGetter data, PatchingRecords std)
     {
         var entries = data.Entries;
         if (entries == null) return null;
 
         foreach (var entry in entries)
         {
-            var entryItem = entry.Data?.Reference.TryResolve(std.LinkCache);
+            var entryItem = entry.Data?.Reference.TryResolve(State.LinkCache);
             var edid = entryItem?.EditorID ?? "";
             if (entryItem == null || edid == null) continue;
 
@@ -1344,13 +1336,13 @@ sealed internal class Program
             {
                 if (entryItem is ILeveledItemGetter lvld)
                 {
-                    if (std.Settings.DebuggingMode) Write.Action(4, $"Meat search recursing into {DeathItemNamerFallback(lvld)}");
+                    if (DebuggingMode) Write.Action(4, $"Meat search recursing into {DeathItemNamer(lvld)}");
                     if (lvld.Entries is not null && lvld.Entries.Count == 1 && GetDefaultMeat(lvld, std) is IItemGetter subItem)
                         return subItem;
                 }
                 else if (entryItem is IItemGetter item)
                 {
-                    if (std.Settings.DebuggingMode) Write.Action(4, $"Meat search found {ItemNamerFallback(item)}");
+                    if (DebuggingMode) Write.Action(4, $"Meat search found {ItemNamer(item)}");
                     return item;
                 }
             }
@@ -1358,11 +1350,6 @@ sealed internal class Program
 
         return null;
     }
-
-    /// <summary>
-    /// Matcher for pre-existing meat items.
-    /// </summary>
-    static readonly Regex DefaultMeatRegex = new("Meat|Flesh", RegexOptions.IgnoreCase);
 
     /// <summary>
     /// Create a new default meat for a creature using a pre-existing meat as a template.
@@ -1374,16 +1361,16 @@ sealed internal class Program
     /// <returns></returns>
     /// <exception cref="CoreRecordMissing"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    static IItemGetter CreateDefaultMeat(CreatureData data, StandardRecords std)
+    private IItemGetter CreateDefaultMeat(CreatureData data, PatchingRecords std)
     {
-        if (std.Settings.DebuggingMode) Write.Action(3, $"Creating new meats for {data.InternalName}");
+        if (DebuggingMode) Write.Action(3, $"Creating new meats for {data.InternalName}");
 
-        DEFAULT_MEAT.TryResolve(std.LinkCache, out var existingMeat);
+        DEFAULT_MEAT.TryResolve(State.LinkCache, out var existingMeat);
         if (existingMeat == null) throw new CoreRecordMissing(DEFAULT_MEAT);
 
-        var newMeat = std.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
-        var newCooked = std.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
-        var newJerky = std.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
+        var newMeat = State.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
+        var newCooked = State.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
+        var newJerky = State.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
 
         if (newMeat == null) throw new InvalidOperationException();
         if (newCooked == null) throw new InvalidOperationException();
@@ -1404,7 +1391,7 @@ sealed internal class Program
         if (!newMeat.HasKeyword(_DS_KW_Food_Raw)) newMeat.Keywords.Add(_DS_KW_Food_Raw);
         if (!newMeat.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)) newMeat.Keywords.Add(Skyrim.Keyword.VendorItemFoodRaw);
 
-        if (std.CacoInstalled)
+        if (IsCacoInstalled())
         {
             if (!newMeat.HasKeyword(VendorItemFoodMeat)) newMeat.Keywords.Add(VendorItemFoodMeat);
             if (!newMeat.HasKeyword(VendorItemFoodUncooked)) newMeat.Keywords.Add(VendorItemFoodUncooked);
@@ -1415,7 +1402,7 @@ sealed internal class Program
             if (!newJerky.HasKeyword(VendorItemFoodPreserved)) newJerky.Keywords.Add(VendorItemFoodPreserved);
         }
 
-        if (std.LastSeedInstalled)
+        if (IsLastSeedInstalled())
         {
             if (!newMeat.HasKeyword(VendorItemFoodMeat)) newMeat.Keywords.Add(VendorItemFoodMeat);
             if (!newMeat.HasKeyword(_Seed_PO3_Detection_MeatRaw)) newMeat.Keywords.Add(_Seed_PO3_Detection_MeatRaw);
@@ -1431,10 +1418,11 @@ sealed internal class Program
         // @TODO Fill this in with something better.
         newMeat.Value = (uint)data.Prototype.CarcassValue / 5;
 
+        MeatSet meatSet = (newMeat, newCooked, newJerky);
         // Make recipes.
-        CreateMeatRecipes(data, (newMeat, newCooked, newJerky), std);
+        CreateMeatRecipes(data, meatSet, std);
 
-        if (std.Settings.DebuggingMode) Write.Success(3, $"Created new meats: {newMeat}, {newCooked}, {newJerky}");
+        if (DebuggingMode) Write.Success(3, $"Created new meats: {meatSet}");
 
         return newMeat;
     }
@@ -1444,14 +1432,16 @@ sealed internal class Program
     /// Dicards are also called "negativetreasure" internally.
     /// </summary>
     /// 
-    static void CreateDiscards(CreatureData data, StandardRecords std)
+    private FormList CreateDiscards(CreatureData data, PatchingRecords std)
     {
-        var discards = std.PatchMod.FormLists.AddNew();
+        var discards = State.PatchMod.FormLists.AddNew();
         if (discards == null) throw new InvalidOperationException();
 
         discards.EditorID = $"_DS_FL_Discard{data.InternalName}_01";
         discards.Items.AddRange(data.Prototype.Discard);
         std.Monsters.Discards.Objects.Add(CreateProperty(discards.ToLink()));
+
+        return discards;
     }
 
     /// <summary>
@@ -1463,10 +1453,10 @@ sealed internal class Program
     /// 
     /// </summary>
     /// 
-    static ILeveledItemGetter CreateDeathDescriptor(CreatureData data, StandardRecords std, IFormListGetter pelts, FormList mats)
+    private ILeveledItemGetter CreateDeathDescriptor(CreatureData data, IFormListGetter pelts, FormList mats, PatchingRecords std)
     {
         // Create the new descriptor.
-        LeveledItem deathDescriptor = std.PatchMod.LeveledItems.AddNew();
+        LeveledItem deathDescriptor = State.PatchMod.LeveledItems.AddNew();
         deathDescriptor.EditorID = $"_DS_DeathItem_{data.InternalName}";
         deathDescriptor.Entries = new();
 
@@ -1513,22 +1503,22 @@ sealed internal class Program
     /// Creates leather and pelt recipes for created leathers.
     /// </summary>
     /// 
-    static void CreatePeltRecipes(CreatureData data, (IMiscItemGetter, IMiscItemGetter, IMiscItemGetter, IMiscItemGetter) pelts, bool createdStandardPelt, StandardRecords std)
+    private void CreatePeltRecipes(CreatureData data, PeltSet pelts, bool createdStandardPelt, PatchingRecords std)
     {
         if (data.Prototype.FurPlateCount.Length >= 3)
         {
             if (createdStandardPelt)
             {
-                var standard = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_STD_RECIPE.Resolve(std.LinkCache));
+                var standard = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_STD_RECIPE.Resolve(State.LinkCache));
                 standard.CreatedObjectCount = (ushort)data.Prototype.PeltCount[1];
                 if (standard.Items?[0].Item is ContainerItem containerItem2) containerItem2.Item = pelts.Item2.ToLink();
                 if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
                 standard.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_01";
             }
 
-            var poor = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_POOR_RECIPE.Resolve(std.LinkCache));
-            var fine = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_FINE_RECIPE.Resolve(std.LinkCache));
-            var flawless = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_FLAWLESS_RECIPE.Resolve(std.LinkCache));
+            var poor = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_POOR_RECIPE.Resolve(State.LinkCache));
+            var fine = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_FINE_RECIPE.Resolve(State.LinkCache));
+            var flawless = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_FLAWLESS_RECIPE.Resolve(State.LinkCache));
 
             poor.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_00";
             fine.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_02";
@@ -1549,14 +1539,14 @@ sealed internal class Program
             fine.CreatedObject = pelts.Item2.ToNullableLink();
             flawless.CreatedObject = pelts.Item3.ToNullableLink();
 
-            if (std.Settings.DebuggingMode) Write.Success(3, $"Created new tanning recipes.");
+            if (DebuggingMode) Write.Success(3, $"Created new tanning recipes.");
         }
 
         if (data.Prototype.FurPlateCount.Length >= 3)
         {
-            var poor = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_POOR_RECIPE.Resolve(std.LinkCache));
-            var standard = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_STD_RECIPE.Resolve(std.LinkCache));
-            var fine = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_FINE_RECIPE.Resolve(std.LinkCache));
+            var poor = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_POOR_RECIPE.Resolve(State.LinkCache));
+            var standard = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_STD_RECIPE.Resolve(State.LinkCache));
+            var fine = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_FINE_RECIPE.Resolve(State.LinkCache));
 
             poor.EditorID = $"HB_Recipe_FurPlate_{data.InternalName}_00";
             standard.EditorID = $"HB_Recipe_FurPlate_{data.InternalName}_01";
@@ -1574,7 +1564,7 @@ sealed internal class Program
             if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
             if (fine.Conditions?[4].Data is FunctionConditionData data3) data3.ParameterOneRecord = pelts.Item3.ToLink();
 
-            if (std.Settings.DebuggingMode) Write.Success(3, $"Created new fur-plate recipes.");
+            if (DebuggingMode) Write.Success(3, $"Created new fur-plate recipes.");
         }
     }
 
@@ -1582,12 +1572,12 @@ sealed internal class Program
     /// Creates standard, campfire, primitive cooking, and jerky recipes for created meats.
     /// </summary>
     /// 
-    static void CreateMeatRecipes(CreatureData data, (IItemGetter, IConstructibleGetter, IConstructibleGetter) meats, StandardRecords std)
+    private void CreateMeatRecipes(CreatureData data, MeatSet meats, PatchingRecords std)
     {
-        var recipeCooked = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_CHARRED_RECIPE.Resolve(std.LinkCache));
-        var recipeCampfire = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_CAMPFIRE_RECIPE.Resolve(std.LinkCache));
-        var recipePrimitive = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PRIMITIVE_RECIPE.Resolve(std.LinkCache));
-        var recipeJerky = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_JERKY_RECIPE.Resolve(std.LinkCache));
+        var recipeCooked = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_CHARRED_RECIPE.Resolve(State.LinkCache));
+        var recipeCampfire = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_CAMPFIRE_RECIPE.Resolve(State.LinkCache));
+        var recipePrimitive = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PRIMITIVE_RECIPE.Resolve(State.LinkCache));
+        var recipeJerky = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_JERKY_RECIPE.Resolve(State.LinkCache));
 
         (var meat, var cooked, var jerky) = meats;
 
@@ -1607,7 +1597,7 @@ sealed internal class Program
         recipeCooked.CreatedObject = cooked.ToNullableLink();
         recipeJerky.CreatedObject = jerky.ToNullableLink();
 
-        if (std.Settings.DebuggingMode) Write.Success(3, $"Created new meat recipes.");
+        if (DebuggingMode) Write.Success(3, $"Created new meat recipes.");
     }
 
     /// <summary>
@@ -1616,7 +1606,7 @@ sealed internal class Program
     /// @TODO Addons should be allowed to add to this list.
     /// 
     /// </summary>
-    readonly static private HashSet<FormLink<IFactionGetter>> ForbiddenFactions = new() {
+    readonly static private HashSet<IFormLinkGetter<IFactionGetter>> ForbiddenFactions = new() {
         Dawnguard.Faction.DLC1VampireFaction,
         Dragonborn.Faction.DLC2AshSpawnFaction,
         Skyrim.Faction.DragonPriestFaction,
@@ -1634,7 +1624,7 @@ sealed internal class Program
     /// @TODO Addons should be allowed to add to this list.
     /// 
     /// </summary>
-    readonly static private HashSet<FormLink<IKeywordGetter>> ForbiddenKeywords = new() {
+    readonly static private HashSet<IFormLinkGetter<IKeywordGetter>> ForbiddenKeywords = new() {
         Skyrim.Keyword.ActorTypeGhost,
         Skyrim.Keyword.ActorTypeNPC
     };
@@ -1752,6 +1742,14 @@ sealed internal class Program
         return new() { Object = link };
     }
 
+    public bool IsCacoInstalled() => State.LoadOrder.ContainsKey(CACO_MODKEY);
+    public bool IsLastSeedInstalled() => State.LoadOrder.ContainsKey(LASTSEED_MODKEY);
+
+    private Func<IFormLinkGetter<IItemGetter>, IFormLinkGetter<IItemGetter>> FormLinkSubstitution { get; }
+
+    private Func<IItemGetter, IItemGetter> ItemSubstitution { get; }
+
+
     /// <summary>
     /// Breaks a set of names into parts based on capital letters, spaces, underlines, and dashes.
     /// They are returned as a single set.
@@ -1782,19 +1780,97 @@ sealed internal class Program
     readonly static private Regex TOKENIZER_BREAK_SPLITTER = new("[ _-]");
     readonly static private Regex TOKENIZER_CAMEL_SPLITTER = new("([A-Z]+[a-z0-9]*)");
 
-    static private string NpcNamerFallback(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache) 
-        => NpcNamer(npc) ?? NpcRaceNamer(npc, linkCache) ?? FormIDNamer(npc);
-    static private string DeathItemNamerFallback(DeathItemGetter deathItem)
-        => DeathItemNamer(deathItem) ?? FormIDNamer(deathItem);
-    static private string ItemNamerFallback(IItemGetter item)
-        => item.EditorID ?? FormIDNamer(item);
-    static private string? NpcNamer(INpcGetter npc) => BasicNamer(npc);
-    static private string? NpcRaceNamer(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache) => RaceNamer(npc.Race.Resolve(linkCache));
-    static private string? NpcDeathItemNamer(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache) => DeathItemNamer(npc.DeathItem?.Resolve(linkCache));
-    static private string? RaceNamer(IRaceGetter? race) => BasicNamer(race);
-    static private string? DeathItemNamer(DeathItemGetter? deathItem) => deathItem?.EditorID;
-    static private string FormIDNamer(ISkyrimMajorRecordGetter? thing) => thing?.FormKey.IDString() ?? "NULL";
-    static private string? BasicNamer<T>(T? thing) where T : ISkyrimMajorRecordGetter, INamedGetter  => thing?.Name?.ToString() ?? thing?.EditorID;
+    private string NpcNamer(INpcGetter npc) => FormNamer(npc, () => LinkNamer(npc.Race, () => FormIDNamer(npc)));
+    private static string DeathItemNamer(DeathItemGetter deathItem) => FormNamer(deathItem);
+    private static string ItemNamer(IItemGetter item) => FormNamer(item);
+
+    //private string NpcNamerFallback(INpcGetter npc) => NpcNamer(npc) ?? NpcRaceNamer(npc) ?? FormIDNamer(npc);
+    //static private string DeathItemNamerFallback(DeathItemGetter deathItem) => DeathItemNamer(deathItem) ?? FormIDNamer(deathItem);
+    //static private string ItemNamerFallback(IItemGetter item)
+    //=> item.EditorID ?? FormIDNamer(item);
+    //private string? NpcRaceNamer(INpcGetter npc) => RaceNamer(npc.Race.Resolve(State.LinkCache));
+    //private string? NpcDeathItemNamer(INpcGetter npc) => DeathItemNamer(npc.DeathItem?.Resolve(State.LinkCache));
+
+    /// <summary>
+    /// Wraps for <code>BasicNamer</code> for <code>INpcGetter</code>.
+    /// </summary>
+    //static private string? NpcNamer(INpcGetter npc) => FormNamer(npc);
+
+    //static private string? RaceNamer(IRaceGetter? race) => FormNamer(race);
+    //static private string? DeathItemNamer(DeathItemGetter? deathItem) => deathItem?.EditorID;
+    static private string FormIDNamer(IMajorRecordGetter? thing) => thing?.FormKey.IDString() ?? "NULL";
+
+    /// <summary>
+    /// Returns name of <code>thing</code>. 
+    /// If no name is available, returns the EditorID of <code>thing</code>.
+    /// If no EditorID is available, returns null;
+    /// </summary>
+    /// 
+    private string LinkNamer(IFormLinkGetter<IMajorRecordGetter>? thing, Func<string?>? fallback = null)
+    {
+        if (thing is null) return "<NULL>";
+        thing.TryResolve(State.LinkCache, out var form);
+        return FormNamer(form, fallback);
+    }
+
+    /// <summary>
+    /// Returns name of <code>thing</code>. 
+    /// If no name is available, returns the EditorID of <code>thing</code>.
+    /// If no EditorID is available, returns null;
+    /// </summary>
+    /// 
+    static private string FormNamer(IMajorRecordGetter? thing, Func<string?>? fallback = null)
+    {
+        if (thing is INamedGetter named && named.Name?.ToString() is string name) return name;
+        else if (thing is ISkyrimMajorRecordGetter rec && rec.EditorID is string edid) return edid;
+        else if (fallback is not null && fallback() is string fallbackName) return fallbackName;
+        else return FormIDNamer(thing);
+    }
+
+    public record CreatureData(DeathItemGetter DeathItem, String InternalName, PluginEntry Prototype, bool IsAnimal, bool IsMonster);
+    private static Lazy<Settings.Settings> _settings = null!;
+
+    /// <summary>
+    /// Matcher for pre-existing pelts items.
+    /// </summary>
+    static readonly private Regex DefaultPeltRegex = new("Pelt|Hide|Skin|Fur|Wool|Leather", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Matcher for pre-existing meat items.
+    /// </summary>
+    static readonly Regex DefaultMeatRegex = new("Meat|Flesh", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Used to strip invalid editorID characters from a string.
+    /// </summary>
+    static readonly private Regex EditorIdFilter = new("[^a-zA-Z0-9_]", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Matcher for plugin names. 
+    /// A match occurs if the plugin internalName is contained in the target string.
+    /// Case-insensitive.
+    /// 
+    /// </summary>
+    /// <param internalName="str">The string against which to match the plugin names.</param>
+    /// <returns>The matcher.</returns>
+    /// 
+    static Func<PluginEntry, bool> PluginNameMatch(String str) => plugin => str.ContainsInsensitive(plugin.Name);
+
+    /// <summary>
+    /// This thing is ridiculous but convenient. Can you say "Currying"?
+    /// 
+    /// </summary>
+    /// 
+    static Func<int, Action<T>> DictionaryIncrementer<T>(Dictionary<T, int> dict) where T : notnull
+        => val => plugin => { if (val > 0) dict[plugin] = dict.GetValueOrDefault(plugin, 0) + val; };
+
+
+    private Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses { get; } = new();
+    private Dictionary<PluginEntry, IFormLinkGetter<IMiscItemGetter>[]> KnownPelts { get; } = new();
+    private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
+    private Settings.Settings Settings { get; }
+    private IPatcherState<ISkyrimMod, ISkyrimModGetter> State { get; }
+    private bool DebuggingMode { get { return Settings.DebuggingMode; } }
 
 }
 
