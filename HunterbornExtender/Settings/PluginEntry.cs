@@ -1,5 +1,7 @@
 ﻿using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Skyrim;
+using Newtonsoft.Json;
+using Noggog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,18 +19,47 @@ namespace HunterbornExtender.Settings
         public IFormLinkGetter<IGlobalGetter> Toggle { get; set; } = new FormLink<IGlobalGetter>();
         public IFormLinkGetter<IMessageGetter> CarcassMessageBox { get; set; } = new FormLink<IMessageGetter>();
         public IFormLinkGetter<IItemGetter> Meat { get; set; } = new FormLink<IItemGetter>();
-        //public IFormLinkGetter<IItemGetter> DefaultPelt { get; set; } = new FormLink<IItemGetter>();
         public int CarcassSize { get; set; } = 1;
         public int CarcassWeight { get; set; } = 10;
         public int CarcassValue { get; set; } = 10;
-        public int[] PeltCount { get; set; } = new int[] { 1, 1, 1, 1 };
-        public int[] FurPlateCount { get; set; } = new int[] { 1, 1, 1, 1 };
+        public int[] PeltCount { get; set; } = new int[] { 2, 2, 2, 2 };
+        public int[] FurPlateCount { get; set; } = new int[] { 1, 2, 4, 8 };
         public List<MaterialLevel> Materials { get; set; } = new();
         public List<IFormLinkGetter<IItemGetter>> Discard { get; set; } = new();
         public IFormLinkGetter<IFormListGetter> SharedDeathItems { get; set; } = new FormLink<IFormListGetter>();
         public IFormLinkGetter<IItemGetter> BloodType { get; set; } = new FormLink<IItemGetter>();
         public IFormLinkGetter<IItemGetter> Venom { get; set; } = new FormLink<IItemGetter>();
         public IFormLinkGetter<IVoiceTypeGetter> Voice { get; set; } = new FormLink<IVoiceTypeGetter>();
+
+        /// <summary>
+        /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
+        /// </summary>
+        [JsonIgnore] public IFormLinkGetter<IMiscItemGetter> DefaultPelt { get; set; } = new FormLink<IMiscItemGetter>();
+
+        /// <summary>
+        /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
+        /// </summary>
+        [JsonIgnore] public bool CreateDefaultMeat { get; set; } = false;
+
+        /// <summary>
+        /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
+        /// </summary>
+        [JsonIgnore] public bool CreateDefaultPelt { get; set; } = true;
+
+        /// <summary>
+        /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
+        /// </summary>
+        [JsonIgnore] public LeatherType LeatherRecipeType { get; set; } = LeatherType.NORMAL;
+
+        /// <summary>
+        /// Data for heuristics. Never persist this.
+        /// </summary>
+        [JsonIgnore] public HashSet<string> Tokens { get; set; } = new();
+
+        /// <summary>
+        /// Data for generating recipes. Never persist this.
+        /// </summary>
+        [JsonIgnore] public PluginEntryRecipes Recipes { get; set; } = new();
 
         public PluginEntry() // Json import appears to require a parameterless default constructor
         {
@@ -45,7 +76,9 @@ namespace HunterbornExtender.Settings
 
         override public string ToString()
         {
-            return ProperName;
+            if (!ProperName.IsNullOrWhitespace()) return ProperName;
+            if (!SortName.IsNullOrWhitespace()) return SortName;
+            return Name;
         }
     }
 
@@ -66,7 +99,6 @@ namespace HunterbornExtender.Settings
         public AddonPluginEntry(EntryType type, string name) : base(type, name) { }
     }
 
-
     /// <summary>
     /// Used to describe the hard-coded plugins from Hunterborn.esp.
     /// They each have a KnownDeathItem used as a prototype.
@@ -83,9 +115,30 @@ namespace HunterbornExtender.Settings
 
     }
 
+    /// <summary>
+    /// Describes the amounts of materials that can be harvested from a creature at a single skill level.
+    /// </summary>
     public sealed class MaterialLevel
     {
         public Dictionary<IFormLinkGetter<IItemGetter>, int> Items { get; set; } = new();
     }
+
+    /// <summary>
+    /// Recipes associated with the plugin.
+    /// </summary>
+    sealed public class PluginEntryRecipes
+    {
+        public (IConstructibleObjectGetter, IConstructibleObjectGetter, IConstructibleObjectGetter, IConstructibleObjectGetter)? PeltRecipes { get; set; } = null;
+
+        public (IConstructibleObjectGetter, IConstructibleObjectGetter, IConstructibleObjectGetter)? FurPlateRecipes { get; set; } = null;
+
+        public (IConstructibleObjectGetter?, IConstructibleObjectGetter?, IConstructibleObjectGetter?, IConstructibleObjectGetter?)? MeatRecipes { get; set; } = null;
+
+    }
+
+    /// <summary>
+    /// If CCOR is installed, this will control what kind of leather is produced by pelt recipes.
+    /// </summary>
+    public enum LeatherType { NORMAL, LIGHT, DARK };
 
 }

@@ -25,7 +25,7 @@ namespace HunterbornExtender
             {
                 try
                 {
-                    Console.WriteLine($"\tReading legacy zedit plugin set: ${fileName}");
+                    Console.WriteLine($"\tReading legacy zedit plugin set: {fileName}");
                     var filePlugins = ReadFile(fileName, state);
                     plugins.AddRange(filePlugins);
                 }
@@ -61,11 +61,10 @@ namespace HunterbornExtender
                     plugins.Add(plugin);
                     Console.WriteLine($"\t\t\t o Added plugin for {plugin.Name}.");
     
-                    /*
-                    if (legacy.name.ToLower().Equals("giant"))
+                    if (legacy.name.ToLower().ContainsInsensitive("hagraven"))
                     {
                         TestImportConversion(legacy, plugin);
-                    }*/
+                    }
                 }
                 catch (MissingRecordException ex)
                 {
@@ -110,9 +109,9 @@ namespace HunterbornExtender
             public string carcassWeight { get; set; } = "10";
             public string carcassValue { get; set; } = "10";
 
-            public string[] peltCount { get; set; } = new string[] { "1", "1", "1", "1" };
+            public string[] peltCount { get; set; } = new string[] { "2", "2", "2", "2" };
 
-            public string[] furPlateCount { get; set; } = new string[] { "1", "1", "1", "1" };
+            public string[] furPlateCount { get; set; } = new string[] { "1", "2", "4", "8" };
             public string? meat { get; set; }
             public string[] negativeTreasure { get; set; } = new string[0];
             public string? sharedDeathItems { get; set; }
@@ -184,19 +183,17 @@ namespace HunterbornExtender
         {
             List<Dictionary<String, int>> expected = new() { 
                 new() {},
-                new() {{ "GiantToes", 1} },
-                new() {{ "GiantToes", 2} },
                 new() {}
             };
 
-            TestField("Name", "Giant", legacy.name, plugin.Name);
+            TestField("Name", "Hagraven", legacy.name, plugin.Name);
             TestField("Type", "Monster", legacy.type, plugin.Type.ToString());
             TestField("CarcassSize", "5", legacy.carcassSize, plugin.CarcassSize.ToString());
             TestField("PeltCount", "[4,2,2,2]", legacy.peltCount.PPrint(), plugin.PeltCount.PPrint());
             TestField("FurPlateCount", "[2,4,8,16]", legacy.furPlateCount.PPrint(), plugin.FurPlateCount.PPrint());
             TestField("Materials", expected.PPrint(), legacy.mats.PPrint(), plugin.Materials.PPrint());
-            TestField("Discards", "[GiantToes]", legacy.negativeTreasure.PPrint(), plugin.Discard.PPrint());
-            TestField("Voice", "[CrGiantVoice]", legacy.voice, plugin.Voice.ToString());
+            TestField("Discards", "[]", legacy.negativeTreasure.PPrint(), plugin.Discard.PPrint());
+            TestField("Voice", "[]", legacy.voice, plugin.Voice.ToString());
         }
 
         static void TestField(String field, String? expected, String? legacy, String? plugin)
