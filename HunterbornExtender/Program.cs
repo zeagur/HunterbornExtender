@@ -359,14 +359,11 @@ sealed internal class Program
                 if (std.Settings.DebuggingMode && !selection.DeathItem.IsNull)
                 {
                     selection.DeathItem.ToLink<DeathItemGetter>().TryResolve(std.LinkCache, out var deathItem);
-                    Write.Action(2, $"{deathItem?.EditorID ?? deathItem?.ToString() ?? "NO DEATH ITEM"}: heuristic selected {selection.Selection?.ProperName ?? "no selection"}.");
+                    Write.Action(2, $"{deathItem?.EditorID ?? deathItem?.ToString() ?? "NO DEATH ITEM"}: heuristic selected {selection.Selection?.SortName}.");
                     Write.Action(3, $"From: {itemWeights.Pretty()}");
 
-                    if (selection.Selection is null || selection.Selection.ProperName.IsNullOrWhitespace())
-                    {
-                        var proto = selection.Selection;
-                        Write.Fail(0, $"PROBLEM WITH PROTOTYPE: selection={selection.CreatureEntryName} '{proto?.Name}' '{proto?.ProperName}' '{proto?.SortName}'");
-                    }
+                    var npcNames = selection.AssignedNPCs.Take(6).Select(n => NpcNamerFallback(n, std.LinkCache)).ToArray().Pretty();
+                    Write.Action(3, $"Archetypes: {npcNames}");
                 }
                 modifiedCount = 0;
             }
