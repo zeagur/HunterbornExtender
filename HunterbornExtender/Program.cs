@@ -737,7 +737,6 @@ public void Initialize()
         if (furRecipe0 is not null && furRecipe1 is not null && furRecipe2 is not null)
         {
             if (DebuggingMode) Write.Success(2, "Found a full set of fur-plating recipes.");
-            plugin.Recipes.FurPlateRecipes = (furRecipe0, furRecipe1, furRecipe2);
             plugin.FurPlateCount = new int[] { furRecipe0.CreatedObjectCount ?? 1, furRecipe1.CreatedObjectCount ?? 2, furRecipe2.CreatedObjectCount ?? 4 };
         }
         else if (furRecipe0 is not null || furRecipe1 is not null || furRecipe2 is not null)
@@ -753,8 +752,8 @@ public void Initialize()
 
         if (meatCooked is not null || meatCampfire is not null || meatPrimitive is not null || meatJerky is not null)
         {
-            //plugin.Recipes.MeatRecipes = (meatCooked, meatCooked, meatPrimitive, meatJerky);
-            if (DebuggingMode) Write.Success(2, $"Found meat recipes: {plugin.Recipes.MeatRecipes.Pretty()}");
+            var meatRecipes = (meatCooked, meatCooked, meatPrimitive, meatJerky);
+            if (DebuggingMode) Write.Success(2, $"Found meat recipes: {meatRecipes}");
         }
         else if (!plugin.Meat.IsNull && DebuggingMode) Write.Fail(2, $"No meat recipes found.");
 
