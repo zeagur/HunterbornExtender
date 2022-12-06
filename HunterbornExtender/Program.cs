@@ -30,7 +30,7 @@ sealed internal class Program
 
     record CreatureData(DeathItemGetter DeathItem, String InternalName, PluginEntry Prototype, bool IsAnimal, bool IsMonster);
     static readonly Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses = new();
-    static readonly Dictionary<PluginEntry, IFormLinkGetter<IConstructibleGetter>[]> KnownPelts = new();
+    static readonly Dictionary<PluginEntry, IFormLinkGetter<IMiscItemGetter>[]> KnownPelts = new();
     static readonly Dictionary<DeathItemGetter, PluginEntry> KnownDeathItems = new();
     private static Lazy<Settings.Settings> _settings = null!;
 
@@ -515,9 +515,10 @@ sealed internal class Program
                     if (std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index].Resolve(std.LinkCache) is not IFormListGetter pelts)
                         throw new CoreRecordMissing(std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index]);
 
-                    IFormLinkGetter<IConstructibleGetter>[] peltsArray = pelts.Items.Select(item => item.FormKey.ToLinkGetter<IConstructibleGetter>()).ToArray();
+                    IFormLinkGetter<IMiscItemGetter>[] peltsArray = pelts.Items.Select(item => item.FormKey.ToLinkGetter<IMiscItemGetter>()).ToArray();
                     if (peltsArray.Length != 0 && peltsArray.Length != 4)
                         throw new InvalidOperationException($"Wrong length for pelts: {plugin.Name} -- {std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index]}");
+
                     KnownPelts.Add(plugin, peltsArray);
                 } 
                 catch (DataConsistencyError ex)
@@ -912,7 +913,7 @@ sealed internal class Program
         if (data.IsMonster) CreateDiscards(data, std);
 
         std.GetCCFor(data).RaceIndex.Data.Add(data.InternalName);
-        std.GetCCFor(data).CarcassSizes.Data.Add(data.Prototype.CarcassWeight);
+        std.GetCCFor(data).CarcassSizes.Data.Add(data.Prototype.CarcassSize);
         std.GetCCFor(data).Switches.Objects.Add(CreateProperty(data.Prototype.Toggle));
         std.GetCCFor(data).SharedDeathItems.Objects.Add(CreateProperty(data.Prototype.SharedDeathItems));
 
@@ -1120,6 +1121,15 @@ sealed internal class Program
         if (pelts == null) throw new InvalidOperationException();
         pelts.EditorID = $"_DS_FL_Pelts{data.InternalName}";
 
+        // If the pelt counts are absent, don't make any pelts or recipes.
+        if (data.Prototype.PeltCount.Length == 0)
+        {
+            std.GetCCFor(data)._DS_FL_PeltLists.Items.Add(pelts);
+            std.GetCCFor(data).PeltValues.Data.Add(0);
+            return pelts;
+        }
+
+
         if (!KnownPelts.ContainsKey(data.Prototype))
         {
             var standard = GetDefaultPelt(data, std);
@@ -1145,14 +1155,13 @@ sealed internal class Program
             fine.Name = $"{standard.Name} (fine)";
             flawless.Name = $"{standard.Name} (flawless)";
 
-            // Store the pelt value to the Hunterborn quest script.
-            std.GetCCFor(data).PeltValues.Data.Add((int)poor.Value);
-
             // Adjust the values of the non-standard pelts.
             poor.Value /= 2;
             fine.Value *= 2;
             flawless.Value *= 20;
             KnownPelts[data.Prototype] = new IFormLinkGetter<IMiscItemGetter>[4] { poor.ToLink(), standard.ToLink(), fine.ToLink(), flawless.ToLink() };
+
+            std.GetCCFor(data).PeltValues.Data.Add((int)standard.Value);
 
             if (createdDefaultPelt) CreatePeltRecipes(data, (poor, standard, fine, flawless), createdDefaultPelt, std);
         }
@@ -1161,7 +1170,10 @@ sealed internal class Program
         pelts.Items.AddRange(KnownPelts[data.Prototype]);
 
         // Put the pelts formlist in the correct formlist.
+        // Update the 
         std.GetCCFor(data)._DS_FL_PeltLists.Items.Add(pelts);
+        std.GetCCFor(data).PeltValues.Data.Add((int)KnownPelts[data.Prototype][1].Resolve(std.LinkCache).Value);
+
         return pelts;
     }
 
@@ -1474,7 +1486,7 @@ sealed internal class Program
                 var standard = std.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_STD_RECIPE.Resolve(std.LinkCache));
                 standard.CreatedObjectCount = (ushort)data.Prototype.PeltCount[1];
                 if (standard.Items?[0].Item is ContainerItem containerItem2) containerItem2.Item = pelts.Item2.ToLink();
-                if (standard.Conditions?[4].Data is ConditionData data2) data2.Reference = pelts.Item2.ToLink();
+                if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
                 standard.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_01";
             }
 
@@ -1494,12 +1506,12 @@ sealed internal class Program
             if (fine.Items?[0].Item is ContainerItem containerItem3) containerItem3.Item = pelts.Item3.ToLink();
             if (flawless.Items?[0].Item is ContainerItem containerItem4) containerItem4.Item = pelts.Item4.ToLink();
 
-            if (poor.Conditions?[4].Data is ConditionData data1) data1.Reference = pelts.Item1.ToLink();
-            if (fine.Conditions?[4].Data is ConditionData data3) data3.Reference = pelts.Item3.ToLink();
-            if (flawless.Conditions?[4].Data is ConditionData data4) data4. Reference = pelts.Item4.ToLink();
+            if (poor.Conditions?[4].Data is FunctionConditionData data1) data1.ParameterOneRecord = pelts.Item1.ToLink();
+            if (fine.Conditions?[4].Data is FunctionConditionData data3) data3.ParameterOneRecord = pelts.Item3.ToLink();
+            if (flawless.Conditions?[4].Data is FunctionConditionData data4) data4.ParameterOneRecord = pelts.Item4.ToLink();
 
-            fine.CreatedObject = pelts.Item1.ToNullableLink();
-            flawless.CreatedObject = pelts.Item2.ToNullableLink();
+            fine.CreatedObject = pelts.Item2.ToNullableLink();
+            flawless.CreatedObject = pelts.Item3.ToNullableLink();
 
             if (std.Settings.DebuggingMode) Write.Success(3, $"Created new tanning recipes.");
         }
@@ -1522,9 +1534,9 @@ sealed internal class Program
             if (standard.Items?[0].Item is ContainerItem containerItem2) containerItem2.Item = pelts.Item2.ToLink();
             if (fine.Items?[0].Item is ContainerItem containerItem3) containerItem3.Item = pelts.Item3.ToLink();
 
-            if (poor.Conditions?[4].Data is ConditionData data1) data1.Reference = pelts.Item1.ToLink();
-            if (standard.Conditions?[4].Data is ConditionData data2) data2.Reference = pelts.Item2.ToLink();
-            if (fine.Conditions?[4].Data is ConditionData data3) data3.Reference = pelts.Item3.ToLink();
+            if (poor.Conditions?[4].Data is FunctionConditionData data1) data1.ParameterOneRecord = pelts.Item1.ToLink();
+            if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
+            if (fine.Conditions?[4].Data is FunctionConditionData data3) data3.ParameterOneRecord = pelts.Item3.ToLink();
 
             if (std.Settings.DebuggingMode) Write.Success(3, $"Created new fur-plate recipes.");
         }
@@ -1829,7 +1841,7 @@ sealed internal class Program
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Monsters", "MeatTypes"),
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Monsters", "SharedDeathItems"),
                     GetProperty<ScriptStringListProperty>(hunterbornQuest, "_DS_HB_Monsters", "MonsterIndex"),
-                    GetProperty<ScriptFloatListProperty>(hunterbornQuest, "_DS_HB_Animals", "AllMeatWeights"),
+                    GetProperty<ScriptFloatListProperty>(hunterbornQuest, "_DS_HB_Monsters", "AllMeatWeights"),
                     GetProperty<ScriptIntListProperty>(hunterbornQuest, "_DS_HB_Monsters", "DefaultPeltValues"),
                     GetProperty<ScriptIntListProperty>(hunterbornQuest, "_DS_HB_Monsters", "CarcassSizes")),
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Monsters", "BloodTypes"),
