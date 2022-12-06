@@ -1,144 +1,121 @@
-﻿using Mutagen.Bethesda.Plugins;
-using Mutagen.Bethesda.Skyrim;
-using Newtonsoft.Json;
-using Noggog;
-using System;
+﻿namespace HunterbornExtender.Settings;
+
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Mutagen.Bethesda.Skyrim;
+using Mutagen.Bethesda.Plugins;
+using Noggog;
 
-namespace HunterbornExtender.Settings
+abstract public class PluginEntry
 {
-    abstract public class PluginEntry
-    {
-        public EntryType Type { get; set; } = EntryType.Animal;
-        public string Name { get; set; } = "Critter";
-        public string ProperName { get; set; } = "Critter";
-        public string SortName { get; set; } = "Critter";
-        public IFormLinkGetter<IGlobalGetter> Toggle { get; set; } = new FormLink<IGlobalGetter>();
-        public IFormLinkGetter<IMessageGetter> CarcassMessageBox { get; set; } = new FormLink<IMessageGetter>();
-        public IFormLinkGetter<IItemGetter> Meat { get; set; } = new FormLink<IItemGetter>();
-        public int CarcassSize { get; set; } = 1;
-        public int CarcassWeight { get; set; } = 10;
-        public int CarcassValue { get; set; } = 10;
-        public int[] PeltCount { get; set; } = new int[] { 2, 2, 2, 2 };
-        public int[] FurPlateCount { get; set; } = new int[] { 1, 2, 4, 8 };
-        public List<MaterialLevel> Materials { get; set; } = new();
-        public List<IFormLinkGetter<IItemGetter>> Discard { get; set; } = new();
-        public IFormLinkGetter<IFormListGetter> SharedDeathItems { get; set; } = new FormLink<IFormListGetter>();
-        public IFormLinkGetter<IItemGetter> BloodType { get; set; } = new FormLink<IItemGetter>();
-        public IFormLinkGetter<IItemGetter> Venom { get; set; } = new FormLink<IItemGetter>();
-        public IFormLinkGetter<IVoiceTypeGetter> Voice { get; set; } = new FormLink<IVoiceTypeGetter>();
-
-        /// <summary>
-        /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
-        /// </summary>
-        [JsonIgnore] public IFormLinkGetter<IMiscItemGetter> DefaultPelt { get; set; } = new FormLink<IMiscItemGetter>();
-
-        /// <summary>
-        /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
-        /// </summary>
-        [JsonIgnore] public bool CreateDefaultMeat { get; set; } = false;
-
-        /// <summary>
-        /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
-        /// </summary>
-        [JsonIgnore] public bool CreateDefaultPelt { get; set; } = true;
-
-        /// <summary>
-        /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
-        /// </summary>
-        [JsonIgnore] public LeatherType LeatherRecipeType { get; set; } = LeatherType.NORMAL;
-
-        /// <summary>
-        /// Data for heuristics. Never persist this.
-        /// </summary>
-        [JsonIgnore] public HashSet<string> Tokens { get; set; } = new();
-
-        /// <summary>
-        /// Data for generating recipes. Never persist this.
-        /// </summary>
-        [JsonIgnore] public PluginEntryRecipes Recipes { get; set; } = new();
-
-        public PluginEntry() // Json import appears to require a parameterless default constructor
-        {
-
-        }
-
-        public PluginEntry(EntryType type, string name)
-        {
-            Type = type;
-            Name = name;
-            ProperName = name;
-            SortName = name;
-        }
-
-        override public string ToString()
-        {
-            if (!ProperName.IsNullOrWhitespace()) return ProperName;
-            if (!SortName.IsNullOrWhitespace()) return SortName;
-            return Name;
-        }
-    }
+    public EntryType Type { get; set; } = EntryType.Animal;
+    public string Name { get; set; } = "Critter";
+    public string ProperName { get; set; } = "Critter";
+    public string SortName { get; set; } = "Critter";
+    public IFormLinkGetter<IGlobalGetter> Toggle { get; set; } = new FormLink<IGlobalGetter>();
+    public IFormLinkGetter<IMessageGetter> CarcassMessageBox { get; set; } = new FormLink<IMessageGetter>();
+    public IFormLinkGetter<IItemGetter> Meat { get; set; } = new FormLink<IItemGetter>();
+    public int CarcassSize { get; set; } = 1;
+    public int CarcassWeight { get; set; } = 10;
+    public int CarcassValue { get; set; } = 10;
+    public int[] PeltCount { get; set; } = new int[] { 2, 2, 2, 2 };
+    public int[] FurPlateCount { get; set; } = new int[] { 1, 2, 4, 8 };
+    public List<MaterialLevel> Materials { get; set; } = new();
+    public List<IFormLinkGetter<IItemGetter>> Discard { get; set; } = new();
+    public IFormLinkGetter<IFormListGetter> SharedDeathItems { get; set; } = new FormLink<IFormListGetter>();
+    public IFormLinkGetter<IItemGetter> BloodType { get; set; } = new FormLink<IItemGetter>();
+    public IFormLinkGetter<IItemGetter> Venom { get; set; } = new FormLink<IItemGetter>();
+    public IFormLinkGetter<IVoiceTypeGetter> Voice { get; set; } = new FormLink<IVoiceTypeGetter>();
 
     /// <summary>
-    /// Used to describe plugins that get loaded from JSon files.
-    /// They each have a name and can have required mods.
-    /// 
-    /// @TODO Add required mods to the JSon files. This will reduce unresolved record issues.
-    /// For now it's fine if it's empty and unused.
-    /// 
+    /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
     /// </summary>
-    sealed public class AddonPluginEntry : PluginEntry
-    {
-        //public ModKey[] RequiredMods { get; set; } = Array.Empty<ModKey>();
-
-        public AddonPluginEntry() { }
-
-        public AddonPluginEntry(EntryType type, string name) : base(type, name) { }
-    }
+    [JsonIgnore] public IFormLinkGetter<IMiscItemGetter> DefaultPelt { get; set; } = new FormLink<IMiscItemGetter>();
 
     /// <summary>
-    /// Used to describe the hard-coded plugins from Hunterborn.esp.
-    /// They each have a KnownDeathItem used as a prototype.
+    /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
     /// </summary>
-    sealed public class InternalPluginEntry : PluginEntry
+    [JsonIgnore] public bool CreateDefaultMeat { get; set; } = false;
+
+    /// <summary>
+    /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
+    /// </summary>
+    [JsonIgnore] public bool CreateDefaultPelt { get; set; } = true;
+
+    /// <summary>
+    /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
+    /// </summary>
+    //[JsonIgnore] public LeatherType LeatherRecipeType { get; set; } = LeatherType.NORMAL;
+
+    /// <summary>
+    /// Data for heuristics. Never persist this.
+    /// </summary>
+    [JsonIgnore] public HashSet<string> Tokens { get; set; } = new();
+
+    public PluginEntry() // Json import appears to require a parameterless default constructor
     {
-        public FormKey KnownDeathItem { get; set; } = new();
-
-        public InternalPluginEntry() { }
-
-        public InternalPluginEntry(EntryType type, string name, FormKey deathItem) : base(type, name) { 
-            KnownDeathItem = deathItem;
-        }
 
     }
 
-    /// <summary>
-    /// Describes the amounts of materials that can be harvested from a creature at a single skill level.
-    /// </summary>
-    public sealed class MaterialLevel
+    public PluginEntry(EntryType type, string name)
     {
-        public Dictionary<IFormLinkGetter<IItemGetter>, int> Items { get; set; } = new();
+        Type = type;
+        Name = name;
+        ProperName = name;
+        SortName = name;
     }
 
-    /// <summary>
-    /// Recipes associated with the plugin.
-    /// </summary>
-    sealed public class PluginEntryRecipes
+    override public string ToString()
     {
-        public (IConstructibleObjectGetter, IConstructibleObjectGetter, IConstructibleObjectGetter, IConstructibleObjectGetter)? PeltRecipes { get; set; } = null;
-
-        public (IConstructibleObjectGetter, IConstructibleObjectGetter, IConstructibleObjectGetter)? FurPlateRecipes { get; set; } = null;
-
-        public (IConstructibleObjectGetter?, IConstructibleObjectGetter?, IConstructibleObjectGetter?, IConstructibleObjectGetter?)? MeatRecipes { get; set; } = null;
-
+        if (!ProperName.IsNullOrWhitespace()) return ProperName;
+        if (!SortName.IsNullOrWhitespace()) return SortName;
+        return Name;
     }
+}
 
-    /// <summary>
-    /// If CCOR is installed, this will control what kind of leather is produced by pelt recipes.
-    /// </summary>
-    public enum LeatherType { NORMAL, LIGHT, DARK };
+/// <summary>
+/// Used to describe plugins that get loaded from JSon files.
+/// They each have a name and can have required mods.
+/// 
+/// @TODO Add required mods to the JSon files. This will reduce unresolved record issues.
+/// For now it's fine if it's empty and unused.
+/// 
+/// </summary>
+sealed public class AddonPluginEntry : PluginEntry
+{
+    //public ModKey[] RequiredMods { get; set; } = Array.Empty<ModKey>();
+
+    public AddonPluginEntry() { }
+
+    public AddonPluginEntry(EntryType type, string name) : base(type, name) { }
+}
+
+/// <summary>
+/// Used to describe the hard-coded plugins from Hunterborn.esp.
+/// They each have a KnownDeathItem used as a prototype.
+/// </summary>
+sealed public class InternalPluginEntry : PluginEntry
+{
+    public FormKey KnownDeathItem { get; set; } = new();
+
+    public InternalPluginEntry() { }
+
+    public InternalPluginEntry(EntryType type, string name, FormKey deathItem) : base(type, name) { 
+        KnownDeathItem = deathItem;
+    }
 
 }
+
+/// <summary>
+/// Describes the amounts of materials that can be harvested from a creature at a single skill level.
+/// </summary>
+public sealed class MaterialLevel
+{
+    public Dictionary<IFormLinkGetter<IItemGetter>, int> Items { get; set; } = new();
+}
+
+/// <summary>
+/// If CCOR is installed, this will control what kind of leather is produced by pelt recipes.
+/// </summary>
+//public enum LeatherType { NORMAL, LIGHT, DARK };
+

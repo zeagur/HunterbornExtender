@@ -11,7 +11,6 @@ using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
-using Mutagen.Bethesda.Plugins.Cache;
 using Mutagen.Bethesda.Plugins.Records;
 using Microsoft.CodeAnalysis;
 using Mutagen.Bethesda.Plugins.Exceptions;
@@ -24,10 +23,6 @@ using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Muta
 using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
 using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter>;
 using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
-using System.Collections.Immutable;
-using System.Xml.XPath;
-
-
 #pragma warning disable IDE1006 // Naming Styles
 
 sealed internal class Program
@@ -180,7 +175,7 @@ public void Initialize()
         //
         // Populates the KnownDeathItem, KnownCarcass, and KnownPelts structures.
         //
-        try
+        /*try
         {
             PopulateKnown(plugins, std_readonly);
         }
@@ -199,7 +194,7 @@ public void Initialize()
             Write.Fail(0, ex.Message);
             Console.WriteLine(ex.StackTrace);
             return;
-        }
+        }*/
 
         //
         // Link death entryItem selection to corresponding creature entry
@@ -470,93 +465,6 @@ public void Initialize()
     }
 
     /// <summary>
-    /// Populate the KnownDeathItems, KnownCarcasses, and KnownPelts.
-    /// Having these means that when new Pelts, DeathItems, and Carcasses get created, they
-    /// can copy the models and keywords from existing ones.
-    /// 
-    /// </summary>
-    /// 
-    /// <param internalName="plugins"></param>
-    /// <param internalName="std"></param>
-    /// <exception cref="CoreRecordMissing"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    /// 
-    private void PopulateKnown(List<PluginEntry> plugins, ViewingRecords std)
-    {
-
-        Dictionary<FormKey, InternalPluginEntry> internalPlugins = new();
-        foreach (var plugin in plugins)
-        {
-            if (plugin is InternalPluginEntry p) internalPlugins[p.KnownDeathItem] = p;
-            //if (plugin is InternalPluginEntry p2) Console.WriteLine($"Recreating FormKey->Plugin:  {p2.KnownDeathItem,-12} -> {p2.ProperName}");
-            //else Console.WriteLine($"Recreating FormKeys: not internal {plugin.ProperName}");
-        }
-
-
-        foreach (EntryType type in Enum.GetValues(typeof(EntryType)))
-        {
-            int count = std.GetCCFor(type).RaceIndex.Data.Count;
-            Write.Action(1, $"Populating data structures for {count} {type} types.");
-
-            // This basically comes down to going through the FormList of deathitems (once for animals and once for monsters),
-            // determining which InternalPlugin each DeathItem corresponds to, and then
-            // * Put the DeathItem->Plugin entry into KnownDeathItems.
-            // * Put the corresponding entry from the Pelts formlist into KnownPelts.
-            // * Put the corresponding entry from the Carcasses entry into KnownCarcasses.
-            // * @TODO Same for materials?
-            for (int index = 0; index < count; index++)
-            {
-                try
-                {
-                    var name = std.GetCCFor(type).RaceIndex.Data[index];
-
-                    // Get the DeathItem link from the formlist and resolve it.
-                    std.GetCCFor(type)._DS_FL_DeathItems.Items[index].TryResolve<DeathItemGetter>(State.LinkCache, out var deathItem);
-
-                    if (deathItem == null) throw new DataConsistencyError(type, name, index, "No DeathItem.");
-                    if (KnownDeathItems.ContainsKey(deathItem)) continue;
-
-                        // Match the DeathItem to the plugin it came from.
-                        // Fatal error if it's not found.
-                        if (!internalPlugins.ContainsKey(deathItem.FormKey))
-                    {
-                        Console.WriteLine($"Fatal error: internalPlugin for {deathItem} is missing.");
-                        throw new CoreRecordMissing(deathItem.ToLink());
-                    }
-
-                    // Finally, put the DeathItem in KnownDeathItems.
-                    var plugin = internalPlugins[deathItem.FormKey];
-                    KnownDeathItems.Add(deathItem, plugin);
-
-                    // Get the Carcass link from the formlist, resolve it, and put it in KnownCarcasses.
-                    // Only animals have carcasses. I guess you can't carry monster corpses around.
-                    if (type == EntryType.Animal)
-                    {
-                        if (std.Animals._DS_FL_CarcassObjects.Items[index].Resolve(State.LinkCache) is not IMiscItemGetter carcass)
-                            throw new CoreRecordMissing(std.Animals._DS_FL_CarcassObjects.Items[index]);
-                        KnownCarcasses.Add(plugin, carcass);
-                    }
-
-                    // Get the Pelts link from the formlist, resolve it, transform it into an array, and put it in KnownPelts.
-                    if (std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index].Resolve(State.LinkCache) is not IFormListGetter pelts)
-                        throw new CoreRecordMissing(std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index]);
-
-                    IFormLinkGetter<IMiscItemGetter>[] peltsArray = pelts.Items.Select(item => item.FormKey.ToLinkGetter<IMiscItemGetter>()).ToArray();
-                    if (peltsArray.Length != 0 && peltsArray.Length != 4)
-                        throw new InvalidOperationException($"Wrong length for pelts: {plugin.Name} -- {std.GetCCFor(plugin.Type)._DS_FL_PeltLists.Items[index]}");
-
-                    KnownPelts.Add(plugin, peltsArray);
-                } 
-                catch (DataConsistencyError ex)
-                {
-                    Write.Fail(0, "WARNING: inconsistent data detected. This may be the result of some other mod patching Hunterborn.");
-                    Write.Fail(0, ex.Message);
-                }
-            }
-        }
-    }
-
-    /// <summary>
     /// 
     /// </summary>
     /// <param internalName="std"></param>
@@ -609,6 +517,8 @@ public void Initialize()
             if (deathItem.EditorID == null) throw new DataConsistencyError(type, internalName, index, $"DeathItem {deathItem.FormKey} has no editor id.");
 
             InternalPluginEntry plugin = new(type, internalName, deathItem.FormKey);
+            KnownDeathItems.Add(deathItem, plugin);
+
             var renaming = RecreatePluginName(plugin, deathItem);
 
             if (!renaming.Equals(NoRename)) (internalName, plugin.ProperName, plugin.SortName) = renaming;
@@ -653,6 +563,7 @@ public void Initialize()
                 var carcass = std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(State.LinkCache);
                 plugin.CarcassWeight = (int)carcass.Weight;
                 plugin.CarcassValue = (int)carcass.Value;
+                KnownCarcasses.Add(plugin, carcass);
             }
 
             plugin.Discard = type != EntryType.Monster
@@ -670,6 +581,17 @@ public void Initialize()
             plugin.PeltCount = Array.Empty<int>();
             plugin.FurPlateCount = Array.Empty<int>();
 
+            IFormListGetter peltList = std.GetCCFor(type)._DS_FL_PeltLists.Items[index].Resolve<IFormListGetter>(State.LinkCache);
+            if (peltList.Items.Count == 4)
+            {
+                PeltSet pelts = (
+                    peltList.Items[0].Resolve<IMiscItemGetter>(State.LinkCache),
+                    peltList.Items[1].Resolve<IMiscItemGetter>(State.LinkCache),
+                    peltList.Items[2].Resolve<IMiscItemGetter>(State.LinkCache),
+                    peltList.Items[3].Resolve<IMiscItemGetter>(State.LinkCache));
+                KnownPelts[plugin] = pelts;
+            }
+
             // The voice field is unnecessary because the core voices are hard-coded.
             // But it's nice to have it just in case.
             // 
@@ -685,7 +607,7 @@ public void Initialize()
             plugin.Voice = voice == null ? new FormLink<IVoiceTypeGetter>() : voice.ToLink();
             //if (DebuggingMode) Write.Action(2, $"Internal plugin {plugin.Name} searching for voice {voiceEdid}: found {plugin.Voice}.");
 
-            FindRecipes(plugin, internalName, deathItem, std);
+            FindRecipes(plugin, internalName, deathItem);
 
             // @TODO Find jerky and charred recipes.
             return plugin;
@@ -706,7 +628,7 @@ public void Initialize()
     /// 
     /// </summary>
     /// 
-    private void FindRecipes(PluginEntry plugin, string internalName, DeathItemGetter deathItem, ViewingRecords std)
+    private void FindRecipes(PluginEntry plugin, string internalName, DeathItemGetter deathItem)
     {
         // Search for the standard recipes using naming conventions in the order of
         // CACO->CCOR->Campfire->Hunterborn->Vanilla.
@@ -737,13 +659,13 @@ public void Initialize()
         var recipes = Edid_Lookups_Fallbacks(names, patterns);
 
         // Extract the results to nicely named variables.
-        var pelts0 = recipes[0];
-        var pelts1 = recipes[1];
-        var pelts2 = recipes[2];
-        var pelts3 = recipes[3];
-        var furs0 = recipes[4];
-        var furs1 = recipes[5];
-        var furs2 = recipes[6];
+        var peltRecipe0 = recipes[0];
+        var peltRecipe1 = recipes[1];
+        var peltRecipe2 = recipes[2];
+        var peltRecipe3 = recipes[3];
+        var furRecipe0 = recipes[4];
+        var furRecipe1 = recipes[5];
+        var furRecipe2 = recipes[6];
         var meatCooked = recipes[7];
         var meatCampfire = recipes[8];
         var meatPrimitive = recipes[9];
@@ -752,14 +674,14 @@ public void Initialize()
         // If a standard pelt recipe is found, there must be a default pelt.
         // Try to get it. Use the result of the GetDefaultPelt function otherwise, which 
         // searches the creature's inventory.
-        if (pelts1 is not null && pelts1.Items is IReadOnlyList<IContainerEntryGetter> containerEntries
+        if (peltRecipe1 is not null && peltRecipe1.Items is IReadOnlyList<IContainerEntryGetter> containerEntries
             && containerEntries.Count > 0 && containerEntries[0] is IContainerEntryGetter containerEntry
             && containerEntry.Item is IContainerItemGetter containerItem
             && containerItem.Item is IFormLink<IItemGetter> foundPelt)
         {
             if (foundPelt is not null && !foundPelt.IsNull)
             {
-                if (DebuggingMode) Write.Success(3, $"Found default pelt from tanning recipe {pelts1.EditorID}.");
+                if (DebuggingMode) Write.Success(3, $"Found default pelt from tanning recipe {peltRecipe1.EditorID}.");
                 plugin.DefaultPelt = foundPelt.FormKey.ToLink<IMiscItemGetter>();
             }
         }
@@ -776,24 +698,49 @@ public void Initialize()
         // Pack it all up and finish filling in the Plugin's properties.
         // Print debugging messages about what was found.
 
-        if (pelts0 is not null && pelts1 is not null && pelts2 is not null && pelts3 is not null)
+        if (peltRecipe0 is not null && peltRecipe1 is not null && peltRecipe2 is not null && peltRecipe3 is not null)
         {
             if (DebuggingMode) Write.Success(2, "Found a full set of leather-making recipes.");
-            plugin.Recipes.PeltRecipes = (pelts0, pelts1, pelts2, pelts3);
-            plugin.PeltCount = new int[] { pelts0.CreatedObjectCount ?? 2, pelts1.CreatedObjectCount ?? 2, pelts2.CreatedObjectCount ?? 2, pelts3.CreatedObjectCount ?? 2 };
+            var peltRecipeSet = (peltRecipe0, peltRecipe1, peltRecipe2, peltRecipe3);
+            //plugin.Recipes.PeltRecipes = peltRecipeSet;
+            plugin.PeltCount = new int[] { peltRecipe0.CreatedObjectCount ?? 2, peltRecipe1.CreatedObjectCount ?? 2, peltRecipe2.CreatedObjectCount ?? 2, peltRecipe3.CreatedObjectCount ?? 2 };
+
+            peltRecipe0.CreatedObject.TryResolve<IMiscItemGetter>(State.LinkCache, out var pelt0);
+            peltRecipe1.CreatedObject.TryResolve<IMiscItemGetter>(State.LinkCache, out var pelt1);
+            peltRecipe2.CreatedObject.TryResolve<IMiscItemGetter>(State.LinkCache, out var pelt2);
+            peltRecipe3.CreatedObject.TryResolve<IMiscItemGetter>(State.LinkCache, out var pelt3);
+
+            if (pelt0 is not null && pelt1 is not null && pelt2 is not null && pelt3 is not null)
+            {
+                var found = (pelt0, pelt1, pelt2, pelt3);
+
+                if (KnownPelts.ContainsKey(plugin))
+                {
+                    var known = KnownPelts[plugin];
+                    if (found.Equals(known)) Write.Success(2, "RECIPE AND PELTS MATCH PEFECTLY.");
+                    else Write.Fail(2, "RECIPE AND PELTS DO NOT MATCH, WHICH IS WEIRD BUT NOT DISASTROUS.");
+                } 
+                else
+                {
+                    KnownPelts[plugin] = (pelt0, pelt1, pelt2, pelt3);
+                    Write.Fail(2, "HOW CAN THIS EVEN HAPPEN?");
+                }
+                //FullGeneratedPelts.Add(pelt1.ToLink());
+            }
+
         }
-        else if (pelts0 is not null || pelts1 is not null || pelts2 is not null || pelts3 is not null)
+        else if (peltRecipe0 is not null || peltRecipe1 is not null || peltRecipe2 is not null || peltRecipe3 is not null)
         {
             if (DebuggingMode) Write.Fail(2, "Found inconsistent set of leather-making recipes.");
         }
 
-        if (furs0 is not null && furs1 is not null && furs2 is not null)
+        if (furRecipe0 is not null && furRecipe1 is not null && furRecipe2 is not null)
         {
             if (DebuggingMode) Write.Success(2, "Found a full set of fur-plating recipes.");
-            plugin.Recipes.FurPlateRecipes = (furs0, furs1, furs2);
-            plugin.FurPlateCount = new int[] { furs0.CreatedObjectCount ?? 1, furs1.CreatedObjectCount ?? 2, furs2.CreatedObjectCount ?? 4 };
+            plugin.Recipes.FurPlateRecipes = (furRecipe0, furRecipe1, furRecipe2);
+            plugin.FurPlateCount = new int[] { furRecipe0.CreatedObjectCount ?? 1, furRecipe1.CreatedObjectCount ?? 2, furRecipe2.CreatedObjectCount ?? 4 };
         }
-        else if (furs0 is not null || furs1 is not null || furs2 is not null)
+        else if (furRecipe0 is not null || furRecipe1 is not null || furRecipe2 is not null)
         {
             if (DebuggingMode) Write.Fail(2, "Found inconsistent set of fur-plating recipes.");
         }
@@ -806,7 +753,7 @@ public void Initialize()
 
         if (meatCooked is not null || meatCampfire is not null || meatPrimitive is not null || meatJerky is not null)
         {
-            plugin.Recipes.MeatRecipes = (meatCooked, meatCooked, meatPrimitive, meatJerky);
+            //plugin.Recipes.MeatRecipes = (meatCooked, meatCooked, meatPrimitive, meatJerky);
             if (DebuggingMode) Write.Success(2, $"Found meat recipes: {plugin.Recipes.MeatRecipes.Pretty()}");
         }
         else if (!plugin.Meat.IsNull && DebuggingMode) Write.Fail(2, $"No meat recipes found.");
@@ -1149,19 +1096,18 @@ public void Initialize()
 
     private IFormListGetter CreatePelts(CreatureData data, PatchingRecords std)
     {
-        var pelts = State.PatchMod.FormLists.AddNew();
-        if (pelts == null) throw new InvalidOperationException();
-        pelts.EditorID = $"_DS_FL_Pelts{data.InternalName}";
+        var peltFormList = State.PatchMod.FormLists.AddNew();
+        if (peltFormList == null) throw new InvalidOperationException();
+        peltFormList.EditorID = $"_DS_FL_Pelts{data.InternalName}";
+        std.GetCCFor(data)._DS_FL_PeltLists.Items.Add(peltFormList);
 
         // If the pelt counts are absent, don't make any pelts or recipes.
         if (data.Prototype.PeltCount.Length == 0)
         {
-            std.GetCCFor(data)._DS_FL_PeltLists.Items.Add(pelts);
             std.GetCCFor(data).PeltValues.Data.Add(0);
-            return pelts;
+            return peltFormList;
         }
-
-
+        
         if (!KnownPelts.ContainsKey(data.Prototype))
         {
             var standard = GetDefaultPelt(data);
@@ -1192,22 +1138,24 @@ public void Initialize()
             fine.Value *= 2;
             flawless.Value *= 20;
 
-            PeltSet peltSet = (poor, standard, fine, flawless);
-            KnownPelts[data.Prototype] = new IFormLinkGetter<IMiscItemGetter>[4] { poor.ToLink(), standard.ToLink(), fine.ToLink(), flawless.ToLink() };
+            //PeltSet peltSet = (poor, standard, fine, flawless);
+            var newPeltSet = (poor, standard, fine, flawless);
+            KnownPelts[data.Prototype] = newPeltSet;
 
             std.GetCCFor(data).PeltValues.Data.Add((int)standard.Value);
-            if (createdDefaultPelt) CreatePeltRecipes(data, peltSet, createdDefaultPelt, std);
+            if (createdDefaultPelt) CreatePeltRecipes(data, newPeltSet, createdDefaultPelt, std);
         }
 
         // Add the pelts to the pelts formlist.
-        pelts.Items.AddRange(KnownPelts[data.Prototype]);
+        var peltSet = KnownPelts[data.Prototype];
+        peltFormList.Items.AddRange(new IFormLinkGetter<IMiscItemGetter>[] { peltSet.Item1.ToLink(), peltSet.Item2.ToLink(), peltSet.Item3.ToLink(), peltSet.Item4.ToLink() });
 
         // Put the pelts formlist in the correct formlist.
-        // Update the 
-        std.GetCCFor(data)._DS_FL_PeltLists.Items.Add(pelts);
-        std.GetCCFor(data).PeltValues.Data.Add((int)KnownPelts[data.Prototype][1].Resolve(State.LinkCache).Value);
+        // Add the pelt value.
+        //std.GetCCFor(data)._DS_FL_PeltLists.Items.Add(peltFormList);
+        std.GetCCFor(data).PeltValues.Data.Add((int)peltSet.Item2.Value);
 
-        return pelts;
+        return peltFormList;
     }
 
     /// <summary>
@@ -1865,9 +1813,22 @@ public void Initialize()
         => val => plugin => { if (val > 0) dict[plugin] = dict.GetValueOrDefault(plugin, 0) + val; };
 
 
+    /// <summary>
+    /// Default carcasses for each Plugin, so that they can be copied.
+    /// This is useful if the default carcass has an interesting model or keywords.
+    /// </summary>
     private Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses { get; } = new();
-    private Dictionary<PluginEntry, IFormLinkGetter<IMiscItemGetter>[]> KnownPelts { get; } = new();
+
+    /// <summary>
+    /// Contains prototypes for which a full pelt set and recipe set already exist.
+    /// </summary>
+    private Dictionary<PluginEntry, PeltSet> KnownPelts { get; } = new();
+    
+    /// <summary>
+    /// Associates DeathItems with plugins. Mainly used to avoid processing a DeathItem more than once.
+    /// </summary>
     private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
+
     private Settings.Settings Settings { get; }
     private IPatcherState<ISkyrimMod, ISkyrimModGetter> State { get; }
     private bool DebuggingMode { get { return Settings.DebuggingMode; } }
