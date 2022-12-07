@@ -8,6 +8,8 @@ using Noggog;
 
 abstract public class PluginEntry
 {
+    static readonly public PluginEntry SKIP = Skip.Instance;
+
     public EntryType Type { get; set; } = EntryType.Animal;
     public string Name { get; set; } = "Critter";
     public string ProperName { get; set; } = "Critter";
@@ -71,6 +73,22 @@ abstract public class PluginEntry
         if (!SortName.IsNullOrWhitespace()) return SortName;
         return Name;
     }
+}
+
+/// <summary>
+/// The skip plugin.
+/// 
+/// </summary>
+sealed class Skip : PluginEntry
+{
+    static internal Skip Instance { get { return instance; } }
+
+    static readonly private Skip instance = new();
+
+
+    private Skip() : base(EntryType.Animal, "Skip") { }
+    public override bool Equals(object? obj) => obj is Skip;
+    public override int GetHashCode() => "SKIP PLUGIN".GetHashCode();
 }
 
 /// <summary>

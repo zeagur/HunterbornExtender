@@ -27,7 +27,7 @@ namespace HunterbornExtender.Settings
         public FormKey DeathItem { get; set; }
         public string CreatureEntryName { get; set; } = String.Empty;
         [JsonIgnore]
-        public PluginEntry? Selection { get; set; } = null;
+        public PluginEntry Selection { get; set; } = PluginEntry.SKIP;
         [JsonIgnore]
         public HashSet<INpcGetter> AssignedNPCs { get; set; } = new(); // does the patcher actually need to know this or does it solely concern the UI? Leaving it for now because Program.cs appears to reference it.
     }

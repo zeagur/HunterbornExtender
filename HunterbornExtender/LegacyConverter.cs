@@ -6,12 +6,13 @@ using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Plugins.Exceptions;
 using HunterbornExtender.Settings;
+using Mutagen.Bethesda.Plugins.Cache;
 
 namespace HunterbornExtender
 {
     sealed public class LegacyConverter
     {
-        static public List<AddonPluginEntry> ImportAndConvert(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        static public List<AddonPluginEntry> ImportAndConvert(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
         {
             // LOAD JSONS
             Console.WriteLine($"\tCurrent directory: {Directory.GetCurrentDirectory()}");
@@ -26,7 +27,7 @@ namespace HunterbornExtender
                 try
                 {
                     Console.WriteLine($"\tReading legacy zedit plugin set: {fileName}");
-                    var filePlugins = ReadFile(fileName, state);
+                    var filePlugins = ReadFile(fileName, linkCache);
                     plugins.AddRange(filePlugins);
                 }
                 catch (Exception ex)
@@ -40,7 +41,7 @@ namespace HunterbornExtender
             return plugins;
         }
 
-        static List<AddonPluginEntry> ReadFile(String fileName, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        static List<AddonPluginEntry> ReadFile(String fileName, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
         {
             string jsonString = File.ReadAllText(fileName);
             Console.WriteLine($"\t\t o Successfully read {fileName}");
@@ -57,7 +58,7 @@ namespace HunterbornExtender
             {
                 try
                 {
-                    var plugin = legacy.ToPlugin(state);
+                    var plugin = legacy.ToPlugin(linkCache);
                     plugins.Add(plugin);
                     Console.WriteLine($"\t\t\t o Added plugin for {plugin.Name}.");
     
@@ -120,13 +121,13 @@ namespace HunterbornExtender
             public string? voice { get; set; }
             public List<Dictionary<string, int>> mats { get; set; } = new();
 
-            public AddonPluginEntry ToPlugin(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+            public AddonPluginEntry ToPlugin(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
             {
                 var materials = mats.Select(lvl => {
                     Dictionary<IFormLinkGetter<IItemGetter>, int> Materials_Level = new();
                     foreach (var lvl_mats in lvl)
                     {
-                        var item = state.LinkCache.Resolve<IItemGetter>(lvl_mats.Key).ToLink();
+                        var item = linkCache.Resolve<IItemGetter>(lvl_mats.Key).ToLink();
                         Materials_Level[item] = lvl_mats.Value;
                     }
                     return new MaterialLevel() { Items = Materials_Level };
@@ -135,20 +136,20 @@ namespace HunterbornExtender
                 AddonPluginEntry plugin = new(type.ContainsInsensitive("anim") ? EntryType.Animal : EntryType.Monster, name);
                 plugin.ProperName = properName ?? name;
                 plugin.SortName = sortName ?? name;
-                plugin.Toggle = animalSwitch.IsNullOrWhitespace() ? new FormLink<IGlobalGetter>() : state.LinkCache.Resolve<IGlobalGetter>(animalSwitch).ToLink();
-                plugin.CarcassMessageBox = carcassMessageBox.IsNullOrWhitespace() ? new FormLink<IMessageGetter>() : state.LinkCache.Resolve<IMessageGetter>(carcassMessageBox).ToLink();
-                plugin.Meat = meat.IsNullOrWhitespace() ? new FormLink<IItemGetter>() : state.LinkCache.Resolve<IItemGetter>(meat).ToLink();
+                plugin.Toggle = animalSwitch.IsNullOrWhitespace() ? new FormLink<IGlobalGetter>() : linkCache.Resolve<IGlobalGetter>(animalSwitch).ToLink();
+                plugin.CarcassMessageBox = carcassMessageBox.IsNullOrWhitespace() ? new FormLink<IMessageGetter>() : linkCache.Resolve<IMessageGetter>(carcassMessageBox).ToLink();
+                plugin.Meat = meat.IsNullOrWhitespace() ? new FormLink<IItemGetter>() : linkCache.Resolve<IItemGetter>(meat).ToLink();
                 plugin.CarcassSize = int.TryParse(carcassSize, out var sz) ? sz : 1;
                 plugin.CarcassWeight = int.TryParse(carcassWeight, out var wt) ? wt : 10;
                 plugin.CarcassValue = int.TryParse(carcassValue, out var val) ? val : 10;
                 plugin.PeltCount = peltCount.Select(s => int.TryParse(s, out var c) ? c : 1).ToArray();
                 plugin.FurPlateCount = furPlateCount.Select(s => int.TryParse(s, out var c) ? c : 1).ToArray();
                 plugin.Materials = materials;
-                plugin.Discard = negativeTreasure.Select(s => state.LinkCache.Resolve<IItemGetter>(s).ToLink() as IFormLinkGetter<IItemGetter>).ToList();
-                plugin.SharedDeathItems = sharedDeathItems.IsNullOrWhitespace() ? new FormLink<IFormListGetter>() : state.LinkCache.Resolve<IFormListGetter>(sharedDeathItems).ToLink();
-                plugin.BloodType = bloodType.IsNullOrWhitespace() ? new FormLink<IItemGetter>() : state.LinkCache.Resolve<IItemGetter>(bloodType).ToLink();
-                plugin.Venom = venom.IsNullOrWhitespace() ? new FormLink<IIngestibleGetter>() : state.LinkCache.Resolve<IIngestibleGetter>(venom).ToLink();
-                plugin.Voice = voice.IsNullOrWhitespace() ? new FormLink<IVoiceTypeGetter>() : state.LinkCache.Resolve<IVoiceTypeGetter>(voice).ToLink();
+                plugin.Discard = negativeTreasure.Select(s => linkCache.Resolve<IItemGetter>(s).ToLink() as IFormLinkGetter<IItemGetter>).ToList();
+                plugin.SharedDeathItems = sharedDeathItems.IsNullOrWhitespace() ? new FormLink<IFormListGetter>() : linkCache.Resolve<IFormListGetter>(sharedDeathItems).ToLink();
+                plugin.BloodType = bloodType.IsNullOrWhitespace() ? new FormLink<IItemGetter>() : linkCache.Resolve<IItemGetter>(bloodType).ToLink();
+                plugin.Venom = venom.IsNullOrWhitespace() ? new FormLink<IIngestibleGetter>() : linkCache.Resolve<IIngestibleGetter>(venom).ToLink();
+                plugin.Voice = voice.IsNullOrWhitespace() ? new FormLink<IVoiceTypeGetter>() : linkCache.Resolve<IVoiceTypeGetter>(voice).ToLink();
                 return plugin;
             }
         }

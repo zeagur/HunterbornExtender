@@ -10,6 +10,8 @@ using static HunterbornExtender.FormKeys;
 
 using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Mutagen.Bethesda.Skyrim.FormList>;
 using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
+using Mutagen.Bethesda.Plugins.Order;
+using Mutagen.Bethesda.Plugins.Cache;
 
 
 /// <summary>
@@ -52,17 +54,17 @@ readonly record struct StandardRecords<PatchType, FormListType>(
     /// <summary>
     /// A patching form of StandardRecords, which creates overrides and new records in PatchMod.
     /// </summary>
-    static public PatchingRecords CreatePatchingInstance(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
+    static public PatchingRecords CreatePatchingInstance(ISkyrimMod patchMod, ILoadOrder<IModListing<ISkyrimModGetter>> loadOrder, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
     {
-        Quest hunterbornQuest = state.PatchMod.Quests.GetOrAddAsOverride(FormKeys._DS_Hunterborn.Resolve<IQuestGetter>(state.LinkCache));
+        Quest hunterbornQuest = patchMod.Quests.GetOrAddAsOverride(FormKeys._DS_Hunterborn.Resolve<IQuestGetter>(linkCache));
         //if (settings.DebuggingMode) QueryImportantProperties(hunterbornQuest);
 
         var animals = new AnimalClass<FormList>(new(
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_Mats__Lists.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_Mats__Lists)),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_Mats__Perfect.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_Mats__Perfect)),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_PeltLists.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_PeltLists)),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_DeathItems.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_DeathItems)),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_DeathItemTokens.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_DeathItemTokens)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_Mats__Lists.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_Mats__Lists)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_Mats__Perfect.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_Mats__Perfect)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_PeltLists.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_PeltLists)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_DeathItems.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_DeathItems)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_DeathItemTokens.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_DeathItemTokens)),
 
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Animals", "ActiveAnimalSwitches"),
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Animals", "DeathItemLI"),
@@ -73,14 +75,14 @@ readonly record struct StandardRecords<PatchType, FormListType>(
                     GetProperty<ScriptIntListProperty>(hunterbornQuest, "_DS_HB_Animals", "DefaultPeltValues"),
                     GetProperty<ScriptIntListProperty>(hunterbornQuest, "_DS_HB_Animals", "CarcassSizes")),
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_MAIN", "FreshCarcassMsgBoxes"),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_CarcassObjects.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_CarcassObjects)));
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_CarcassObjects.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_CarcassObjects)));
 
         var monsters = new MonsterClass<FormList>(new(
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_Mats__Lists_Monsters.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_Mats__Lists_Monsters)),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_Mats__Perfect_Monsters.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_Mats__Perfect_Monsters)),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_PeltLists_Monsters.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_PeltLists_Monsters)),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_DeathItems_Monsters.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_DeathItems_Monsters)),
-                    state.PatchMod.FormLists.GetOrAddAsOverride(_DS_FL_DeathItemTokens_Monsters.Resolve(state.LinkCache) ?? throw new CoreRecordMissing(_DS_FL_DeathItemTokens_Monsters)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_Mats__Lists_Monsters.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_Mats__Lists_Monsters)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_Mats__Perfect_Monsters.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_Mats__Perfect_Monsters)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_PeltLists_Monsters.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_PeltLists_Monsters)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_DeathItems_Monsters.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_DeathItems_Monsters)),
+                    patchMod.FormLists.GetOrAddAsOverride(_DS_FL_DeathItemTokens_Monsters.Resolve(linkCache) ?? throw new CoreRecordMissing(_DS_FL_DeathItemTokens_Monsters)),
 
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Monsters", "ActiveMonsterSwitches"),
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Monsters", "DeathItemLI"),
@@ -104,17 +106,17 @@ readonly record struct StandardRecords<PatchType, FormListType>(
     /// <summary>
     /// A read-only form of StandardRecords, for pre-processing.
     /// </summary>
-    static public ViewingRecords CreateViewingInstance(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
+    static public ViewingRecords CreateViewingInstance(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
     {
-        IQuestGetter hunterbornQuest = FormKeys._DS_Hunterborn.Resolve<IQuestGetter>(state.LinkCache);
+        IQuestGetter hunterbornQuest = FormKeys._DS_Hunterborn.Resolve<IQuestGetter>(linkCache);
         //if (settings.DebuggingMode) QueryImportantProperties(hunterbornQuest);
 
         var animals = new AnimalClass<IFormListGetter>(new(
-                    _DS_FL_Mats__Lists.Resolve(state.LinkCache),
-                    _DS_FL_Mats__Perfect.Resolve(state.LinkCache),
-                    _DS_FL_PeltLists.Resolve(state.LinkCache),
-                    _DS_FL_DeathItems.Resolve(state.LinkCache),
-                    _DS_FL_DeathItemTokens.Resolve(state.LinkCache),
+                    _DS_FL_Mats__Lists.Resolve(linkCache),
+                    _DS_FL_Mats__Perfect.Resolve(linkCache),
+                    _DS_FL_PeltLists.Resolve(linkCache),
+                    _DS_FL_DeathItems.Resolve(linkCache),
+                    _DS_FL_DeathItemTokens.Resolve(linkCache),
 
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Animals", "ActiveAnimalSwitches"),
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Animals", "DeathItemLI"),
@@ -125,14 +127,14 @@ readonly record struct StandardRecords<PatchType, FormListType>(
                     GetProperty<ScriptIntListProperty>(hunterbornQuest, "_DS_HB_Animals", "DefaultPeltValues"),
                     GetProperty<ScriptIntListProperty>(hunterbornQuest, "_DS_HB_Animals", "CarcassSizes")),
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_MAIN", "FreshCarcassMsgBoxes"),
-                    _DS_FL_CarcassObjects.Resolve(state.LinkCache));
+                    _DS_FL_CarcassObjects.Resolve(linkCache));
 
         var monsters = new MonsterClass<IFormListGetter>(new(
-                    _DS_FL_Mats__Lists_Monsters.Resolve(state.LinkCache),
-                    _DS_FL_Mats__Perfect_Monsters.Resolve(state.LinkCache),
-                    _DS_FL_PeltLists_Monsters.Resolve(state.LinkCache),
-                    _DS_FL_DeathItems_Monsters.Resolve(state.LinkCache),
-                    _DS_FL_DeathItemTokens_Monsters.Resolve(state.LinkCache),
+                    _DS_FL_Mats__Lists_Monsters.Resolve(linkCache),
+                    _DS_FL_Mats__Perfect_Monsters.Resolve(linkCache),
+                    _DS_FL_PeltLists_Monsters.Resolve(linkCache),
+                    _DS_FL_DeathItems_Monsters.Resolve(linkCache),
+                    _DS_FL_DeathItemTokens_Monsters.Resolve(linkCache),
 
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Monsters", "ActiveMonsterSwitches"),
                     GetProperty<ScriptObjectListProperty>(hunterbornQuest, "_DS_HB_Monsters", "DeathItemLI"),

@@ -23,9 +23,11 @@ using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Muta
 using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
 using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter>;
 using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
+using Mutagen.Bethesda.Plugins.Cache;
+using Mutagen.Bethesda.Plugins.Order;
 #pragma warning disable IDE1006 // Naming Styles
 
-sealed internal class Program
+sealed public class Program
 {
 
     public static Task<int> Main(string[] args)
@@ -77,20 +79,28 @@ sealed internal class Program
     /// </summary>
     /// <param name="settings"></param>
     /// <param name="state"></param>
-    public Program(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+    public Program(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state) : this(settings, state.PatchMod, state.LoadOrder, state.LinkCache) { }
+
+    /// <summary>
+    /// Creates a new instance of Program.
+    /// </summary>
+    /// <param name="settings"></param>
+    /// <param name="state"></param>
+    public Program(Settings.Settings settings, ISkyrimMod patchMod, ILoadOrder<IModListing<ISkyrimModGetter>> loadOrder, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
     {
         Settings = settings;
-        State = state;
-        FormLinkSubstitution = Substitutions.GetCACOSub(State.LoadOrder.ContainsKey(CACO_MODKEY));
-        ItemSubstitution = Substitutions.GetCACOSubResolved(State.LoadOrder.ContainsKey(CACO_MODKEY), State.LinkCache);
+        LinkCache = linkCache;
+        LoadOrder = loadOrder;
+        PatchMod = patchMod;
+        FormLinkSubstitution = Substitutions.GetCACOSub(LoadOrder.ContainsKey(CACO_MODKEY));
+        ItemSubstitution = Substitutions.GetCACOSubResolved(LoadOrder.ContainsKey(CACO_MODKEY), LinkCache);
+    }
 
-}
-
-public void Initialize()
+    public void Initialize()
     {
         Write.Divider(0);
         Write.Action(0, "Importing plugins.");
-        var addonPlugins = LegacyConverter.ImportAndConvert(State);
+        var addonPlugins = LegacyConverter.ImportAndConvert(LinkCache);
         Write.Success(0, $"{addonPlugins.Count} creature types imported.");
 
         //
@@ -103,7 +113,7 @@ public void Initialize()
         {
             Write.Divider(0);
             Write.Action(0, "Trying to resolve required forms from Hunterborn.esp, and preparing the patch structure.");
-            std_readonly = ViewingRecords.CreateViewingInstance(State, Settings);
+            std_readonly = ViewingRecords.CreateViewingInstance(LinkCache);
             Write.Success(0, $"Success.");
         }
         catch (RecordException ex)
@@ -201,7 +211,7 @@ public void Initialize()
         //
         foreach (var deathItem in Settings.DeathItemSelections)
         {
-            deathItem.Selection = plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault();
+            deathItem.Selection = plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault(PluginEntry.SKIP);
         }
 
         Write.Success(0, $"Imported death plugin support for {plugins.Count} creatures");
@@ -214,7 +224,7 @@ public void Initialize()
         try
         {
             Write.Action(0, $"Running heuristics.");
-            var npcs = State.LoadOrder.PriorityOrder.Npc().WinningOverrides();
+            var npcs = LoadOrder.PriorityOrder.Npc().WinningOverrides();
             int heuristics = MakeHeuristicSelections(plugins, npcs, std_readonly);
             Write.Success(0, $"Heuristics assigned {heuristics} creatures.");
         }
@@ -245,7 +255,7 @@ public void Initialize()
         {
             Write.Divider(0);
             Write.Action(0, "Trying to resolve required forms from Hunterborn.esp, and preparing the patch structure.");
-            std = PatchingRecords.CreatePatchingInstance(State, Settings);
+            std = PatchingRecords.CreatePatchingInstance(PatchMod, LoadOrder, LinkCache);
             Write.Success(0, $"Success.");
         }
         catch (RecordException ex)
@@ -279,7 +289,7 @@ public void Initialize()
 
             try
             {
-                var deathItem = State.LinkCache.Resolve<DeathItemGetter>(selection.DeathItem);
+                var deathItem = LinkCache.Resolve<DeathItemGetter>(selection.DeathItem);
                 var data = CreateCreatureData(deathItem, prototype, std);
                 if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
 
@@ -349,7 +359,7 @@ public void Initialize()
             //if (settings.DebuggingMode) Write.Action(2, $"Heuristics examining {npc}");
             if (npc.DeathItem?.IsNull ?? true) continue;
             
-            var deathItem = npc.DeathItem.Resolve(State.LinkCache);
+            var deathItem = npc.DeathItem.Resolve(LinkCache);
             if (KnownDeathItems.ContainsKey(deathItem)) continue;
 
             // If there is no DeathItemSelection record for the NPC's DeathItem, create it.
@@ -377,7 +387,7 @@ public void Initialize()
         }
 
         DeathItemSelection[] selections = selectionWeights.Keys.ToArray();
-        Dictionary<FormKey, PluginEntry?> savedSelections = Settings.DeathItemSelections.ToDictionary(v => v.DeathItem, v => v.Selection);
+        Dictionary<FormKey, PluginEntry> savedSelections = Settings.DeathItemSelections.ToDictionary(v => v.DeathItem, v => v.Selection);
         int modifiedCount = 0;
 
         foreach (var selection in selections)
@@ -397,7 +407,7 @@ public void Initialize()
                 selection.Selection = options.First();
                 if (DebuggingMode && !selection.DeathItem.IsNull)
                 {
-                    selection.DeathItem.ToLink<DeathItemGetter>().TryResolve(State.LinkCache, out var deathItem);
+                    selection.DeathItem.ToLink<DeathItemGetter>().TryResolve(LinkCache, out var deathItem);
                     Write.Action(2, $"{deathItem?.EditorID ?? deathItem?.ToString() ?? "NO DEATH ITEM"}: heuristic selected {selection.Selection?.SortName}.");
                     Write.Action(3, $"From: {itemWeights.Pretty()}");
 
@@ -434,8 +444,8 @@ public void Initialize()
 
         // Match the creature's editorId, internalName, and race internalName to the names of plugins.
         var nameMatches = new HashSet<PluginEntry>();
-        var race = npc.Race.Resolve(State.LinkCache);
-        npc.DeathItem.TryResolve(State.LinkCache, out var deathItem);
+        var race = npc.Race.Resolve(LinkCache);
+        npc.DeathItem.TryResolve(LinkCache, out var deathItem);
 
         if (npc.EditorID is string npcEditorId) Settings.Plugins.Where(PluginNameMatch(npcEditorId)).ForEach(clicker(1));
         if (npc.Name?.ToString() is string npcName) Settings.Plugins.Where(PluginNameMatch(npcName)).ForEach(clicker(1));
@@ -512,7 +522,7 @@ public void Initialize()
             var deathItemLink = std.GetCCFor(type)._DS_FL_DeathItems.Items[index];
             if (deathItemLink.IsNull) throw new DataConsistencyError(type, internalName, index, "No DeathItem.");
 
-            deathItemLink.TryResolve<DeathItemGetter>(State.LinkCache, out var deathItem);
+            deathItemLink.TryResolve<DeathItemGetter>(LinkCache, out var deathItem);
             if (deathItem == null) throw new DataConsistencyError(type, internalName, index, "DeathItem could not be resolved.");
             if (deathItem.EditorID == null) throw new DataConsistencyError(type, internalName, index, $"DeathItem {deathItem.FormKey} has no editor id.");
 
@@ -526,15 +536,15 @@ public void Initialize()
 
             var toggle = std.GetCCFor(type).Switches.Objects[index].Object;
             if (toggle.IsNull) plugin.Toggle = new FormLink<IGlobalGetter>();
-            else plugin.Toggle = toggle.Resolve<IGlobalGetter>(State.LinkCache).ToLink();
+            else plugin.Toggle = toggle.Resolve<IGlobalGetter>(LinkCache).ToLink();
 
             var meat = std.GetCCFor(type).MeatType.Objects[index].Object;
             if (meat.IsNull) plugin.Meat = new FormLink<IItemGetter>();
-            else plugin.Meat = meat.Resolve<IItemGetter>(State.LinkCache).ToLink();
+            else plugin.Meat = meat.Resolve<IItemGetter>(LinkCache).ToLink();
 
             var shared = std.GetCCFor(type).SharedDeathItems.Objects[index].Object;
             if (shared.IsNull) plugin.SharedDeathItems = new FormLink<IFormListGetter>();
-            else plugin.SharedDeathItems = shared.Resolve<IFormListGetter>(State.LinkCache).ToLink();
+            else plugin.SharedDeathItems = shared.Resolve<IFormListGetter>(LinkCache).ToLink();
 
             plugin.CarcassSize = std.GetCCFor(type).CarcassSizes.Data[index];
 
@@ -542,11 +552,11 @@ public void Initialize()
             {
                 var venom = std.Monsters.VenomItems.Objects[index].Object;
                 if (venom.IsNull) plugin.Venom = new FormLink<IIngestibleGetter>();
-                else plugin.Venom = venom.Resolve<IIngestibleGetter>(State.LinkCache).ToLink();
+                else plugin.Venom = venom.Resolve<IIngestibleGetter>(LinkCache).ToLink();
 
                 var blood = std.Monsters.BloodItems.Objects[index].Object;
                 if (blood.IsNull) plugin.BloodType = new FormLink<IItemGetter>();
-                else plugin.BloodType = blood.Resolve<IItemGetter>(State.LinkCache).ToLink();
+                else plugin.BloodType = blood.Resolve<IItemGetter>(LinkCache).ToLink();
 
                 plugin.CarcassWeight = 0;
                 plugin.CarcassValue = 0;
@@ -555,12 +565,12 @@ public void Initialize()
             {
                 var msg = std.Animals.CarcassMessages.Objects[index].Object;
                 if (msg.IsNull) plugin.CarcassMessageBox = new FormLink<IMessageGetter>();
-                else plugin.CarcassMessageBox = msg.Resolve<IMessageGetter>(State.LinkCache).ToLink();
+                else plugin.CarcassMessageBox = msg.Resolve<IMessageGetter>(LinkCache).ToLink();
 
                 plugin.Venom = new FormLink<IIngestibleGetter>();
                 plugin.BloodType = new FormLink<IItemGetter>();
 
-                var carcass = std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(State.LinkCache);
+                var carcass = std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(LinkCache);
                 plugin.CarcassWeight = (int)carcass.Weight;
                 plugin.CarcassValue = (int)carcass.Value;
                 KnownCarcasses.Add(plugin, carcass);
@@ -569,26 +579,26 @@ public void Initialize()
             plugin.Discard = type != EntryType.Monster
                 ? new()
                 : std.Monsters.Discards.Objects[index].Object
-                .Resolve<IFormListGetter>(State.LinkCache).Items
+                .Resolve<IFormListGetter>(LinkCache).Items
                 .Select(item => item as IFormLinkGetter<IItemGetter>)
                 .Where(item => item is not null)
                 .Select(item => item!).ToList();
 
-            var mats = std.GetCCFor(type)._DS_FL_Mats__Lists.Items[index].Resolve<IFormListGetter>(State.LinkCache);
+            var mats = std.GetCCFor(type)._DS_FL_Mats__Lists.Items[index].Resolve<IFormListGetter>(LinkCache);
             plugin.Materials = RecreateMaterials(mats, std);
             // Console.WriteLine($"===RECREATED MATS FOR {plugin.ProperName}: {plugin.Materials.Pretty()}");
 
             plugin.PeltCount = Array.Empty<int>();
             plugin.FurPlateCount = Array.Empty<int>();
 
-            IFormListGetter peltList = std.GetCCFor(type)._DS_FL_PeltLists.Items[index].Resolve<IFormListGetter>(State.LinkCache);
+            IFormListGetter peltList = std.GetCCFor(type)._DS_FL_PeltLists.Items[index].Resolve<IFormListGetter>(LinkCache);
             if (peltList.Items.Count == 4)
             {
                 PeltSet pelts = (
-                    peltList.Items[0].Resolve<IMiscItemGetter>(State.LinkCache),
-                    peltList.Items[1].Resolve<IMiscItemGetter>(State.LinkCache),
-                    peltList.Items[2].Resolve<IMiscItemGetter>(State.LinkCache),
-                    peltList.Items[3].Resolve<IMiscItemGetter>(State.LinkCache));
+                    peltList.Items[0].Resolve<IMiscItemGetter>(LinkCache),
+                    peltList.Items[1].Resolve<IMiscItemGetter>(LinkCache),
+                    peltList.Items[2].Resolve<IMiscItemGetter>(LinkCache),
+                    peltList.Items[3].Resolve<IMiscItemGetter>(LinkCache));
                 KnownPelts[plugin] = pelts;
             }
 
@@ -603,7 +613,7 @@ public void Initialize()
             // Vanilla voices are named very predictably, so just use that.
             //
             string voiceEdid = $"Cr{plugin.Name}Voice";
-            State.LinkCache.TryResolve<IVoiceTypeGetter>(voiceEdid, out var voice);
+            LinkCache.TryResolve<IVoiceTypeGetter>(voiceEdid, out var voice);
             plugin.Voice = voice == null ? new FormLink<IVoiceTypeGetter>() : voice.ToLink();
             //if (DebuggingMode) Write.Action(2, $"Internal plugin {plugin.Name} searching for voice {voiceEdid}: found {plugin.Voice}.");
 
@@ -705,10 +715,10 @@ public void Initialize()
             //plugin.Recipes.PeltRecipes = peltRecipeSet;
             plugin.PeltCount = new int[] { peltRecipe0.CreatedObjectCount ?? 2, peltRecipe1.CreatedObjectCount ?? 2, peltRecipe2.CreatedObjectCount ?? 2, peltRecipe3.CreatedObjectCount ?? 2 };
 
-            peltRecipe0.CreatedObject.TryResolve<IMiscItemGetter>(State.LinkCache, out var pelt0);
-            peltRecipe1.CreatedObject.TryResolve<IMiscItemGetter>(State.LinkCache, out var pelt1);
-            peltRecipe2.CreatedObject.TryResolve<IMiscItemGetter>(State.LinkCache, out var pelt2);
-            peltRecipe3.CreatedObject.TryResolve<IMiscItemGetter>(State.LinkCache, out var pelt3);
+            peltRecipe0.CreatedObject.TryResolve<IMiscItemGetter>(LinkCache, out var pelt0);
+            peltRecipe1.CreatedObject.TryResolve<IMiscItemGetter>(LinkCache, out var pelt1);
+            peltRecipe2.CreatedObject.TryResolve<IMiscItemGetter>(LinkCache, out var pelt2);
+            peltRecipe3.CreatedObject.TryResolve<IMiscItemGetter>(LinkCache, out var pelt3);
 
             if (pelt0 is not null && pelt1 is not null && pelt2 is not null && pelt3 is not null)
             {
@@ -770,7 +780,7 @@ public void Initialize()
             {
                 foreach (var pattern in group)
                 {
-                    State.LinkCache.TryResolve<IConstructibleObjectGetter>(String.Format(pattern, name), out result);
+                    LinkCache.TryResolve<IConstructibleObjectGetter>(String.Format(pattern, name), out result);
 
                     /*if (DebuggingMode)
                     {
@@ -792,8 +802,8 @@ public void Initialize()
 
     private T? EdidLookupFallback<T>(string template, string name1, string name2) where T : SkyrimMajorRecord
     {
-        State.LinkCache.TryResolve<T>(String.Format(template, name1), out var result);
-        if (result == null) State.LinkCache.TryResolve<T>(String.Format(template, name2), out result);
+        LinkCache.TryResolve<T>(String.Format(template, name1), out var result);
+        if (result == null) LinkCache.TryResolve<T>(String.Format(template, name2), out result);
         return result;
     }
 
@@ -964,11 +974,11 @@ public void Initialize()
         // Get a pre-existing token that already has the keywords and model set.
         // That way all that needs to be done is to change the internalName and editor ID.
         var existingTokenLink = data.IsAnimal ? DEFAULT_TOKEN_ANIMAL : DEFAULT_TOKEN_MONSTER;
-        existingTokenLink.TryResolve(State.LinkCache, out var existingToken);
+        existingTokenLink.TryResolve(LinkCache, out var existingToken);
         if (existingToken == null) throw new CoreRecordMissing(existingTokenLink);
 
         // Add the token to the patch.
-        var token = State.PatchMod.MiscItems.DuplicateInAsNewRecord(existingToken);
+        var token = PatchMod.MiscItems.DuplicateInAsNewRecord(existingToken);
         if (token == null) throw new InvalidOperationException();
 
         // Set the EditorID.
@@ -984,11 +994,11 @@ public void Initialize()
     private MiscItem CreateCarcass(CreatureData data, PatchingRecords std)
     {
         // Get a pre-existing carcass that already has the keywords set.
-        DEFAULT_CARCASS.TryResolve(State.LinkCache, out var existingCarcass);
+        DEFAULT_CARCASS.TryResolve(LinkCache, out var existingCarcass);
         if (existingCarcass == null) throw new CoreRecordMissing(DEFAULT_CARCASS);
 
         // Add the carcass to the patch.
-        var carcass = State.PatchMod.MiscItems.DuplicateInAsNewRecord(existingCarcass);
+        var carcass = PatchMod.MiscItems.DuplicateInAsNewRecord(existingCarcass);
         if (carcass == null) throw new InvalidOperationException();
 
         var oldName = carcass.Name?.String;
@@ -1021,13 +1031,13 @@ public void Initialize()
     /// 
     private FormList CreateMaterials(CreatureData data, PatchingRecords std)
     {
-        //DEFAULT_MATS.TryResolve(state.LinkCache, out var existingMaterials);
+        //DEFAULT_MATS.TryResolve(LinkCache, out var existingMaterials);
         //if (existingMaterials == null) throw new CoreRecordMissing(DEFAULT_MATS.FormKey);
 
-        var matsFormList = State.PatchMod.FormLists.AddNew();
+        var matsFormList = PatchMod.FormLists.AddNew();
         if (matsFormList == null) throw new InvalidOperationException();
 
-        var matsPerfectLvld = State.PatchMod.LeveledItems.AddNew();
+        var matsPerfectLvld = PatchMod.LeveledItems.AddNew();
         if (matsPerfectLvld == null) throw new InvalidOperationException();
 
         matsFormList.EditorID = $"_DS_FL_Mats_{data.InternalName}";
@@ -1036,7 +1046,7 @@ public void Initialize()
         for (int index = 0; index < data.Prototype.Materials.Count; index++)
         {
             var skillLevel = data.Prototype.Materials[index];
-            var mat = State.PatchMod.LeveledItems.AddNew();
+            var mat = PatchMod.LeveledItems.AddNew();
             if (mat == null) throw new InvalidOperationException();
 
             mat.EditorID = $"{matsFormList.EditorID}{index:D2}";
@@ -1071,7 +1081,7 @@ public void Initialize()
 
         foreach (var level in matsFormList.Items)
         {
-            var asLeveled = level.FormKey.ToLinkGetter<ILeveledItemGetter>().Resolve(State.LinkCache);
+            var asLeveled = level.FormKey.ToLinkGetter<ILeveledItemGetter>().Resolve(LinkCache);
 
             MaterialLevel skillLevel = new();
             materials.Add(skillLevel);
@@ -1095,7 +1105,7 @@ public void Initialize()
 
     private IFormListGetter CreatePelts(CreatureData data, PatchingRecords std)
     {
-        var peltFormList = State.PatchMod.FormLists.AddNew();
+        var peltFormList = PatchMod.FormLists.AddNew();
         if (peltFormList == null) throw new InvalidOperationException();
         peltFormList.EditorID = $"_DS_FL_Pelts{data.InternalName}";
         std.GetCCFor(data)._DS_FL_PeltLists.Items.Add(peltFormList);
@@ -1115,9 +1125,9 @@ public void Initialize()
  
             if (DebuggingMode) Write.Action(3, "Creating new Pelt records in Misc.");
 
-            var poor = State.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
-            var fine = State.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
-            var flawless = State.PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
+            var poor = PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
+            var fine = PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
+            var flawless = PatchMod.MiscItems.DuplicateInAsNewRecord(standard);
 
             if (DebuggingMode) Write.Success(3, "Created \"poor\".");
             if (DebuggingMode) Write.Success(3, "Created \"standard\".");
@@ -1166,7 +1176,7 @@ public void Initialize()
     /// 
     private IMiscItemGetter? GetDefaultPelt(CreatureData data)
     {
-        if (!data.Prototype.DefaultPelt.IsNull) return data.Prototype.DefaultPelt.Resolve(State.LinkCache);
+        if (!data.Prototype.DefaultPelt.IsNull) return data.Prototype.DefaultPelt.Resolve(LinkCache);
         var defaultPelt = GetDefaultPelt(data.DeathItem);
         if (defaultPelt is IMiscItemGetter pelt) return pelt;
         else return null;
@@ -1187,7 +1197,7 @@ public void Initialize()
 
         foreach (var entry in entries)
         {
-            var entryItem = entry.Data?.Reference.TryResolve(State.LinkCache);
+            var entryItem = entry.Data?.Reference.TryResolve(LinkCache);
             var edid = entryItem?.EditorID ?? "";
             if (entryItem == null || edid == null) continue;
 
@@ -1223,10 +1233,10 @@ public void Initialize()
     {
         if (DebuggingMode) Write.Action(3, $"Creating new pelt for {data.InternalName}");
 
-        DEFAULT_PELT.TryResolve(State.LinkCache, out var existingPelt);
+        DEFAULT_PELT.TryResolve(LinkCache, out var existingPelt);
         if (existingPelt == null) throw new CoreRecordMissing(DEFAULT_PELT);
 
-        var newPelt = State.PatchMod.MiscItems.DuplicateInAsNewRecord(DEFAULT_PELT.Resolve(State.LinkCache));
+        var newPelt = PatchMod.MiscItems.DuplicateInAsNewRecord(DEFAULT_PELT.Resolve(LinkCache));
         if (newPelt == null) throw new InvalidOperationException();
 
         newPelt.EditorID = $"_DS_Pelt_{data.InternalName}_01";
@@ -1250,7 +1260,7 @@ public void Initialize()
     /// 
     private IItemGetter? GetDefaultMeat(CreatureData data, PatchingRecords std)
     {
-        if (!data.Prototype.Meat.IsNull) return data.Prototype.Meat.Resolve(State.LinkCache);
+        if (!data.Prototype.Meat.IsNull) return data.Prototype.Meat.Resolve(LinkCache);
         else
         {
             var defaultMeat = GetDefaultMeat(data.DeathItem, std);
@@ -1275,7 +1285,7 @@ public void Initialize()
 
         foreach (var entry in entries)
         {
-            var entryItem = entry.Data?.Reference.TryResolve(State.LinkCache);
+            var entryItem = entry.Data?.Reference.TryResolve(LinkCache);
             var edid = entryItem?.EditorID ?? "";
             if (entryItem == null || edid == null) continue;
 
@@ -1312,12 +1322,12 @@ public void Initialize()
     {
         if (DebuggingMode) Write.Action(3, $"Creating new meats for {data.InternalName}");
 
-        DEFAULT_MEAT.TryResolve(State.LinkCache, out var existingMeat);
+        DEFAULT_MEAT.TryResolve(LinkCache, out var existingMeat);
         if (existingMeat == null) throw new CoreRecordMissing(DEFAULT_MEAT);
 
-        var newMeat = State.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
-        var newCooked = State.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
-        var newJerky = State.PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
+        var newMeat = PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
+        var newCooked = PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
+        var newJerky = PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
 
         if (newMeat == null) throw new InvalidOperationException();
         if (newCooked == null) throw new InvalidOperationException();
@@ -1381,7 +1391,7 @@ public void Initialize()
     /// 
     private FormList CreateDiscards(CreatureData data, PatchingRecords std)
     {
-        var discards = State.PatchMod.FormLists.AddNew();
+        var discards = PatchMod.FormLists.AddNew();
         if (discards == null) throw new InvalidOperationException();
 
         discards.EditorID = $"_DS_FL_Discard{data.InternalName}_01";
@@ -1403,7 +1413,7 @@ public void Initialize()
     private ILeveledItemGetter CreateDeathDescriptor(CreatureData data, IFormListGetter pelts, FormList mats, PatchingRecords std)
     {
         // Create the new descriptor.
-        LeveledItem deathDescriptor = State.PatchMod.LeveledItems.AddNew();
+        LeveledItem deathDescriptor = PatchMod.LeveledItems.AddNew();
         deathDescriptor.EditorID = $"_DS_DeathItem_{data.InternalName}";
         deathDescriptor.Entries = new();
 
@@ -1456,16 +1466,16 @@ public void Initialize()
         {
             if (createdStandardPelt)
             {
-                var standard = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_STD_RECIPE.Resolve(State.LinkCache));
+                var standard = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_STD_RECIPE.Resolve(LinkCache));
                 standard.CreatedObjectCount = (ushort)data.Prototype.PeltCount[1];
                 if (standard.Items?[0].Item is ContainerItem containerItem2) containerItem2.Item = pelts.Item2.ToLink();
                 if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
                 standard.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_01";
             }
 
-            var poor = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_POOR_RECIPE.Resolve(State.LinkCache));
-            var fine = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_FINE_RECIPE.Resolve(State.LinkCache));
-            var flawless = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_FLAWLESS_RECIPE.Resolve(State.LinkCache));
+            var poor = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_POOR_RECIPE.Resolve(LinkCache));
+            var fine = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_FINE_RECIPE.Resolve(LinkCache));
+            var flawless = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_FLAWLESS_RECIPE.Resolve(LinkCache));
 
             poor.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_00";
             fine.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_02";
@@ -1491,9 +1501,9 @@ public void Initialize()
 
         if (data.Prototype.FurPlateCount.Length >= 3)
         {
-            var poor = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_POOR_RECIPE.Resolve(State.LinkCache));
-            var standard = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_STD_RECIPE.Resolve(State.LinkCache));
-            var fine = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_FINE_RECIPE.Resolve(State.LinkCache));
+            var poor = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_POOR_RECIPE.Resolve(LinkCache));
+            var standard = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_STD_RECIPE.Resolve(LinkCache));
+            var fine = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_FURS_FINE_RECIPE.Resolve(LinkCache));
 
             poor.EditorID = $"HB_Recipe_FurPlate_{data.InternalName}_00";
             standard.EditorID = $"HB_Recipe_FurPlate_{data.InternalName}_01";
@@ -1521,10 +1531,10 @@ public void Initialize()
     /// 
     private void CreateMeatRecipes(CreatureData data, MeatSet meats, PatchingRecords std)
     {
-        var recipeCooked = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_CHARRED_RECIPE.Resolve(State.LinkCache));
-        var recipeCampfire = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_CAMPFIRE_RECIPE.Resolve(State.LinkCache));
-        var recipePrimitive = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PRIMITIVE_RECIPE.Resolve(State.LinkCache));
-        var recipeJerky = State.PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_JERKY_RECIPE.Resolve(State.LinkCache));
+        var recipeCooked = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_CHARRED_RECIPE.Resolve(LinkCache));
+        var recipeCampfire = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_CAMPFIRE_RECIPE.Resolve(LinkCache));
+        var recipePrimitive = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PRIMITIVE_RECIPE.Resolve(LinkCache));
+        var recipeJerky = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_JERKY_RECIPE.Resolve(LinkCache));
 
         (var meat, var cooked, var jerky) = meats;
 
@@ -1689,8 +1699,8 @@ public void Initialize()
         return new() { Object = link };
     }
 
-    public bool IsCacoInstalled() => State.LoadOrder.ContainsKey(CACO_MODKEY);
-    public bool IsLastSeedInstalled() => State.LoadOrder.ContainsKey(LASTSEED_MODKEY);
+    public bool IsCacoInstalled() => LoadOrder.ContainsKey(CACO_MODKEY);
+    public bool IsLastSeedInstalled() => LoadOrder.ContainsKey(LASTSEED_MODKEY);
 
     private Func<IFormLinkGetter<IItemGetter>, IFormLinkGetter<IItemGetter>> FormLinkSubstitution { get; }
 
@@ -1735,8 +1745,8 @@ public void Initialize()
     //static private string DeathItemNamerFallback(DeathItemGetter deathItem) => DeathItemNamer(deathItem) ?? FormIDNamer(deathItem);
     //static private string ItemNamerFallback(IItemGetter item)
     //=> item.EditorID ?? FormIDNamer(item);
-    //private string? NpcRaceNamer(INpcGetter npc) => RaceNamer(npc.Race.Resolve(State.LinkCache));
-    //private string? NpcDeathItemNamer(INpcGetter npc) => DeathItemNamer(npc.DeathItem?.Resolve(State.LinkCache));
+    //private string? NpcRaceNamer(INpcGetter npc) => RaceNamer(npc.Race.Resolve(LinkCache));
+    //private string? NpcDeathItemNamer(INpcGetter npc) => DeathItemNamer(npc.DeathItem?.Resolve(LinkCache));
 
     /// <summary>
     /// Wraps for <code>BasicNamer</code> for <code>INpcGetter</code>.
@@ -1756,7 +1766,7 @@ public void Initialize()
     private string LinkNamer(IFormLinkGetter<IMajorRecordGetter>? thing, Func<string?>? fallback = null)
     {
         if (thing is null) return "<NULL>";
-        thing.TryResolve(State.LinkCache, out var form);
+        thing.TryResolve(LinkCache, out var form);
         return FormNamer(form, fallback);
     }
 
@@ -1829,7 +1839,10 @@ public void Initialize()
     private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
 
     private Settings.Settings Settings { get; }
-    private IPatcherState<ISkyrimMod, ISkyrimModGetter> State { get; }
+    //private IPatcherState<ISkyrimMod, ISkyrimModGetter> State { get; }
+    private ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache { get; }
+    private ILoadOrder<IModListing<ISkyrimModGetter>> LoadOrder { get; }
+    private ISkyrimMod PatchMod { get; }
     private bool DebuggingMode { get { return Settings.DebuggingMode; } }
 
 }
