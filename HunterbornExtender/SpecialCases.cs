@@ -12,7 +12,7 @@ using Mutagen.Bethesda.Plugins.Cache;
 /// Storage class for big hard-coded Dictionaries that replace one thing with another.
 /// 
 /// </summary>
-sealed public class Substitutions
+sealed public class SpecialCases
 {
 
     /// <summary>
