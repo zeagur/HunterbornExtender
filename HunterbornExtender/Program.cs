@@ -386,7 +386,7 @@ sealed public class Program
         }
 
         DeathItemSelection[] selections = selectionWeights.Keys.ToArray();
-        Dictionary<FormKey, PluginEntry> savedSelections = Settings.DeathItemSelections.ToDictionary(v => v.DeathItem, v => v.Selection);
+        Dictionary<FormKey, PluginEntry> savedSelections = Settings.DeathItemSelections.ToDictionary(v => v.DeathItem, v => v.Selection ?? PluginEntry.SKIP);
         int modifiedCount = 0;
 
         foreach (var selection in selections)
