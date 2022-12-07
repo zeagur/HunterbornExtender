@@ -23,6 +23,7 @@ using System.Reflection;
 
 namespace HunterbornExtender
 {
+
     /// <summary>
     /// Adds an EqualsIgnoreCase method to String.
     /// </summary>
@@ -63,38 +64,65 @@ namespace HunterbornExtender
     }
 
     /// <summary>
+    /// Methods for breaking apart names into parts based on capital letters, spaces, underlines, and dashes.
+    /// They are always returned as a single set.
+    /// 
+    /// </summary>
+    sealed public class Tokenizer
+    {
+        static public HashSet<string> Tokenize(IEnumerable<string?> names) => names.Where(n => !n.IsNullOrWhitespace()).SelectMany(Tokenize).ToHashSet();
+
+        static public HashSet<string> Tokenize(params string?[] names) => names.Where(n => !n.IsNullOrWhitespace()).SelectMany(Tokenize).ToHashSet();
+
+        static public HashSet<string> Tokenize(string? name)
+        {
+            if (name.IsNullOrWhitespace()) return new();
+
+            var filtered = TOKENIZER_FILTER.Replace(name, "");
+            var tokens = TOKENIZER_BREAK_SPLITTER.Split(filtered);
+            if (tokens == null || tokens.Length == 0) return new();
+
+            return tokens.SelectMany(t => TOKENIZER_CAMEL_SPLITTER.Split(t)).Where(t => !t.IsNullOrWhitespace()).ToHashSet();
+        }
+
+        readonly static private Regex TOKENIZER_FILTER = new("[^A-Za-z0-9 _-]");
+        readonly static private Regex TOKENIZER_BREAK_SPLITTER = new("[ _-]");
+        readonly static private Regex TOKENIZER_CAMEL_SPLITTER = new("([A-Z]+[a-z0-9]*)");
+    }
+
+    /// <summary>
     /// Log writing methods.
     /// </summary>
     sealed public class Write
     {
-        static public void Success(int tabs, string msg)
+        public static void Success(int IndentLevel, string msg)
         {
-            Console.Write(new String('\t', tabs));
+            Console.Write(new string('\t', IndentLevel));
             Console.Write(" o ");
             Console.WriteLine(msg);
         }
 
-        static public void Fail(int tabs, string msg)
+        public static void Fail(int IndentLevel, string msg)
         {
-            Console.Write(new String('\t', tabs));
+            Console.Write(new string('\t', IndentLevel));
             Console.Write(" x ");
             Console.WriteLine(msg);
         }
 
-        static public void Action(int tabs, string msg)
+        public static void Action(int IndentLevel, string msg)
         {
-            Console.Write(new String('\t', tabs));
+            Console.Write(new string('\t', IndentLevel));
             Console.WriteLine(msg);
         }
 
-        static public void Title(int tabs, string msg)
+        static public void Title(int IndentLevel, string msg)
         {
-            Action(tabs, CreateTitle(msg));
+            Action(IndentLevel, CreateTitle(msg));
         }
 
-        static public void Divider(int tabs)
+        public static void Divider(int IndentLevel)
         {
-            Action(tabs, DividerString);
+            Action(IndentLevel, DividerString);
         }
 
         /// <summary>
@@ -105,14 +133,14 @@ namespace HunterbornExtender
         /// <summary>
         /// For printing titled-dividers in the console output.
         /// </summary>
-        static public String CreateTitle(String title)
+        public static string CreateTitle(string title)
         {
             int dividerLength = DividerString.Length;
             int titleLength = title.Length;
             int leftLength = Math.Max(0, (dividerLength - titleLength) / 2);
             int rightLength = Math.Max(0, (dividerLength - titleLength + 1) / 2);
-            String left = DividerString.Substring(0, leftLength);
-            String right = DividerString.Substring(0, rightLength);
+            string left = DividerString[..leftLength];
+            string right = DividerString[..rightLength];
             return $"{left}{title}{right}";
         }
 
@@ -120,14 +148,14 @@ namespace HunterbornExtender
     /// <summary>
     /// Debugging class that outputs numbered checkin strings.
     /// </summary>
-    sealed record Checkin(int tabs = 0, string name = "")
+    sealed public record Checkin(int IndentLevel = 0, string CheckinName = "")
     {
         private int Counter = 0;
 
-        public void check()
+        public void Check()
         {
             Counter++;
-            Write.Success(tabs, $"{name} {Counter,-3}: every is okay.");
+            Write.Success(IndentLevel, $"{CheckinName} {Counter,-3}: every is okay.");
         }
     }
 
@@ -209,8 +237,8 @@ namespace HunterbornExtender
             var group = mod?.GetTopLevelGroup<T>();
             if (mod == null || group == null || group.Count == 0) return;
 
-            String modname = $"{Regex.Replace(filename.ToUpper(), "[^a-zA-Z0-9_]", "")}";
-            String typeName = typeof(T).FullName ?? "TYPENAME";
+            string modname = $"{Regex.Replace(filename.ToUpper(), "[^a-zA-Z0-9_]", "")}";
+            string typeName = typeof(T).FullName ?? "TYPENAME";
 
             System.Console.WriteLine($"static readonly public ModKey {modname} = new ModKey(\"{filename}\"), ModType.Plugin);");
 

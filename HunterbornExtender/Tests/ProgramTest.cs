@@ -16,7 +16,7 @@ sealed public class HunterbornProgramTesting
             ""
         };
 
-        HashSet<string>[] actual = testStrings.Select(Program.TokenizeName).ToArray();
+        HashSet<string>[] actual = testStrings.Select(Tokenizer.Tokenize).ToArray();
 
         HashSet<string>[] expected = new HashSet<string>[]
         {
@@ -42,7 +42,7 @@ sealed public class HunterbornProgramTesting
             "hello and goodbye"
         };
 
-        HashSet<string> actual = Program.TokenizeNames(testStrings);
+        HashSet<string> actual = Tokenizer.Tokenize(testStrings);
         HashSet<string> expected = new() { "hello", "goodbye", "and", "world" };
 
         //Assert.AreEqual(expected, actual);

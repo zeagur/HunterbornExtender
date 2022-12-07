@@ -15,7 +15,6 @@ using Mutagen.Bethesda.Synthesis;
 using Noggog;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -140,7 +139,12 @@ sealed public class Program
         {
             Write.Divider(0);
             Write.Action(0, "Trying to recreate the hard-coded core plugin from Hunterborn.esp.");
-            internalPlugins = RecreateCorePlugins(std_readonly);
+            (internalPlugins, var addDeathItems, var addCarcasses, var addPelts) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
+
+            foreach (var e in addDeathItems) KnownDeathItems.Add(e.Key, e.Value);
+            foreach (var e in addCarcasses) KnownCarcasses.Add(e.Key, e.Value);
+            foreach (var e in addPelts) KnownPelts.Add(e.Key, e.Value);
+            
 
             if (internalPlugins.Count > 0)
             {
@@ -172,14 +176,6 @@ sealed public class Program
         plugins.AddRange(addonPlugins);
         Settings.Plugins = plugins;
         Write.Success(0, $"Add-on creatures and hard-coded creatures merged; {plugins.Count} total.");
-
-        // 
-        // Import allowed and forbidden values from plugins.
-        //
-        foreach (var plugin in plugins)
-        {
-            if (!plugin.Voice.IsNull) AllowedVoices.Add(plugin.Voice);
-        }
 
         //
         // Populates the KnownDeathItem, KnownCarcass, and KnownPelts structures.
@@ -224,8 +220,11 @@ sealed public class Program
         {
             Write.Action(0, $"Running heuristics.");
             var npcs = LoadOrder.PriorityOrder.Npc().WinningOverrides();
-            int heuristics = MakeHeuristicSelections(plugins, npcs);
-            Write.Success(0, $"Heuristics assigned {heuristics} creatures.");
+            
+            DeathItemSelection[] selections = Heuristics.MakeHeuristicSelections(npcs, plugins, Settings.DeathItemSelections, LinkCache, Settings.DebuggingMode);
+            Settings.DeathItemSelections = selections;
+
+            Write.Success(0, $"Heuristics produced {selections.Length} results.");
         }
         catch (RecordException ex)
         {
@@ -292,11 +291,7 @@ sealed public class Program
                 var data = CreateCreatureData(deathItem, prototype);
                 if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
 
-                if (ForbiddenDeathItems.Contains(data.DeathItem.ToLink()))
-                {
-                    Write.Fail(1, $"Skipped {name}: DeathItem blacklisted.");
-                }
-                else if (KnownDeathItems.ContainsKey(data.DeathItem))
+                if (KnownDeathItems.ContainsKey(data.DeathItem))
                 {
                     Write.Fail(1, $"Skipped {name}: DeathItem already processed.");
                 }
@@ -326,513 +321,11 @@ sealed public class Program
         }
     }
 
-    /// <summary>
-    /// This should be called from the UI to pre-select the choices for each deathitem.
-    /// 
-    /// If Settings.ReuseSelections is enabled then selections in the settings will be preferred.
-    /// Everything still gets scanned anyway in case the loadorder has changed.
-    /// 
-    /// The selections array in Settings is replaced with a new one.
-    /// 
-    /// </summary>
-    /// 
-    private int MakeHeuristicSelections(List<PluginEntry> plugins, IEnumerable<INpcGetter> npcs)
-    {
-        // For each DeathItem, there will be a weighted set of plausible Plugins.
-        // HeuristicMatcher assigns the weights.
-        Dictionary<DeathItemSelection, Dictionary<PluginEntry, int>> selectionWeights = new();
-        Dictionary<DeathItemGetter, DeathItemSelection> indexer = new();
-
-        // Tokenize the names of the plugins.
-        foreach (var plugin in plugins) plugin.Tokens = TokenizeNames(plugin.Name, plugin.SortName, plugin.ProperName);
-        if (DebuggingMode)
-        {
-            Write.Title(1, "Tokenizing plugin names.");
-            plugins.ForEach(p => Write.Action(2, $"Plugin: {p.Name} -> {p.Tokens.Pretty()}"));
-            Write.Title(1, "Analyzing NPCs.");
-        }
-
-        // Scan the list of npcs.
-        foreach (var npc in npcs.Where(IsCreature))
-        {
-            //if (settings.DebuggingMode) Write.Action(2, $"Heuristics examining {npc}");
-            if (npc.DeathItem?.IsNull ?? true) continue;
-
-            var deathItem = npc.DeathItem.Resolve(LinkCache);
-            if (KnownDeathItems.ContainsKey(deathItem)) continue;
-
-            // If there is no DeathItemSelection record for the NPC's DeathItem, create it.
-            // Try as hard as possible to give the DeathItemSelection a internalName. Fallbacks on fallbacks.
-            if (!indexer.ContainsKey(deathItem))
-            {
-                indexer[deathItem] = new DeathItemSelection()
-                {
-                    DeathItem = deathItem.FormKey,
-                    CreatureEntryName = deathItem.EditorID ?? npc.EditorID ?? npc.Name?.ToString() ?? Guid.NewGuid().ToString()
-                };
-                selectionWeights[indexer[deathItem]] = new();
-            }
-
-            // Add the NPC to the assigned NPCs of the DeathItemSelection.
-            var deathItemSelection = indexer[deathItem];
-            deathItemSelection.AssignedNPCs.Add(npc);
-
-            // Run the heuristic matcher.
-            var npcWeights = HeuristicNpcMatcher(npc);
-            var itemWeights = selectionWeights[deathItemSelection];
-
-            foreach (PluginEntry plugin in npcWeights.Keys)
-                itemWeights[plugin] = itemWeights.GetValueOrDefault(plugin, 0) + npcWeights[plugin];
-        }
-
-        DeathItemSelection[] selections = selectionWeights.Keys.ToArray();
-        Dictionary<FormKey, PluginEntry> savedSelections = Settings.DeathItemSelections.ToDictionary(v => v.DeathItem, v => v.Selection ?? PluginEntry.SKIP);
-        int modifiedCount = 0;
-
-        foreach (var selection in selections)
-        {
-            if (Settings.ReuseSelections && savedSelections.ContainsKey(selection.DeathItem))
-            {
-                selection.Selection = savedSelections[selection.DeathItem];
-                if (DebuggingMode) Write.Action(3, $"Previously selected {selection.Selection?.ProperName}.");
-            }
-            else
-            {
-                var itemWeights = selectionWeights[selection];
-                List<PluginEntry> options = new(itemWeights.Keys);
-                if (options.Count == 0) continue;
-
-                options.Sort((a, b) => itemWeights[b].CompareTo(itemWeights[a]));
-                selection.Selection = options.First();
-                if (DebuggingMode && !selection.DeathItem.IsNull)
-                {
-                    selection.DeathItem.ToLink<DeathItemGetter>().TryResolve(LinkCache, out var deathItem);
-                    Write.Action(2, $"{deathItem?.EditorID ?? deathItem?.ToString() ?? "NO DEATH ITEM"}: heuristic selected {selection.Selection?.SortName}.");
-                    Write.Action(3, $"From: {itemWeights.Pretty()}");
-
-                    var npcNames = selection.AssignedNPCs.Take(6).Select(n => NpcNamer(n)).ToArray().Pretty();
-                    Write.Action(3, $"Archetypes: {npcNames}");
-                }
-                modifiedCount = 0;
-            }
-        }
-
-        Settings.DeathItemSelections = selections;
-        return modifiedCount;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
-    private Dictionary<PluginEntry, int> HeuristicNpcMatcher(INpcGetter npc)
-    {
-        Dictionary<PluginEntry, int> candidates = new();
-        string name = NpcNamer(npc);
-
-        var clicker = DictionaryIncrementer(candidates);
-
-        // Try to match the voice.
-        if (!npc.Voice.IsNull)
-        {
-            Settings.Plugins
-                .Where(plugin => !plugin.Voice.IsNull)
-                .Where(plugin => plugin.Voice.Equals(npc.Voice))
-                .ForEach(clicker(10));
-        }
-
-        // Match the creature's editorId, internalName, and race internalName to the names of plugins.
-        var nameMatches = new HashSet<PluginEntry>();
-        var race = npc.Race.Resolve(LinkCache);
-        npc.DeathItem.TryResolve(LinkCache, out var deathItem);
-
-        if (npc.EditorID is string npcEditorId) Settings.Plugins.Where(PluginNameMatch(npcEditorId)).ForEach(clicker(1));
-        if (npc.Name?.ToString() is string npcName) Settings.Plugins.Where(PluginNameMatch(npcName)).ForEach(clicker(1));
-        if (race.EditorID is string raceEditorId) Settings.Plugins.Where(PluginNameMatch(raceEditorId)).ForEach(clicker(1));
-        if (race.Name?.ToString() is string raceName) Settings.Plugins.Where(PluginNameMatch(raceName)).ForEach(clicker(1));
-
-        // Try this tokenizing matcher to break ties.
-        var npcTokens = TokenizeNames(new List<string?>() { npc.Name?.ToString(), npc.EditorID, race.Name?.ToString(), race.EditorID, deathItem?.EditorID });
-        if (DebuggingMode) Write.Action(2, $"Tokens for {name}: {npcTokens.Pretty()}");
-
-        foreach (var plugin in Settings.Plugins)
-        {
-            int intersection = plugin.Tokens.Intersect(npcTokens).Count();
-            if (intersection > 0) clicker(intersection)(plugin);
-        }
-
-        // @TODO Add matching for distinctive keywords?
-        // @TODO Add exclusion terms?
-
-        if (DebuggingMode)
-        {
-            Write.Success(2, $"Candidates for {name}:");
-            Write.Success(3, candidates.Pretty());
-        }
-
-        return candidates;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param internalName="std"></param>
-    /// <returns></returns>
-    private List<InternalPluginEntry> RecreateCorePlugins(ViewingRecords std)
-    {
-        List<InternalPluginEntry> plugins = new();
-
-        foreach (EntryType type in Enum.GetValues(typeof(EntryType)))
-        {
-            int count = std.GetCCFor(type).RaceIndex.Data.Count;
-            Write.Action(1, $"Recreating {count} {type} plugin entries.");
-
-            if (DebuggingMode)
-            {
-                if (type == EntryType.Animal) Console.WriteLine($"\tChecks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}, carcasses={std.Animals._DS_FL_CarcassObjects.Items.Count}");
-                else Write.Action(1, $"Checks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}");
-            }
-
-            for (int index = 0; index < count; index++)
-            {
-                try
-                {
-                    InternalPluginEntry entry = RecreateCorePluginEntry(type, index, std);
-                    plugins.Add(entry);
-                }
-                catch (DataConsistencyError ex)
-                {
-                    Write.Fail(0, "WARNING: inconsistent data detected. This may be the result of some other mod patching Hunterborn.");
-                    Write.Fail(0, ex.Message);
-                }
-            }
-        }
-
-        return plugins;
-    }
-
-    private InternalPluginEntry RecreateCorePluginEntry(EntryType type, int index, ViewingRecords std)
-    {
-        string internalName = std.GetCCFor(type).RaceIndex.Data[index];
-        if (internalName.IsNullOrWhitespace()) throw new DataConsistencyError(type, internalName, index, "No name.");
-
-        try
-        {
-            var deathItemLink = std.GetCCFor(type)._DS_FL_DeathItems.Items[index];
-            if (deathItemLink.IsNull) throw new DataConsistencyError(type, internalName, index, "No DeathItem.");
-
-            deathItemLink.TryResolve<DeathItemGetter>(LinkCache, out var deathItem);
-            if (deathItem == null) throw new DataConsistencyError(type, internalName, index, "DeathItem could not be resolved.");
-            if (deathItem.EditorID == null) throw new DataConsistencyError(type, internalName, index, $"DeathItem {deathItem.FormKey} has no editor id.");
-
-            InternalPluginEntry plugin = new(type, internalName, deathItem.FormKey);
-            KnownDeathItems.Add(deathItem, plugin);
-
-            var renaming = RecreatePluginName(plugin, deathItem);
-
-            if (!renaming.Equals(NoRename)) (internalName, plugin.ProperName, plugin.SortName) = renaming;
-            if (DebuggingMode) Write.Action(2, $"Recreating {plugin.Name} from {DeathItemNamer(deathItem)} (proper name '{plugin.ProperName}', sort name '{plugin.SortName}')");
-
-            var toggle = std.GetCCFor(type).Switches.Objects[index].Object;
-            if (toggle.IsNull) plugin.Toggle = new FormLink<IGlobalGetter>();
-            else plugin.Toggle = toggle.Resolve<IGlobalGetter>(LinkCache).ToLink();
-
-            var meat = std.GetCCFor(type).MeatType.Objects[index].Object;
-            if (meat.IsNull) plugin.Meat = new FormLink<IItemGetter>();
-            else plugin.Meat = meat.Resolve<IItemGetter>(LinkCache).ToLink();
-
-            var shared = std.GetCCFor(type).SharedDeathItems.Objects[index].Object;
-            if (shared.IsNull) plugin.SharedDeathItems = new FormLink<IFormListGetter>();
-            else plugin.SharedDeathItems = shared.Resolve<IFormListGetter>(LinkCache).ToLink();
-
-            plugin.CarcassSize = std.GetCCFor(type).CarcassSizes.Data[index];
-
-            if (type == EntryType.Monster)
-            {
-                var venom = std.Monsters.VenomItems.Objects[index].Object;
-                if (venom.IsNull) plugin.Venom = new FormLink<IIngestibleGetter>();
-                else plugin.Venom = venom.Resolve<IIngestibleGetter>(LinkCache).ToLink();
-
-                var blood = std.Monsters.BloodItems.Objects[index].Object;
-                if (blood.IsNull) plugin.BloodType = new FormLink<IItemGetter>();
-                else plugin.BloodType = blood.Resolve<IItemGetter>(LinkCache).ToLink();
-
-                plugin.CarcassWeight = 0;
-                plugin.CarcassValue = 0;
-            }
-            else if (type == EntryType.Animal)
-            {
-                var msg = std.Animals.CarcassMessages.Objects[index].Object;
-                if (msg.IsNull) plugin.CarcassMessageBox = new FormLink<IMessageGetter>();
-                else plugin.CarcassMessageBox = msg.Resolve<IMessageGetter>(LinkCache).ToLink();
-
-                plugin.Venom = new FormLink<IIngestibleGetter>();
-                plugin.BloodType = new FormLink<IItemGetter>();
-
-                var carcass = std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(LinkCache);
-                plugin.CarcassWeight = (int)carcass.Weight;
-                plugin.CarcassValue = (int)carcass.Value;
-                KnownCarcasses.Add(plugin, carcass);
-            }
-
-            plugin.Discard = type != EntryType.Monster
-                ? new()
-                : std.Monsters.Discards.Objects[index].Object
-                .Resolve<IFormListGetter>(LinkCache).Items
-                .Select(item => item as IFormLinkGetter<IItemGetter>)
-                .Where(item => item is not null)
-                .Select(item => item!).ToList();
-
-            var mats = std.GetCCFor(type)._DS_FL_Mats__Lists.Items[index].Resolve<IFormListGetter>(LinkCache);
-            plugin.Materials = RecreateMaterials(mats);
-            // Console.WriteLine($"===RECREATED MATS FOR {plugin.ProperName}: {plugin.Materials.Pretty()}");
-
-            plugin.PeltCount = Array.Empty<int>();
-            plugin.FurPlateCount = Array.Empty<int>();
-
-            IFormListGetter peltList = std.GetCCFor(type)._DS_FL_PeltLists.Items[index].Resolve<IFormListGetter>(LinkCache);
-            if (peltList.Items.Count == 4)
-            {
-                PeltSet pelts = (
-                    peltList.Items[0].Resolve<IMiscItemGetter>(LinkCache),
-                    peltList.Items[1].Resolve<IMiscItemGetter>(LinkCache),
-                    peltList.Items[2].Resolve<IMiscItemGetter>(LinkCache),
-                    peltList.Items[3].Resolve<IMiscItemGetter>(LinkCache));
-                KnownPelts[plugin] = pelts;
-            }
-
-            // The voice field is unnecessary because the core voices are hard-coded.
-            // But it's nice to have it just in case.
-            // 
-            // We could scan through all NPCs looking for the matching DeathItem and grab the voice of
-            // the first match.
-            //
-            // BUT
-            // 
-            // Vanilla voices are named very predictably, so just use that.
-            //
-            string voiceEdid = $"Cr{plugin.Name}Voice";
-            LinkCache.TryResolve<IVoiceTypeGetter>(voiceEdid, out var voice);
-            plugin.Voice = voice == null ? new FormLink<IVoiceTypeGetter>() : voice.ToLink();
-            //if (DebuggingMode) Write.Action(2, $"Internal plugin {plugin.Name} searching for voice {voiceEdid}: found {plugin.Voice}.");
-
-            FindRecipes(plugin, internalName, deathItem);
-
-            // @TODO Find jerky and charred recipes.
-            return plugin;
-
-        }
-        catch (RecordException ex)
-        {
-            Write.Title(0, $"Problem with {type} {internalName} {ex.FormKey} {ex.EditorID}");
-            Write.Fail(1, $"Problem with {type} {internalName} {ex.FormKey} {ex.EditorID}");
-            Write.Fail(1, ex.Message);
-            Console.WriteLine(ex.StackTrace);
-            throw ex;
-        }
-    }
-
-    /// <summary>
-    /// Fill in recipe-related data for the internal plugins.
-    /// 
-    /// </summary>
-    /// 
-    private void FindRecipes(PluginEntry plugin, string internalName, DeathItemGetter deathItem)
-    {
-        // Search for the standard recipes using naming conventions in the order of
-        // CACO->CCOR->Campfire->Hunterborn->Vanilla.
-        // If nothing is found, try again using the plugin name instead of the internal name.
-
-        List<List<string>> patterns = new() {
-            new() { "_DS_Recipe_Pelt_{0}_00" },
-            new() { "_DS_Recipe_Pelt_{0}_01", "RecipeLeather{0}Hide" },
-            new() { "_DS_Recipe_Pelt_{0}_02" },
-            new() { "_DS_Recipe_Pelt_{0}_03" },
-            new() { "HB_Recipe_FurPlate_{0}_00" },
-            new() { "CCOR_RecipeFurPlate{0}Hide", "_Camp_RecipeTanningLeather{0}Hide", "HB_Recipe_FurPlate_{0}_01" },
-            new() { "HB_Recipe_FurPlate_{0}_02" },
-            new() { "CACO_RecipeFood{0}Cooked", "CACO_RecipeFoodMeatFoxCooked", "_DS_Recipe_Food_CharredMeat_{0}" },
-            new() { "CACO_RecipeFood{0}Cooked_Campfire", "HB_Recipe_FireFood_CharredMeat_{0}" },
-            new() { "HB_CACO_RecipeFood{0}Cooked_PrimCook", "_DS_Recipe_Food_Primitive_CharredMeat_{0}" },
-            new() { "CACO_RecipeJerky{0}", "_DS_Food_{0}Jerky", "_DS_Recipe_Food_{0}Jerky"}};
-
-        // Some corrections for vanilla and hunterborn recipes with non-standard names.
-        List<string> names = new() { internalName, plugin.Name };
-        if (plugin.Name.EqualsIgnoreCase("Cow")) names.Add("Beef");
-        if (plugin.Name.EqualsIgnoreCase("Deer")) names.Add("Venison");
-        if (plugin.Name.ContainsInsensitive("Elk")) names.Add("Venison");
-        if (plugin.Name.EqualsIgnoreCase("Dog")) names.Add("DogCookedWhole");
-        if (plugin.Name.ContainsInsensitive("Mudcrab")) names.Add("Mudcrab");
-        if (plugin.Name.ContainsInsensitive("Bristleback")) names.Add("Boar");
-
-        var recipes = Edid_Lookups_Fallbacks(names, patterns);
-
-        // Extract the results to nicely named variables.
-        var peltRecipe0 = recipes[0];
-        var peltRecipe1 = recipes[1];
-        var peltRecipe2 = recipes[2];
-        var peltRecipe3 = recipes[3];
-        var furRecipe0 = recipes[4];
-        var furRecipe1 = recipes[5];
-        var furRecipe2 = recipes[6];
-        var meatCooked = recipes[7];
-        var meatCampfire = recipes[8];
-        var meatPrimitive = recipes[9];
-        var meatJerky = recipes[10];
-
-        // If a standard pelt recipe is found, there must be a default pelt.
-        // Try to get it. Use the result of the GetDefaultPelt function otherwise, which 
-        // searches the creature's inventory.
-        if (peltRecipe1 is not null && peltRecipe1.Items is IReadOnlyList<IContainerEntryGetter> containerEntries
-            && containerEntries.Count > 0 && containerEntries[0] is IContainerEntryGetter containerEntry
-            && containerEntry.Item is IContainerItemGetter containerItem
-            && containerItem.Item is IFormLink<IItemGetter> foundPelt)
-        {
-            if (foundPelt is not null && !foundPelt.IsNull)
-            {
-                if (DebuggingMode) Write.Success(3, $"Found default pelt from tanning recipe {peltRecipe1.EditorID}.");
-                plugin.DefaultPelt = foundPelt.FormKey.ToLink<IMiscItemGetter>();
-            }
-        }
-        else
-        {
-            var defaultPelt = GetDefaultPelt(deathItem);
-            if (defaultPelt is not null)
-            {
-                if (DebuggingMode) Write.Success(3, $"Found default pelt from DeathItem {deathItem.EditorID}.");
-                plugin.DefaultPelt = defaultPelt.ToLink();
-            }
-        }
-
-        // Pack it all up and finish filling in the Plugin's properties.
-        // Print debugging messages about what was found.
-
-        if (peltRecipe0 is not null && peltRecipe1 is not null && peltRecipe2 is not null && peltRecipe3 is not null)
-        {
-            if (DebuggingMode) Write.Success(2, "Found a full set of leather-making recipes.");
-            //var peltRecipeSet = (peltRecipe0, peltRecipe1, peltRecipe2, peltRecipe3);
-            //plugin.Recipes.PeltRecipes = peltRecipeSet;
-
-            plugin.PeltCount = new int[] { peltRecipe0.CreatedObjectCount ?? 2, peltRecipe1.CreatedObjectCount ?? 2, peltRecipe2.CreatedObjectCount ?? 2, peltRecipe3.CreatedObjectCount ?? 2 };
-
-            peltRecipe0.CreatedObject.TryResolve<IMiscItemGetter>(LinkCache, out var pelt0);
-            peltRecipe1.CreatedObject.TryResolve<IMiscItemGetter>(LinkCache, out var pelt1);
-            peltRecipe2.CreatedObject.TryResolve<IMiscItemGetter>(LinkCache, out var pelt2);
-            peltRecipe3.CreatedObject.TryResolve<IMiscItemGetter>(LinkCache, out var pelt3);
-
-            if (pelt0 is not null && pelt1 is not null && pelt2 is not null && pelt3 is not null)
-            {
-                var found = (pelt0, pelt1, pelt2, pelt3);
-
-                if (KnownPelts.ContainsKey(plugin))
-                {
-                    var known = KnownPelts[plugin];
-                    if (found.Equals(known)) Write.Success(2, "RECIPE AND PELTS MATCH PEFECTLY.");
-                    else Write.Fail(2, "RECIPE AND PELTS DO NOT MATCH, WHICH IS WEIRD BUT NOT DISASTROUS.");
-                }
-                else
-                {
-                    KnownPelts[plugin] = (pelt0, pelt1, pelt2, pelt3);
-                    Write.Fail(2, "HOW CAN THIS EVEN HAPPEN?");
-                }
-                //FullGeneratedPelts.Add(pelt1.ToLink());
-            }
-
-        }
-        else if (peltRecipe0 is not null || peltRecipe1 is not null || peltRecipe2 is not null || peltRecipe3 is not null)
-        {
-            if (DebuggingMode) Write.Fail(2, "Found inconsistent set of leather-making recipes.");
-        }
-
-        if (furRecipe0 is not null && furRecipe1 is not null && furRecipe2 is not null)
-        {
-            if (DebuggingMode) Write.Success(2, "Found a full set of fur-plating recipes.");
-            plugin.FurPlateCount = new int[] { furRecipe0.CreatedObjectCount ?? 1, furRecipe1.CreatedObjectCount ?? 2, furRecipe2.CreatedObjectCount ?? 4 };
-        }
-        else if (furRecipe0 is not null || furRecipe1 is not null || furRecipe2 is not null)
-        {
-            if (DebuggingMode) Write.Fail(2, "Found inconsistent set of fur-plating recipes.");
-        }
-
-        if (DebuggingMode)
-        {
-            if (!plugin.DefaultPelt.IsNull) Write.Success(2, $"Found standard pelt: {plugin.DefaultPelt}");
-            else if (plugin.PeltCount.Length > 0) Write.Fail(2, $"No pelt found but pelt counts are specified.");
-        }
-
-        if (meatCooked is not null || meatCampfire is not null || meatPrimitive is not null || meatJerky is not null)
-        {
-            var meatRecipes = (meatCooked, meatCooked, meatPrimitive, meatJerky);
-            if (DebuggingMode) Write.Success(2, $"Found meat recipes: {meatRecipes}");
-        }
-        else if (!plugin.Meat.IsNull && DebuggingMode) Write.Fail(2, $"No meat recipes found.");
-
-    }
-
-    private List<IConstructibleObjectGetter?> Edid_Lookups_Fallbacks(List<string> names, List<List<string>> patterns)
-    {
-        List<IConstructibleObjectGetter?> results = new();
-
-        foreach (var group in patterns)
-        {
-            IConstructibleObjectGetter? result = null;
-            foreach (var name in names)
-            {
-                foreach (var pattern in group)
-                {
-                    LinkCache.TryResolve<IConstructibleObjectGetter>(string.Format(pattern, name), out result);
-                    if (result is not null) break;
-                }
-                if (result is not null) break;
-            }
-            results.Add(result);
-        }
-
-        return results;
-    }
-
-    /// <summary>
-    /// Attempts to recreate the useful names for the plugin.
-    /// </summary>
-    /// <returns>A tuple of (deathItemName, ProperName, SortName)</returns>
-    static private (string, string, string) RecreatePluginName(PluginEntry plugin, DeathItemGetter deathItem)
-    {
-        if (deathItem.EditorID is string deathItemEdid && DeathItemPrefix.IsMatch(deathItemEdid))
-        {
-            string deathItemName = DeathItemPrefix.Replace(deathItemEdid, "");
-            if (SpecialCases.EditorToNames.ContainsKey(deathItemName) && SpecialCases.EditorToNames[deathItemName].Count > 0)
-            {
-                var parts = SpecialCases.EditorToNames[deathItemName];
-
-                if (parts.Count == 1) return (deathItemName, parts[0], parts[0]);
-                else if (parts.Count == 2) return (deathItemName, $"{parts[1]} {parts[0]}", $"{parts[0]} - {parts[1]}");
-                else if (parts.Count == 3) return (deathItemName, $"{parts[2]} {parts[1]} {parts[0]}", $"{parts[0]} - {parts[1]}, {parts[2]}");
-            }
-            else if (!deathItemName.EqualsIgnoreCase(plugin.Name))
-            {
-                string subtype = deathItemName.Replace(plugin.Name, "", StringComparison.InvariantCultureIgnoreCase);
-                if (!subtype.IsNullOrWhitespace())
-                    return (deathItemName, TextInfo.ToTitleCase($"{subtype} {plugin.Name}"), TextInfo.ToTitleCase($"{plugin.Name} - {subtype}"));
-            }
-        }
-
-        return NoRename;
-    }
 
     /// <summary>
     /// Regular expression used to turn the names of vanilla DeathItems into useful names.
     /// </summary>
-    static private readonly Regex DeathItemPrefix = new(".*DeathItem", RegexOptions.IgnoreCase);
-
-    /// <summary>
-    /// Used to make nice names.
-    /// </summary>
-    static private readonly TextInfo TextInfo = CultureInfo.CurrentCulture.TextInfo;
-
-    /// <summary>
-    /// Flag object indicating that RecreatePluginName did not have a result.
-    /// </summary>
-    static private (string, string, string) NoRename = ("", "", "");
+    //static private readonly Regex DeathItemPrefix = new(".*DeathItem", RegexOptions.IgnoreCase);
 
     /// <summary>
     /// Things that have to be done for each race:
@@ -1053,41 +546,6 @@ sealed public class Program
         return matsFormList;
     }
 
-    /// <summary>
-    /// Turns a FormList of LeveledItems into a list of MaterialLevels.
-    /// The inverse of CreateMaterials.
-    /// </summary>
-    /// 
-    private List<MaterialLevel> RecreateMaterials(IFormListGetter matsFormList)
-    {
-        List<MaterialLevel> materials = new();
-        //Console.WriteLine($"===Recreating materials from {matsFormList}, {matsFormList.Items.Count} in formlist.===");
-        //Console.WriteLine("======" + matsFormList.Items.ToArray().Pretty());
-
-        foreach (var level in matsFormList.Items)
-        {
-            var asLeveled = level.FormKey.ToLinkGetter<ILeveledItemGetter>().Resolve(LinkCache);
-
-            MaterialLevel skillLevel = new();
-            materials.Add(skillLevel);
-
-            var entries = asLeveled.Entries;
-            //Console.WriteLine($"======Recreating materials from {level}, {entries?.Count} in leveledlist.===");
-
-            if (entries is not null)
-            {
-                foreach (var entry in entries)
-                {
-                    if (entry.Data is not null && entry.Data.Reference is not null)
-                        skillLevel.Items[entry.Data.Reference] = entry.Data.Count;
-                }
-            }
-        }
-
-        return materials;
-    }
-
-
     private IFormListGetter CreatePelts(CreatureData data, PatchingRecords std)
     {
         var peltFormList = PatchMod.FormLists.AddNew();
@@ -1153,59 +611,6 @@ sealed public class Program
     }
 
     /// <summary>
-    /// Checks the creature's DeathItem for anything whose internalName or editorID contains a string-match
-    /// that indicates it's probably a pelt. Returns the pelt.
-    /// 
-    /// </summary>
-    /// <returns>A pair consisting of the pelt Item and a flag indicating whether it was created.</returns>
-    /// 
-    private IMiscItemGetter? GetDefaultPelt(CreatureData data)
-    {
-        if (!data.Prototype.DefaultPelt.IsNull) return data.Prototype.DefaultPelt.Resolve(LinkCache);
-        var defaultPelt = GetDefaultPelt(data.DeathItem);
-        if (defaultPelt is IMiscItemGetter pelt) return pelt;
-        else return null;
-    }
-
-    /// <summary>
-    /// Checks the creature's DeathItem for anything whose internalName or editorID contains a string-match
-    /// that indicates it's probably a pelt. Returns the pelt.
-    /// 
-    /// If no default pelt was found, one will be created and added to the patch.
-    /// 
-    /// </summary>
-    /// 
-    private IMiscItemGetter? GetDefaultPelt(DeathItemGetter data)
-    {
-        var entries = data.Entries;
-        if (entries == null) return null;
-
-        foreach (var entry in entries)
-        {
-            var entryItem = entry.Data?.Reference.TryResolve(LinkCache);
-            var edid = entryItem?.EditorID ?? "";
-            if (entryItem == null || edid == null) continue;
-
-            if (DefaultPeltRegex.Matches(edid).Any())
-            {
-                if (entryItem is ILeveledItemGetter lvld)
-                {
-                    if (DebuggingMode) Write.Action(4, $"Pelt search recursing into {DeathItemNamer(lvld)}");
-                    if (lvld.Entries is not null && lvld.Entries.Count == 1 && GetDefaultPelt(lvld) is IMiscItemGetter subItem)
-                        return subItem;
-                }
-                else if (entryItem is IMiscItemGetter item)
-                {
-                    if (DebuggingMode) Write.Action(4, $"Pelt search found {ItemNamer(item)}");
-                    return item;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>
     /// Create a new default pelt for a creature using a pre-existing pelt as a template.
     /// 
     /// </summary>
@@ -1228,6 +633,21 @@ sealed public class Program
         if (DebuggingMode) Write.Success(3, $"Created new default Pelt {newPelt}");
 
         return newPelt;
+    }
+
+    /// <summary>
+    /// Checks the creature's DeathItem for anything whose internalName or editorID contains a string-match
+    /// that indicates it's probably a pelt. Returns the pelt.
+    /// 
+    /// </summary>
+    /// <returns>A pair consisting of the pelt Item and a flag indicating whether it was created.</returns>
+    /// 
+    private IMiscItemGetter? GetDefaultPelt(CreatureData data)
+    {
+        if (!data.Prototype.DefaultPelt.IsNull) return data.Prototype.DefaultPelt.Resolve(LinkCache);
+        var defaultPelt = RecreateInternal.FindDefaultPelt(data.DeathItem, LinkCache, DebuggingMode);
+        if (defaultPelt is IMiscItemGetter pelt) return pelt;
+        else return null;
     }
 
     /// <summary>
@@ -1538,124 +958,6 @@ sealed public class Program
     }
 
     /// <summary>
-    /// To be recognized as a creature by the patcher, an Npc must not belong to any of these factions.
-    /// 
-    /// @TODO Addons should be allowed to add to this list.
-    /// 
-    /// </summary>
-    readonly private HashSet<IFormLinkGetter<IFactionGetter>> ForbiddenFactions = new() {
-        Dawnguard.Faction.DLC1VampireFaction,
-        Dragonborn.Faction.DLC2AshSpawnFaction,
-        Skyrim.Faction.DragonPriestFaction,
-        Skyrim.Faction.DraugrFaction,
-        Skyrim.Faction.DwarvenAutomatonFaction,
-        Skyrim.Faction.IceWraithFaction,
-        Dawnguard.Faction.SoulCairnFaction,
-        Skyrim.Faction.VampireFaction,
-        Skyrim.Faction.WispFaction
-    };
-
-    /// <summary>
-    /// To be recognized as a creature by the patcher, an Npc must not have any of these keywords.
-    /// 
-    /// @TODO Addons should be allowed to add to this list.
-    /// 
-    /// </summary>
-    readonly private HashSet<IFormLinkGetter<IKeywordGetter>> ForbiddenKeywords = new() {
-        Skyrim.Keyword.ActorTypeGhost,
-        Skyrim.Keyword.ActorTypeNPC
-    };
-
-    /// <summary>
-    /// Voices of creatures. To be recognized as a creature by the patcher, an Npc must have a voiceType from
-    /// this list.
-    /// 
-    /// VoiceTypes from addons will get added to this list at runtime.
-    /// Isn't that forward thinking? Why don't the other Forbidden/Allowed lists get
-    /// populated from addons?
-    /// 
-    /// </summary>
-    readonly private HashSet<IFormLinkGetter<IVoiceTypeGetter>> AllowedVoices = new() {
-        Skyrim.VoiceType.CrBearVoice,
-        Skyrim.VoiceType.CrChickenVoice,
-        Skyrim.VoiceType.CrCowVoice,
-        Skyrim.VoiceType.CrDeerVoice,
-        Skyrim.VoiceType.CrDogVoice,
-        Dawnguard.VoiceType.CrDogHusky,
-        Skyrim.VoiceType.CrFoxVoice,
-        Skyrim.VoiceType.CrGoatVoice,
-        Skyrim.VoiceType.CrHareVoice,
-        Skyrim.VoiceType.CrHorkerVoice,
-        Skyrim.VoiceType.CrHorseVoice,
-        Skyrim.VoiceType.CrMammothVoice,
-        Skyrim.VoiceType.CrMudcrabVoice,
-        Skyrim.VoiceType.CrSabreCatVoice,
-        Skyrim.VoiceType.CrSkeeverVoice,
-        Skyrim.VoiceType.CrSlaughterfishVoice,
-        Skyrim.VoiceType.CrWolfVoice,
-        Dragonborn.VoiceType.DLC2CrBristlebackVoice,
-        Skyrim.VoiceType.CrChaurusVoice,
-        Skyrim.VoiceType.CrFrostbiteSpiderVoice,
-        Skyrim.VoiceType.CrFrostbiteSpiderGiantVoice,
-        Skyrim.VoiceType.CrSprigganVoice,
-        Skyrim.VoiceType.CrTrollVoice,
-        Skyrim.VoiceType.CrWerewolfVoice,
-        Skyrim.VoiceType.CrDragonVoice,
-        Dawnguard.VoiceType.CrChaurusInsectVoice
-    };
-
-    /// <summary>
-    /// A list of EditorIDs of creatures that should never be processed.
-    /// I wish this was explained.
-    /// 
-    /// @TODO Addons should be allowed to add to this list.
-    /// 
-    /// </summary>
-    readonly private List<string> ForbiddenNpcEditorIds = new() { "HISLCBlackWolf", "BSKEncRat" };
-
-    /// <summary>
-    /// A list of DeathItems that should never be processed. 
-    /// Creatures with one of these DeathItems should be ignored by Hunterborn and by this patcher.
-    /// 
-    /// @TODO Addons should be allowed to add to this list.
-    /// 
-    /// </summary>
-    readonly List<FormLink<DeathItemGetter>> ForbiddenDeathItems = new() {
-        Skyrim.LeveledItem.DeathItemDragonBonesOnly,
-        Skyrim.LeveledItem.DeathItemVampire,
-        Skyrim.LeveledItem.DeathItemForsworn,
-        Dawnguard.LeveledItem.DLC1DeathItemDragon06,
-        Dawnguard.LeveledItem.DLC1DeathItemDragon07,
-        new(new FormKey(new("Skyrim Immersive Creatures Special Edition", type : ModType.Plugin), 0x11B217))
-    };
-
-    public bool IsCreature(INpcGetter npc)
-    {
-        var deathItem = npc.DeathItem;
-        var edid = npc.EditorID;
-
-        if (edid is not null && HasForbiddenEditorId(edid)) return false;
-        else if (deathItem == null) return false;
-        else if (HasForbiddenDeathItem(deathItem)) return false;
-        else if (HasForbiddenKeyword(npc)) return false;
-        else if (HasForbiddenFaction(npc)) return false;
-        else if (!HasAllowedVoice(npc)) return false;
-        else return true;
-    }
-
-    private bool HasForbiddenEditorId(string editorId) => ForbiddenNpcEditorIds.Any(edid => edid.EqualsIgnoreCase(editorId));
-
-    private bool HasForbiddenFaction(INpcGetter creature) =>
-        creature.Factions.Any(placement => ForbiddenFactions.Contains(placement.Faction));
-
-    private bool HasForbiddenKeyword(INpcGetter creature) =>
-        creature.Keywords?.Any(keyword => ForbiddenKeywords.Contains(keyword)) ?? false;
-
-    private bool HasAllowedVoice(INpcGetter creature) => AllowedVoices.Contains(creature.Voice);
-
-    private bool HasForbiddenDeathItem(IFormLinkGetter<ILeveledItemGetter> deathItem) => ForbiddenDeathItems.Contains(deathItem);
-
-    /// <summary>
     /// Convenience method for creating new LeveledItemEntry.
     /// No extra data is added.
     /// </summary>
@@ -1685,40 +987,12 @@ sealed public class Program
 
     private Func<IItemGetter, IItemGetter> ItemSubstitution { get; }
 
-
-    /// <summary>
-    /// Breaks a set of names into parts based on capital letters, spaces, underlines, and dashes.
-    /// They are returned as a single set.
-    /// 
-    /// </summary>
-    /// 
-    static public HashSet<string> TokenizeNames(IEnumerable<string?> names) => names.Where(n => !n.IsNullOrWhitespace()).SelectMany(TokenizeName).ToHashSet();
-    static public HashSet<string> TokenizeNames(params string?[] names) => names.Where(n => !n.IsNullOrWhitespace()).SelectMany(TokenizeName).ToHashSet();
-
-
-    /// <summary>
-    /// Breaks a internalName into parts based on capital letters, spaces, underlines, and dashes.
-    /// 
-    /// </summary>
-    /// 
-    static public HashSet<string> TokenizeName(string? name)
-    {
-        if (name.IsNullOrWhitespace()) return new();
-
-        var filtered = TOKENIZER_FILTER.Replace(name, "");
-        var tokens = TOKENIZER_BREAK_SPLITTER.Split(filtered);
-        if (tokens == null || tokens.Length == 0) return new();
-
-        return tokens.SelectMany(t => TOKENIZER_CAMEL_SPLITTER.Split(t)).Where(t => !t.IsNullOrWhitespace()).ToHashSet();
-    }
-
-    readonly static private Regex TOKENIZER_FILTER = new("[^A-Za-z0-9 _-]");
-    readonly static private Regex TOKENIZER_BREAK_SPLITTER = new("[ _-]");
-    readonly static private Regex TOKENIZER_CAMEL_SPLITTER = new("([A-Z]+[a-z0-9]*)");
-
     private string NpcNamer(INpcGetter npc) => FormNamer(npc, () => LinkNamer(npc.Race, () => FormIDNamer(npc)));
+
     private static string DeathItemNamer(DeathItemGetter deathItem) => FormNamer(deathItem);
+
     private static string ItemNamer(IItemGetter item) => FormNamer(item);
+
 
     //private string NpcNamerFallback(INpcGetter npc) => NpcNamer(npc) ?? NpcRaceNamer(npc) ?? FormIDNamer(npc);
     //static private string DeathItemNamerFallback(DeathItemGetter deathItem) => DeathItemNamer(deathItem) ?? FormIDNamer(deathItem);
@@ -1767,11 +1041,6 @@ sealed public class Program
     private static Lazy<Settings.Settings> _settings = null!;
 
     /// <summary>
-    /// Matcher for pre-existing pelts items.
-    /// </summary>
-    static readonly private Regex DefaultPeltRegex = new("Pelt|Hide|Skin|Fur|Wool|Leather", RegexOptions.IgnoreCase);
-
-    /// <summary>
     /// Matcher for pre-existing meat items.
     /// </summary>
     static readonly Regex DefaultMeatRegex = new("Meat|Flesh", RegexOptions.IgnoreCase);
@@ -1780,26 +1049,6 @@ sealed public class Program
     /// Used to strip invalid editorID characters from a string.
     /// </summary>
     static readonly private Regex EditorIdFilter = new("[^a-zA-Z0-9_]", RegexOptions.IgnoreCase);
-
-    /// <summary>
-    /// Matcher for plugin names. 
-    /// A match occurs if the plugin internalName is contained in the target string.
-    /// Case-insensitive.
-    /// 
-    /// </summary>
-    /// <param internalName="str">The string against which to match the plugin names.</param>
-    /// <returns>The matcher.</returns>
-    /// 
-    static Func<PluginEntry, bool> PluginNameMatch(string str) => plugin => str.ContainsInsensitive(plugin.Name);
-
-    /// <summary>
-    /// This thing is ridiculous but convenient. Can you say "Currying"?
-    /// 
-    /// </summary>
-    /// 
-    static Func<int, Action<T>> DictionaryIncrementer<T>(Dictionary<T, int> dict) where T : notnull
-        => val => plugin => { if (val > 0) dict[plugin] = dict.GetValueOrDefault(plugin, 0) + val; };
-
 
     /// <summary>
     /// Default carcasses for each Plugin, so that they can be copied.
