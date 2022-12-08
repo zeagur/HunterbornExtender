@@ -25,7 +25,7 @@ namespace HunterbornExtenderUI
             if (_state.LinkCache.TryResolve<ILeveledItemGetter>(model.DeathItem, out var deathItemList))
             {
                 DeathItemList = deathItemList;
-                CreatureEntryName = ParentMenu.CreatureTypes.Where(x => x.Equals(model.CreatureEntryName, StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? "Skip";
+                CreatureEntryName = model.Selection?.SortName ?? "Skip";
                 AssignedNPCs = new(model.AssignedNPCs);
             }
         }

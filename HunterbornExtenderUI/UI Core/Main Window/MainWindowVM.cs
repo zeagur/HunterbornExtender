@@ -18,8 +18,7 @@ public class MainWindowVM : ViewModel
     private DeathItemSettingsLoader _deathItemLoader;
     private readonly VMLoader_DeathItems _vmDeathItemLoader;
     private readonly VM_DeathItemSelectionList _deathItemSelectionList;
-
-    private Settings _patcherSettings;
+    private SettingsProvider _settingsProvider;
 
     [Reactive]
     public object DisplayedSubView { get; set; }
@@ -32,6 +31,7 @@ public class MainWindowVM : ViewModel
     public ICommand SaveSettings { get; }
 
     public MainWindowVM(
+        SettingsProvider settingsProvider,
         PluginLoader pluginLoader,
         DeathItemSettingsLoader deathItemSettingsLoader,
         VM_WelcomePage welcomePage,
@@ -42,6 +42,7 @@ public class MainWindowVM : ViewModel
         VM_DeathItemSelectionList deathItemSelectionList,
         VM_DeathItemAssignmentPage deathItemMenu)
     {
+        _settingsProvider = settingsProvider;
         _pluginLoader = pluginLoader;
         _deathItemLoader = deathItemSettingsLoader;
 
@@ -55,7 +56,7 @@ public class MainWindowVM : ViewModel
         PluginEditorPage = pluginEditorPage;
         DeathItemMenu = deathItemMenu;
 
-        _patcherSettings = PatcherSettingsIO.LoadFromDisk(WelcomePage.SettingsDir); // change this to state.ExtraDataSettingsFolder when it becomes exposed
+        _settingsProvider.PatcherSettings = PatcherSettingsIO.LoadFromDisk(WelcomePage.SettingsDir); // change this to state.ExtraDataSettingsFolder when it becomes exposed
 
         Init();
 
@@ -93,6 +94,6 @@ public class MainWindowVM : ViewModel
             _vmDeathItemLoader.GetDeathItemVMs(
                 _deathItemLoader.LoadDeathItemSettings()));
         */
-        DeathItemMenu.Initialize(_patcherSettings.DeathItemSelections);
+        DeathItemMenu.Initialize();
     }
 }

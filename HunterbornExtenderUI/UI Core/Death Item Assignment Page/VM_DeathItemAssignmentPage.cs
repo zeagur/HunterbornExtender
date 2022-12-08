@@ -8,14 +8,19 @@ using DynamicData;
 using Noggog;
 using HunterbornExtenderUI.App_Core.Death_Item_Selection;
 using HunterbornExtender.Settings;
+using HunterbornExtender;
+using Mutagen.Bethesda.Plugins.Cache;
+using static System.Diagnostics.DebuggableAttribute;
+using System.Collections.Generic;
 
 namespace HunterbornExtenderUI;
 
 sealed public class VM_DeathItemAssignmentPage : ViewModel
 {
     private StateProvider _stateProvider;
-    private VM_PluginList _pluginList;
-    private DeathItemSettingsLoader _deathItemSettingsLoader;
+    private VM_PluginList _pluginVMList;
+    private ObservableCollection<PluginEntry> _pluginEntries = new();
+    private readonly SettingsProvider _settingsProvider;
     private readonly VMLoader_DeathItems _vmDeathItemLoader;
 
     [Reactive]
@@ -23,96 +28,31 @@ sealed public class VM_DeathItemAssignmentPage : ViewModel
 
     [Reactive]
     public VM_DeathItemSelectionList DeathItemSelectionList { get; set; }
-    public VM_DeathItemAssignmentPage(StateProvider stateProvider, VM_PluginList pluginList, VM_DeathItemSelectionList deathItemList, DeathItemSettingsLoader deathItemSettingsLoader, VMLoader_DeathItems deathItemVMLoader)
+    public VM_DeathItemAssignmentPage(StateProvider stateProvider, SettingsProvider settingsProvider, VM_PluginList pluginList, VM_DeathItemSelectionList deathItemList, DeathItemSettingsLoader deathItemSettingsLoader, VMLoader_DeathItems deathItemVMLoader)
     {
         _stateProvider = stateProvider;
-        _pluginList = pluginList;
+        _settingsProvider = settingsProvider;
+        _pluginVMList = pluginList;
         DeathItemSelectionList = deathItemList;
-        _deathItemSettingsLoader = deathItemSettingsLoader;
         _vmDeathItemLoader = deathItemVMLoader;
-
-        CreatureTypes = new ObservableCollection<string>(HunterbornExtenderUI.CreatureTypes.AnimalTypes);
-        foreach (var monster in HunterbornExtenderUI.CreatureTypes.MonsterTypes)
-        {
-            if (!CreatureTypes.Contains(monster))
-            {
-                CreatureTypes.Add(monster);
-            }
-        }
-
-        CreatureTypes.Sort(x => x, false);
-        CreatureTypes.Insert(0, "Skip");
     }
 
-    public void Initialize(DeathItemSelection[] deathItemSelections)
+    public void Initialize()
     {
         ScanForPluginEntries();
-        ScanForDeathItems(deathItemSelections.ToList());
+        var deathItems = Heuristics.MakeHeuristicSelections(_stateProvider.LoadOrder.PriorityOrder.OnlyEnabledAndExisting().WinningOverrides<INpcGetter>(), _pluginEntries.ToList(), _settingsProvider.PatcherSettings.DeathItemSelections, _stateProvider.LinkCache);
+        DeathItemSelectionList.DeathItems.SetTo(_vmDeathItemLoader.GetDeathItemVMs(deathItems).Where(x => x.DeathItemList != null));
     }
         
     private void ScanForPluginEntries()
     {
-        foreach (var plugin in _pluginList.Plugins)
+        _pluginEntries = new(RecreateInternal.RecreateInternalPluginsUI(_stateProvider.LinkCache));
+        foreach (var pluginEntry in _pluginVMList.Plugins.SelectMany(x => x.Entries).Select(x => x.DumpToModel()))
         {
-            foreach (var pluginEntry in plugin.Entries)
-            {
-                if (!CreatureTypes.Contains(pluginEntry.Name))
-                {
-                    CreatureTypes.Add(pluginEntry.Name);
-                }
-            }
+            _pluginEntries.Add(pluginEntry);
         }
+
+        CreatureTypes = new(_pluginEntries.Select(x => x.SortName));
         CreatureTypes.Sort(x => x, false);
-    }
-
-    private void ScanForDeathItems(List<DeathItemSelection> deathItemSettings)
-    {
-        foreach (var npc in _stateProvider.LoadOrder.PriorityOrder.OnlyEnabledAndExisting().WinningOverrides<INpcGetter>().Where(x => x.DeathItem != null))
-        {
-            var deathItemListFormLink = npc.DeathItem;
-            var existingEntry = deathItemSettings.Where(x => x.DeathItem.Equals(deathItemListFormLink.FormKey)).FirstOrDefault();
-            if (existingEntry != null) 
-            {
-                // Record NPC 
-                existingEntry.AssignedNPCs.Add(npc);
-            }
-            else if (_stateProvider.LinkCache.TryResolve<ILeveledItemGetter>(deathItemListFormLink.FormKey, out var deathItemListGetter) && IsPatchableDeathItem(deathItemListGetter, out string correspondingCreatureName))
-            {
-                // Add new entry
-                var newEntry = new DeathItemSelection();
-                newEntry.DeathItem = deathItemListFormLink.FormKey;
-                newEntry.CreatureEntryName = correspondingCreatureName;
-                newEntry.AssignedNPCs.Add(npc);
-                deathItemSettings.Add(newEntry);
-            }
-        }
-
-        DeathItemSelectionList.DeathItems.SetTo(_vmDeathItemLoader.GetDeathItemVMs(deathItemSettings).Where(x => x.DeathItemList != null));
-    }
-
-    private bool IsPatchableDeathItem(ILeveledItemGetter deathItem, out string creatureEntryName)
-    {
-        var edid = deathItem.EditorID;
-        if (edid != null && edid.StartsWith("DeathItem", StringComparison.OrdinalIgnoreCase))
-        {
-            int splitPos = edid.IndexOf("DeathItem", StringComparison.OrdinalIgnoreCase);
-            splitPos += "DeathItem".Length;
-            string subName = edid.Substring(splitPos);
-
-            foreach (var plugin in _pluginList.Plugins)
-            {
-                foreach (var entry in plugin.Entries)
-                {
-                    if (entry.Name.Contains(subName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        creatureEntryName = entry.Name;
-                        return true;
-                    }
-                }
-            }
-        }
-
-        creatureEntryName = "";
-        return false;
     }
 }
