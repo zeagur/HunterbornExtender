@@ -211,18 +211,18 @@ sealed public class RecreateInternal
         // CACO->CCOR->Campfire->Hunterborn->Vanilla.
         // If nothing is found, try again using the plugin name instead of the internal name.
 
-        List<List<string>> patterns = new() {
-            new() { "_DS_Recipe_Pelt_{0}_00" },
-            new() { "_DS_Recipe_Pelt_{0}_01", "RecipeLeather{0}Hide" },
-            new() { "_DS_Recipe_Pelt_{0}_02" },
-            new() { "_DS_Recipe_Pelt_{0}_03" },
-            new() { "HB_Recipe_FurPlate_{0}_00" },
-            new() { "CCOR_RecipeFurPlate{0}Hide", "_Camp_RecipeTanningLeather{0}Hide", "HB_Recipe_FurPlate_{0}_01" },
-            new() { "HB_Recipe_FurPlate_{0}_02" },
-            new() { "CACO_RecipeFood{0}Cooked", "CACO_RecipeFoodMeatFoxCooked", "_DS_Recipe_Food_CharredMeat_{0}" },
-            new() { "CACO_RecipeFood{0}Cooked_Campfire", "HB_Recipe_FireFood_CharredMeat_{0}" },
-            new() { "HB_CACO_RecipeFood{0}Cooked_PrimCook", "_DS_Recipe_Food_Primitive_CharredMeat_{0}" },
-            new() { "CACO_RecipeJerky{0}", "_DS_Food_{0}Jerky", "_DS_Recipe_Food_{0}Jerky"}};
+        Dictionary<RecipeType, List<string>> patterns = new() {
+            { RecipeType.PeltPoor, new() { "_DS_Recipe_Pelt_{0}_00" } },
+            { RecipeType.PeltStandard, new() { "_DS_Recipe_Pelt_{0}_01", "RecipeLeather{0}Hide" } },
+            { RecipeType.PeltFine, new() { "_DS_Recipe_Pelt_{0}_02" } },
+            { RecipeType.PeltFlawless, new() { "_DS_Recipe_Pelt_{0}_03" } },
+            { RecipeType.FurPoor, new() { "HB_Recipe_FurPlate_{0}_00" } },
+            { RecipeType.FurStandard, new() { "CCOR_RecipeFurPlate{0}Hide", "_Camp_RecipeTanningLeather{0}Hide", "HB_Recipe_FurPlate_{0}_01" } },
+            { RecipeType.FurFine, new() { "HB_Recipe_FurPlate_{0}_02" } },
+            { RecipeType.MeatCooked, new() { "CACO_RecipeFood{0}Cooked", "CACO_RecipeFoodMeat{0}Cooked", "_DS_Recipe_Food_CharredMeat_{0}", "_DS_Recipe_Food_Seared{0}" } },
+            { RecipeType.MeatCampfire, new() { "CACO_RecipeFood{0}Cooked_Campfire", "HB_Recipe_FireFood_CharredMeat_{0}", "HB_Recipe_FireFood_Seared{0}" } },
+            { RecipeType.MeatPrimitive, new() { "HB_CACO_RecipeFood{0}Cooked_PrimCook", "_DS_Recipe_Food_Primitive_CharredMeat_{0}", "_DS_Recipe_Food_Primitive_Seared{0}" } },
+            { RecipeType.MeatJerky, new() { "CACO_RecipeJerky{0}", "_DS_Food_{0}Jerky", "_DS_Recipe_Food_{0}Jerky"} } };
 
         // Some corrections for vanilla and hunterborn recipes with non-standard names.
         List<string> names = new() { internalName, plugin.Name };
@@ -232,21 +232,25 @@ sealed public class RecreateInternal
         if (plugin.Name.EqualsIgnoreCase("Dog")) names.Add("DogCookedWhole");
         if (plugin.Name.ContainsInsensitive("Mudcrab")) names.Add("Mudcrab");
         if (plugin.Name.ContainsInsensitive("Bristleback")) names.Add("Boar");
+        if (plugin.Name.ContainsInsensitive("FoxIce")) names.Insert(0, "FoxSnow");
+        if (plugin.Name.ContainsInsensitive("WolfIce")) names.Insert(0, "IceWolf");
+        if (plugin.Name.ContainsInsensitive("DeerVale")) names.Insert(0, "ValeDeer");
+        if (plugin.Name.ContainsInsensitive("SabrecatVale")) names.Insert(0, "ValeSabrecat");
 
-        var recipes = Edid_Lookups_Fallbacks(names, patterns, linkCache);
+        var recipes = Edid_Lookups_Fallbacks(names, patterns, linkCache, false || internalName.ContainsInsensitive("fox"));//debuggingMode);
 
         // Extract the results to nicely named variables.
-        var peltRecipe0 = recipes[0];
-        var peltRecipe1 = recipes[1];
-        var peltRecipe2 = recipes[2];
-        var peltRecipe3 = recipes[3];
-        var furRecipe0 = recipes[4];
-        var furRecipe1 = recipes[5];
-        var furRecipe2 = recipes[6];
-        var meatCooked = recipes[7];
-        var meatCampfire = recipes[8];
-        var meatPrimitive = recipes[9];
-        var meatJerky = recipes[10];
+        var peltRecipe0 = recipes.GetValueOrDefault(RecipeType.PeltPoor);
+        var peltRecipe1 = recipes.GetValueOrDefault(RecipeType.PeltStandard);
+        var peltRecipe2 = recipes.GetValueOrDefault(RecipeType.PeltFine);
+        var peltRecipe3 = recipes.GetValueOrDefault(RecipeType.PeltFlawless);
+        var furRecipe0 = recipes.GetValueOrDefault(RecipeType.FurPoor);
+        var furRecipe1 = recipes.GetValueOrDefault(RecipeType.PeltStandard);
+        var furRecipe2 = recipes.GetValueOrDefault(RecipeType.PeltFine);
+        var meatCooked = recipes.GetValueOrDefault(RecipeType.MeatCooked);
+        var meatCampfire = recipes.GetValueOrDefault(RecipeType.MeatCampfire);
+        var meatPrimitive = recipes.GetValueOrDefault(RecipeType.MeatPrimitive);
+        var meatJerky = recipes.GetValueOrDefault(RecipeType.MeatJerky);
 
         // If a standard pelt recipe is found, there must be a default pelt.
         // Try to get it. Use the result of the GetDefaultPelt function otherwise, which 
@@ -258,7 +262,7 @@ sealed public class RecreateInternal
         {
             if (foundPelt is not null && !foundPelt.IsNull)
             {
-                if (debuggingMode) Write.Success(3, $"Found default pelt from tanning recipe {peltRecipe1.EditorID}.");
+                if (debuggingMode) Write.Success(2, $"Found default pelt from tanning recipe {peltRecipe1.EditorID}.");
                 plugin.DefaultPelt = foundPelt.FormKey.ToLink<IMiscItemGetter>();
             }
         }
@@ -267,10 +271,12 @@ sealed public class RecreateInternal
             var defaultPelt = FindDefaultPelt(deathItem, linkCache, debuggingMode);
             if (defaultPelt is not null)
             {
-                if (debuggingMode) Write.Success(3, $"Found default pelt from DeathItem {deathItem.EditorID}.");
+                if (debuggingMode) Write.Success(2, $"Found default pelt from DeathItem {deathItem.EditorID}.");
                 plugin.DefaultPelt = defaultPelt.ToLink();
             }
         }
+
+        plugin.Recipes = recipes;
 
         // Pack it all up and finish filling in the Plugin's properties.
         // Print debugging messages about what was found.
@@ -283,26 +289,35 @@ sealed public class RecreateInternal
 
             plugin.PeltCount = new int[] { peltRecipe0.CreatedObjectCount ?? 2, peltRecipe1.CreatedObjectCount ?? 2, peltRecipe2.CreatedObjectCount ?? 2, peltRecipe3.CreatedObjectCount ?? 2 };
 
-            peltRecipe0.CreatedObject.TryResolve<IMiscItemGetter>(linkCache, out var pelt0);
-            peltRecipe1.CreatedObject.TryResolve<IMiscItemGetter>(linkCache, out var pelt1);
-            peltRecipe2.CreatedObject.TryResolve<IMiscItemGetter>(linkCache, out var pelt2);
-            peltRecipe3.CreatedObject.TryResolve<IMiscItemGetter>(linkCache, out var pelt3);
+            IMiscItemGetter? pelt0 = null;
+            IMiscItemGetter? pelt1 = null;
+            IMiscItemGetter? pelt2 = null;
+            IMiscItemGetter? pelt3 = null;
+
+            peltRecipe0.Items?[0].Item.Item.TryResolve<IMiscItemGetter>(linkCache, out pelt0);
+            peltRecipe1.Items?[0].Item.Item.TryResolve<IMiscItemGetter>(linkCache, out pelt1);
+            peltRecipe2.Items?[0].Item.Item.TryResolve<IMiscItemGetter>(linkCache, out pelt2);
+            peltRecipe3.Items?[0].Item.Item.TryResolve<IMiscItemGetter>(linkCache, out pelt3);
 
             if (pelt0 is not null && pelt1 is not null && pelt2 is not null && pelt3 is not null)
             {
-                var found = (pelt0, pelt1, pelt2, pelt3);
+                PeltSet found = (pelt0, pelt1, pelt2, pelt3);
 
                 if (knownPelts.ContainsKey(plugin))
                 {
                     var known = knownPelts[plugin];
-                    if (found.Equals(known)) Write.Success(2, "RECIPE AND PELTS MATCH PEFECTLY.");
+                    if (found.Equals(known)) Write.Success(2, "Recipe pelts and name-lookup pelts are a match.");
                     else
                     {
                         Write.Fail(2, "Recipe pelts and deathItem name-match pelts do not match, which is weird but not disastrous.");
                         if (debuggingMode) 
                         {
                             Write.Fail(3, $"Recipe pelts: {found}");
-                            Write.Fail(3, $"Name-match pelts: {found}");
+                            Write.Fail(3, $"Name-match pelts: {known}");
+                            Write.Fail(3, $"Recipe: {known.Item1.FormKey,-20} Name: ${found.Item1.FormKey,-20} - {known.Item1.FormKey.Equals(found.Item1.FormKey)}");
+                            Write.Fail(3, $"Recipe: {known.Item2.FormKey,-20} Name: ${found.Item2.FormKey,-20} - {known.Item2.FormKey.Equals(found.Item2.FormKey)}");
+                            Write.Fail(3, $"Recipe: {known.Item3.FormKey,-20} Name: ${found.Item3.FormKey,-20} - {known.Item3.FormKey.Equals(found.Item3.FormKey)}");
+                            Write.Fail(3, $"Recipe: {known.Item4.FormKey,-20} Name: ${found.Item4.FormKey,-20} - {known.Item4.FormKey.Equals(found.Item4.FormKey)}");
                         }
                     }
                 }
@@ -311,7 +326,6 @@ sealed public class RecreateInternal
                     knownPelts[plugin] = (pelt0, pelt1, pelt2, pelt3);
                     Write.Fail(2, "HOW CAN THIS EVEN HAPPEN?");
                 }
-                //FullGeneratedPelts.Add(pelt1.ToLink());
             }
 
         }
@@ -332,7 +346,7 @@ sealed public class RecreateInternal
 
         if (debuggingMode)
         {
-            if (!plugin.DefaultPelt.IsNull) Write.Success(2, $"Found standard pelt: {plugin.DefaultPelt}");
+            if (!plugin.DefaultPelt.IsNull) Write.Success(2, $"Found standard pelt: {ItemNamer(plugin.DefaultPelt.Resolve(linkCache))}");
             else if (plugin.PeltCount.Length > 0) Write.Fail(2, $"No pelt found but pelt counts are specified.");
         }
 
@@ -345,23 +359,28 @@ sealed public class RecreateInternal
 
     }
 
-    static private List<IConstructibleObjectGetter?> Edid_Lookups_Fallbacks(List<string> names, List<List<string>> patterns, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+    static private Dictionary<T, IConstructibleObjectGetter> Edid_Lookups_Fallbacks<T>(List<string> names, Dictionary<T, List<string>> patterns, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode) where T : Enum
     {
-        List<IConstructibleObjectGetter?> results = new();
+        Dictionary<T, IConstructibleObjectGetter> results = new();
 
         foreach (var group in patterns)
         {
             IConstructibleObjectGetter? result = null;
             foreach (var name in names)
             {
-                foreach (var pattern in group)
+                foreach (var pattern in group.Value)
                 {
-                    linkCache.TryResolve<IConstructibleObjectGetter>(string.Format(pattern, name), out result);
+                    string editorID = string.Format(pattern, name);
+                    linkCache.TryResolve<IConstructibleObjectGetter>(editorID, out result);
+                    if (debuggingMode) 
+                        if (result is not null) Write.Success(1, $"Found {group.Key,-14}: {editorID}");
+                        else Write.Fail(1, $"Miss  {group.Key,-14}: {editorID}");
                     if (result is not null) break;
                 }
                 if (result is not null) break;
             }
-            results.Add(result);
+
+            if (result is not null) results.Add(group.Key, result);
         }
 
         return results;

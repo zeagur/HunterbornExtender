@@ -27,7 +27,6 @@ using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter,
 
 sealed public class Program
 {
-
     public static Task<int> Main(string[] args)
     {
         return SynthesisPipeline.Instance

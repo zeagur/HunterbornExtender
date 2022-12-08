@@ -5,13 +5,11 @@ using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Plugins;
 using HunterbornExtender.Settings;
 using static HunterbornExtender.FormKeys;
-
-#pragma warning disable IDE1006 // Naming Styles
-
 using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Mutagen.Bethesda.Skyrim.FormList>;
 using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
 using Mutagen.Bethesda.Plugins.Order;
 using Mutagen.Bethesda.Plugins.Cache;
+#pragma warning disable IDE1006 // Naming Styles
 
 
 /// <summary>

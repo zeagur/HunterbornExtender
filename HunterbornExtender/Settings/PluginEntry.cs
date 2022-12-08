@@ -35,6 +35,11 @@ abstract public class PluginEntry
     [JsonIgnore] public IFormLinkGetter<IMiscItemGetter> DefaultPelt { get; set; } = new FormLink<IMiscItemGetter>();
 
     /// <summary>
+    /// Stores the recipes for meat, pelts, and furs.
+    /// </summary>
+    [JsonIgnore] public Dictionary<RecipeType, IConstructibleObjectGetter> Recipes { get; set; } = new();
+
+    /// <summary>
     /// Not added to plugins yet. Remove [JsonIgnore] once this functionality is implemented.
     /// </summary>
     [JsonIgnore] public bool CreateDefaultMeat { get; set; } = false;
@@ -131,6 +136,11 @@ public sealed class MaterialLevel
 {
     public Dictionary<IFormLinkGetter<IItemGetter>, int> Items { get; set; } = new();
 }
+
+/// <summary>
+/// Enumerates recipe types used to recreate the internal plugins.
+/// </summary>
+public enum RecipeType { PeltPoor, PeltStandard, PeltFine, PeltFlawless, FurPoor, FurStandard, FurFine, MeatCooked, MeatCampfire, MeatPrimitive, MeatJerky };
 
 /// <summary>
 /// If CCOR is installed, this will control what kind of leather is produced by pelt recipes.
