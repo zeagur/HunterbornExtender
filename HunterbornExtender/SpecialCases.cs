@@ -7,6 +7,7 @@ using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using static HunterbornExtender.FormKeys;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Plugins.Cache;
+using System.Text.RegularExpressions;
 
 /// <summary>
 /// Storage class for big hard-coded Dictionaries that replace one thing with another.
@@ -84,5 +85,25 @@ sealed public class SpecialCases
         { "TrollFrost", new() {"Troll", "Frost"} },
         { "Boar", new() {"Boar", "Bristleback" } }
     };
+
+    /// <summary>
+    /// Regular expression used to turn the names of vanilla DeathItems into useful names.
+    /// </summary>
+    static public readonly Regex DeathItemPrefix = new(".*DeathItem", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Matcher for pre-existing pelts items.
+    /// </summary>
+    static public readonly Regex DefaultPeltRegex = new("Pelt|Hide|Skin|Fur|Wool|Leather", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Matcher for pre-existing meat items.
+    /// </summary>
+    static public readonly Regex DefaultMeatRegex = new("Meat|Flesh", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Used to strip invalid editorID characters from a string.
+    /// </summary>
+    static public readonly Regex EditorIdFilter = new("[^a-zA-Z0-9_]", RegexOptions.IgnoreCase);
 
 }

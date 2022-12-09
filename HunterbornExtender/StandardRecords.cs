@@ -9,6 +9,7 @@ using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Muta
 using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
 using Mutagen.Bethesda.Plugins.Order;
 using Mutagen.Bethesda.Plugins.Cache;
+using static HunterbornExtender.ScriptUtil;
 #pragma warning disable IDE1006 // Naming Styles
 
 
@@ -55,6 +56,7 @@ readonly record struct StandardRecords<PatchType, FormListType>(
     static public PatchingRecords CreatePatchingInstance(ISkyrimMod patchMod, ILoadOrder<IModListing<ISkyrimModGetter>> loadOrder, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
     {
         Quest hunterbornQuest = patchMod.Quests.GetOrAddAsOverride(FormKeys._DS_Hunterborn.Resolve<IQuestGetter>(linkCache));
+
         //if (settings.DebuggingMode) QueryImportantProperties(hunterbornQuest);
 
         var animals = new AnimalClass<FormList>(new(
@@ -153,48 +155,6 @@ readonly record struct StandardRecords<PatchType, FormListType>(
             monsters,
             new() { animals, monsters });
     }
-
-    /// <summary>
-    /// Retrieves a script property by quest->script name->property name.
-    /// </summary>
-    /// <typeparam name="ScriptTProperty">The type of script parameter.</typeparam>
-    /// <param name="quest"></param>
-    /// <param name="scriptName"></param>
-    /// <param name="propertyName"></param>
-    /// <returns></returns>
-    /// <exception cref="ScriptMissing"></exception>
-    /// <exception cref="PropertyMissing"></exception>
-    static ScriptTProperty GetProperty<ScriptTProperty>(IQuestGetter quest, String scriptName, String propertyName) where ScriptTProperty : ScriptProperty
-    {
-        String questName = quest.Name?.ToString() ?? quest.EditorID ?? "Quest";
-
-        var scriptFilter = ScriptFilter(scriptName);
-        var propertyFilter = PropertyFilter(propertyName);
-
-        var script = quest.VirtualMachineAdapter?.Scripts.Where(scriptFilter).FirstOrDefault();
-        if (script == null) throw new ScriptMissing(questName, scriptName);
-
-        if (script.Properties.Where(propertyFilter).FirstOrDefault() is not ScriptTProperty property)
-            throw new PropertyMissing(questName, scriptName, propertyName);
-
-        return property;
-    }
-
-    /// <summary>
-    /// A predicate for matching scripts by internalName.
-    /// </summary>
-    /// <param internalName="name">The internalName to match.</param>
-    /// <returns>A predicate that matches the specified internalName.</returns>
-    /// 
-    static Func<IScriptEntryGetter, bool> ScriptFilter(String name) => (IScriptEntryGetter s) => name.EqualsIgnoreCase(s?.Name);
-
-    /// <summary>
-    /// A predicate for matching script properties by internalName.
-    /// </summary>
-    /// <param internalName="name">The internalName to match.</param>
-    /// <returns>A predicate that matches the specified internalName.</returns>
-    /// 
-    static Func<IScriptPropertyGetter, bool> PropertyFilter(String name) => (IScriptPropertyGetter s) => name.EqualsIgnoreCase(s?.Name);
 
 }
 

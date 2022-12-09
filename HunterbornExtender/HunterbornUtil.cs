@@ -23,6 +23,90 @@ using System.Reflection;
 
 namespace HunterbornExtender
 {
+    public static class ScriptUtil
+    {
+        /// <summary>
+        /// Retrieves a script property by quest->script name->property name.
+        /// </summary>
+        /// <typeparam name="ScriptTProperty">The type of script parameter.</typeparam>
+        /// <param name="quest"></param>
+        /// <param name="scriptName"></param>
+        /// <param name="propertyName"></param>
+        /// <returns></returns>
+        /// <exception cref="ScriptMissing"></exception>
+        /// <exception cref="PropertyMissing"></exception>
+        static public ScriptTProperty GetProperty<ScriptTProperty>(IQuestGetter scripted, String scriptName, String propertyName) where ScriptTProperty : ScriptProperty
+        {
+            var scriptedName = scripted is INamedGetter named ? named.Name?.ToString() : null;
+            scriptedName ??= scripted is MajorRecord rec ? (rec.EditorID ?? rec.FormKey.ToString()) : "vmad";
+
+            if (scripted.VirtualMachineAdapter is null)
+                throw new ScriptMissing(scriptedName, scriptName);
+
+            return GetProperty<ScriptTProperty>(scripted.VirtualMachineAdapter, scriptedName, scriptName, propertyName);
+        }
+
+        /// <summary>
+        /// Retrieves a script property by quest->script name->property name.
+        /// </summary>
+        /// <typeparam name="ScriptTProperty">The type of script parameter.</typeparam>
+        /// <param name="quest"></param>
+        /// <param name="scriptName"></param>
+        /// <param name="propertyName"></param>
+        /// <returns></returns>
+        /// <exception cref="ScriptMissing"></exception>
+        /// <exception cref="PropertyMissing"></exception>
+        static public ScriptTProperty GetProperty<ScriptTProperty>(IScriptedGetter scripted, string scriptName, string propertyName) where ScriptTProperty : ScriptProperty
+        {
+            var scriptedName = scripted is INamedGetter named ? named.Name?.ToString() : null;
+            scriptedName ??= scripted is MajorRecord rec ? (rec.EditorID ?? rec.FormKey.ToString()) : "vmad";
+            Quest? t = null;
+            if (t is Quest q) q.VirtualMachineAdapter?.ToString();
+
+            if (scripted.VirtualMachineAdapter is null)
+                throw new ScriptMissing(scriptedName, scriptName);
+
+            return GetProperty<ScriptTProperty>(scripted.VirtualMachineAdapter, scriptedName, scriptName, propertyName);
+        }
+
+        /// <summary>
+        /// Retrieves a script property by vmad->script name->property name.
+        /// </summary>
+        /// <typeparam name="ScriptTProperty">The type of script parameter.</typeparam>
+        /// <exception cref="ScriptMissing"></exception>
+        /// <exception cref="PropertyMissing"></exception>
+        /// IVirtualMachineAdapterGetter
+        static public ScriptTProperty GetProperty<ScriptTProperty>(IAVirtualMachineAdapterGetter vmad, string scriptedName, string scriptName, string propertyName) where ScriptTProperty : ScriptProperty
+        {
+            var scriptFilter = ScriptFilter(scriptName);
+            var propertyFilter = PropertyFilter(propertyName);
+
+            var script = vmad.Scripts.Where(scriptFilter).FirstOrDefault();
+            if (script == null) throw new ScriptMissing(scriptedName, scriptName);
+
+            if (script.Properties.Where(propertyFilter).FirstOrDefault() is not ScriptTProperty property)
+                throw new PropertyMissing(scriptedName, scriptName, propertyName);
+
+            return property;
+        }
+
+        /// <summary>
+        /// A predicate for matching scripts by internalName.
+        /// </summary>
+        /// <param internalName="name">The internalName to match.</param>
+        /// <returns>A predicate that matches the specified internalName.</returns>
+        /// 
+        static Func<IScriptEntryGetter, bool> ScriptFilter(string name) => (IScriptEntryGetter s) => name.EqualsIgnoreCase(s?.Name);
+
+        /// <summary>
+        /// A predicate for matching script properties by internalName.
+        /// </summary>
+        /// <param internalName="name">The internalName to match.</param>
+        /// <returns>A predicate that matches the specified internalName.</returns>
+        /// 
+        static Func<IScriptPropertyGetter, bool> PropertyFilter(string name) => (IScriptPropertyGetter s) => name.EqualsIgnoreCase(s?.Name);
+
+    }
 
     /// <summary>
     /// Adds an EqualsIgnoreCase method to String.
@@ -160,6 +244,22 @@ namespace HunterbornExtender
     }
 
     /// <summary>
+    /// Thrown to indicate that a problem occurred during Heuristics.
+    /// </summary>
+    sealed class HeuristicsError : Exception
+    {
+        public HeuristicsError(Exception cause) : base("An error occurred during heuristic selection.", cause) { }
+    }
+
+    /// <summary>
+    /// Thrown to indicate that a problem occurred during internal plugin recreation.
+    /// </summary>
+    sealed class RecreationError : Exception
+    {
+        public RecreationError(Exception cause) : base("An error occurred while recreating internal plugins.", cause) { }
+    }
+
+    /// <summary>
     /// Thrown to indicate that an Npc has no DeathItem and therefore can't be processed by Hunterborn.
     /// @TODO Create a PO3-enhanced Taxonomy spell that can add DeathItems to creatures.
     /// </summary>
@@ -193,7 +293,7 @@ namespace HunterbornExtender
     /// </summary>
     sealed class ScriptMissing : Exception
     {
-        public ScriptMissing(String questname, String scriptName) : base($"Missing script: {questname}.{scriptName}") { }
+        public ScriptMissing(String scriptedName, String scriptName) : base($"Missing script: {scriptedName}.{scriptName}") { }
     }
 
     /// <summary>
@@ -202,7 +302,7 @@ namespace HunterbornExtender
     /// </summary>
     sealed class PropertyMissing : Exception
     {
-        public PropertyMissing(String questname, String scriptName, String propertyName) : base($"Missing property: {questname}.{scriptName}.{propertyName}") { }
+        public PropertyMissing(String scriptedName, String scriptName, String propertyName) : base($"Missing property: {scriptedName}.{scriptName}.{propertyName}") { }
     }
 
     /// <summary>

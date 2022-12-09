@@ -9,7 +9,6 @@ using Noggog;
 abstract public class PluginEntry
 {
     static readonly public PluginEntry SKIP = Skip.Instance;
-
     public EntryType Type { get; set; } = EntryType.Animal;
     public string Name { get; set; } = "Critter";
     public string ProperName { get; set; } = "Critter";

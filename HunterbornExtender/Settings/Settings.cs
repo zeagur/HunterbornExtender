@@ -10,4 +10,6 @@ sealed public class Settings
 
     public bool ReuseSelections { get; set; } = true;
 
+    public bool AdvancedTaxonomy { get; set; } = true;
+
 }

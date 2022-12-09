@@ -17,7 +17,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
-using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter, Mutagen.Bethesda.Skyrim.IMiscItemGetter>;
+//using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter>;
+using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
 using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
 
 sealed public class RecreateInternal
@@ -25,9 +26,12 @@ sealed public class RecreateInternal
     /// <summary>
     /// 
     /// </summary>
-    /// <param internalName="std"></param>
+    /// <param name="linkCache"></param>
+    /// <param name="debuggingMode"></param>
     /// <returns></returns>
-    static public List<InternalPluginEntry> RecreateInternalPluginsUI(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
+    /// <exception cref="RecreationException">Indicates that something went wrong during recreation. Using the InnerException field to retrieve the cause.</exception>
+    /// 
+    static public List<PluginEntry> RecreateInternalPluginsUI(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
     {
         (var plugins, _, _, _) = RecreateInternalPlugins(linkCache, debuggingMode);
         return plugins;
@@ -38,43 +42,55 @@ sealed public class RecreateInternal
     /// </summary>
     /// <param internalName="std"></param>
     /// <returns></returns>
-    static public (List<InternalPluginEntry>, OrderedDictionary<DeathItemGetter, PluginEntry>, Dictionary<PluginEntry, IMiscItemGetter>, Dictionary<PluginEntry, PeltSet>) 
+    /// <exception cref="RecreationException">Indicates that something went wrong during recreation. Using the InnerException field to retrieve the cause.</exception>
+    /// 
+    static public (List<PluginEntry>, OrderedDictionary<DeathItemGetter, PluginEntry>, Dictionary<PluginEntry, IMiscItemGetter>, Dictionary<PluginEntry, PeltSet>) 
         RecreateInternalPlugins(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
     {
-        OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems = new();
-        Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses = new();
-        Dictionary<PluginEntry, PeltSet> KnownPelts = new();
-        List<InternalPluginEntry> plugins = new();
-
-        var std = ViewingRecords.CreateViewingInstance(linkCache);
-
-        foreach (EntryType type in Enum.GetValues(typeof(EntryType)))
+        try
         {
-            int count = std.GetCCFor(type).RaceIndex.Data.Count;
-            Write.Action(1, $"Recreating {count} {type} plugin entries.");
+            OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems = new();
+            Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses = new();
+            Dictionary<PluginEntry, PeltSet> KnownPelts = new();
+            List<PluginEntry> plugins = new();
 
-            if (debuggingMode)
+            ViewingRecords std;
+
+            std = ViewingRecords.CreateViewingInstance(linkCache);
+
+            foreach (EntryType type in Enum.GetValues(typeof(EntryType)))
             {
-                if (type == EntryType.Animal) Console.WriteLine($"\tChecks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}, carcasses={std.Animals._DS_FL_CarcassObjects.Items.Count}");
-                else Write.Action(1, $"Checks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}");
+                int count = std.GetCCFor(type).RaceIndex.Data.Count;
+                Write.Action(1, $"Recreating {count} {type} plugin entries.");
+
+                if (debuggingMode)
+                {
+                    if (type == EntryType.Animal) Console.WriteLine($"\tChecks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}, carcasses={std.Animals._DS_FL_CarcassObjects.Items.Count}");
+                    else Write.Action(1, $"Checks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}");
+                }
+
+                for (int index = 0; index < count; index++)
+                {
+                    try
+                    {
+                        InternalPluginEntry entry = RecreateCorePluginEntry(type, index, KnownDeathItems, KnownCarcasses, KnownPelts, std, linkCache, debuggingMode);
+                        plugins.Add(entry);
+                    }
+                    catch (DataConsistencyError ex)
+                    {
+                        Write.Fail(0, "WARNING: inconsistent data detected. This may be the result of some other mod patching Hunterborn.");
+                        Write.Fail(0, ex.Message);
+                        plugins.Add(PluginEntry.SKIP);
+                    }
+                }
             }
 
-            for (int index = 0; index < count; index++)
-            {
-                try
-                {
-                    InternalPluginEntry entry = RecreateCorePluginEntry(type, index, KnownDeathItems, KnownCarcasses, KnownPelts, std, linkCache, debuggingMode);
-                    plugins.Add(entry);
-                }
-                catch (DataConsistencyError ex)
-                {
-                    Write.Fail(0, "WARNING: inconsistent data detected. This may be the result of some other mod patching Hunterborn.");
-                    Write.Fail(0, ex.Message);
-                }
-            }
+            return (plugins, KnownDeathItems, KnownCarcasses, KnownPelts);
         }
-
-        return (plugins, KnownDeathItems, KnownCarcasses, KnownPelts);
+        catch (Exception ex)
+        {
+            throw new RecreationError(ex);
+        }
     }
 
     static private InternalPluginEntry RecreateCorePluginEntry(EntryType type, int index, OrderedDictionary<DeathItemGetter, PluginEntry> knownDeathItems, 
@@ -82,16 +98,23 @@ sealed public class RecreateInternal
         ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode)
     {
         string internalName = std.GetCCFor(type).RaceIndex.Data[index];
-        if (internalName.IsNullOrWhitespace()) throw new DataConsistencyError(type, internalName, index, "No name.");
+        if (internalName.IsNullOrWhitespace()) throw new DataConsistencyError(type, internalName, index, $"No name: {type} {index}");
 
         try
         {
             var deathItemLink = std.GetCCFor(type)._DS_FL_DeathItems.Items[index];
-            if (deathItemLink.IsNull) throw new DataConsistencyError(type, internalName, index, "No DeathItem.");
+            if (deathItemLink.IsNull) throw new DataConsistencyError(type, internalName, index, $"No DeathItem: {type} {index} {deathItemLink.FormKey}");
 
             deathItemLink.TryResolve<DeathItemGetter>(linkCache, out var deathItem);
-            if (deathItem == null) throw new DataConsistencyError(type, internalName, index, "DeathItem could not be resolved.");
+            if (deathItem == null) throw new DataConsistencyError(type, internalName, index, $"DeathItem could not be resolved: {type} {index} {deathItemLink}");
             if (deathItem.EditorID == null) throw new DataConsistencyError(type, internalName, index, $"DeathItem {deathItem.FormKey} has no editor id.");
+
+            if (knownDeathItems.ContainsKey(deathItem))
+            {
+                var arr = std.GetCCFor(type)._DS_FL_DeathItems.Items.ToArray();
+                int previous = Array.FindIndex(arr, 0, index, di => deathItem.Equals(di));
+                throw new DataConsistencyError(type, internalName, index, $"DeathItem {deathItem.FormKey} appears twice: {type} #{previous} and #{index}.");
+            }
 
             InternalPluginEntry plugin = new(type, internalName, deathItem.FormKey);
             knownDeathItems.Add(deathItem, plugin);
@@ -161,10 +184,10 @@ sealed public class RecreateInternal
             if (peltList.Items.Count == 4)
             {
                 PeltSet pelts = (
-                    peltList.Items[0].Resolve<IMiscItemGetter>(linkCache),
-                    peltList.Items[1].Resolve<IMiscItemGetter>(linkCache),
-                    peltList.Items[2].Resolve<IMiscItemGetter>(linkCache),
-                    peltList.Items[3].Resolve<IMiscItemGetter>(linkCache));
+                    peltList.Items[0].Resolve<IConstructibleGetter>(linkCache),
+                    peltList.Items[1].Resolve<IConstructibleGetter>(linkCache),
+                    peltList.Items[2].Resolve<IConstructibleGetter>(linkCache),
+                    peltList.Items[3].Resolve<IConstructibleGetter>(linkCache));
                 knownPelts[plugin] = pelts;
             }
 
@@ -185,7 +208,7 @@ sealed public class RecreateInternal
 
             FindRecipes(plugin, internalName, deathItem, knownPelts, linkCache, debuggingMode);
 
-            // @TODO Find jerky and charred recipes.
+            Write.Success(1, $"Recreation of {internalName} complete.");
             return plugin;
 
         }
@@ -219,10 +242,12 @@ sealed public class RecreateInternal
             { RecipeType.FurPoor, new() { "HB_Recipe_FurPlate_{0}_00" } },
             { RecipeType.FurStandard, new() { "CCOR_RecipeFurPlate{0}Hide", "_Camp_RecipeTanningLeather{0}Hide", "HB_Recipe_FurPlate_{0}_01" } },
             { RecipeType.FurFine, new() { "HB_Recipe_FurPlate_{0}_02" } },
-            { RecipeType.MeatCooked, new() { "CACO_RecipeFood{0}Cooked", "CACO_RecipeFoodMeat{0}Cooked", "_DS_Recipe_Food_CharredMeat_{0}", "_DS_Recipe_Food_Seared{0}" } },
-            { RecipeType.MeatCampfire, new() { "CACO_RecipeFood{0}Cooked_Campfire", "HB_Recipe_FireFood_CharredMeat_{0}", "HB_Recipe_FireFood_Seared{0}" } },
-            { RecipeType.MeatPrimitive, new() { "HB_CACO_RecipeFood{0}Cooked_PrimCook", "_DS_Recipe_Food_Primitive_CharredMeat_{0}", "_DS_Recipe_Food_Primitive_Seared{0}" } },
+            { RecipeType.MeatCooked, new() { "CACO_RecipeFood{0}Cooked", "CACO_RecipeFoodMeat{0}Cooked", "_DS_Recipe_Food_CharredMeat_{0}", "_DS_Recipe_Food_Seared{0}", "RecipeFood{0}Cooked" } },
+            { RecipeType.MeatCampfire, new() { "CACO_RecipeFood{0}Cooked_Campfire", "HB_Recipe_FireFood_CharredMeat_{0}", "HB_Recipe_FireFood_Seared{0}", "_Camp_FireFoodRecipe_{0}Cooked", "_Camp_FireFoodRecipe_{0}Cooked_CCO" } },
+            { RecipeType.MeatPrimitive, new() { "HB_CACO_RecipeFood{0}Cooked_PrimCook", "_DS_Recipe_Food_Primitive_CharredMeat_{0}", "_DS_Recipe_Food_Primitive_Seared{0}", "_DS_Recipe_Food_Primitive_CharredMeat_{0}" } },
             { RecipeType.MeatJerky, new() { "CACO_RecipeJerky{0}", "_DS_Food_{0}Jerky", "_DS_Recipe_Food_{0}Jerky"} } };
+
+        // @TODO Find soup/stew recipes.
 
         // Some corrections for vanilla and hunterborn recipes with non-standard names.
         List<string> names = new() { internalName, plugin.Name };
@@ -231,13 +256,22 @@ sealed public class RecreateInternal
         if (plugin.Name.ContainsInsensitive("Elk")) names.Add("Venison");
         if (plugin.Name.EqualsIgnoreCase("Dog")) names.Add("DogCookedWhole");
         if (plugin.Name.ContainsInsensitive("Mudcrab")) names.Add("Mudcrab");
-        if (plugin.Name.ContainsInsensitive("Bristleback")) names.Add("Boar");
-        if (plugin.Name.ContainsInsensitive("FoxIce")) names.Insert(0, "FoxSnow");
-        if (plugin.Name.ContainsInsensitive("WolfIce")) names.Insert(0, "IceWolf");
-        if (plugin.Name.ContainsInsensitive("DeerVale")) names.Insert(0, "ValeDeer");
-        if (plugin.Name.ContainsInsensitive("SabrecatVale")) names.Insert(0, "ValeSabrecat");
+        if (internalName.ContainsInsensitive("Bristleback")) names.Add("Boar");
+        if (internalName.ContainsInsensitive("FoxIce")) names.Insert(0, "FoxSnow");
+        if (internalName.ContainsInsensitive("FoxSnow")) names.Insert(0, "SnowFox");
+        if (internalName.ContainsInsensitive("WolfIce")) names.Insert(0, "IceWolf");
+        if (internalName.ContainsInsensitive("IceWolf")) names.Insert(0, "WolfIce");
+        if (internalName.ContainsInsensitive("DeerVale")) names.Insert(0, "ValeDeer");
+        if (internalName.ContainsInsensitive("ValeDeer")) names.Insert(0, "DeerVale");
+        if (internalName.ContainsInsensitive("ValeSabrecat")) names.Insert(0, "SabrecatVale");
+        if (internalName.ContainsInsensitive("BearCave")) names.Insert(0, "CaveBear");
+        if (internalName.ContainsInsensitive("CaveBear")) names.Insert(0, "BearCave");
+        if (internalName.ContainsInsensitive("SnowBear")) names.Insert(0, "BearSnow");
+        if (internalName.ContainsInsensitive("BearSnow")) names.Insert(0, "SnowBear");
 
-        var recipes = Edid_Lookups_Fallbacks(names, patterns, linkCache, false || internalName.ContainsInsensitive("fox"));//debuggingMode);
+        bool flagged = true;// internalName.ContainsInsensitive("fox") || internalName.ContainsInsensitive("wolf");
+        if (flagged) Write.Action(1, names.Pretty());
+        var recipes = Edid_Lookups_Fallbacks(names, patterns, linkCache, flagged && debuggingMode);
 
         // Extract the results to nicely named variables.
         var peltRecipe0 = recipes.GetValueOrDefault(RecipeType.PeltPoor);
@@ -289,15 +323,15 @@ sealed public class RecreateInternal
 
             plugin.PeltCount = new int[] { peltRecipe0.CreatedObjectCount ?? 2, peltRecipe1.CreatedObjectCount ?? 2, peltRecipe2.CreatedObjectCount ?? 2, peltRecipe3.CreatedObjectCount ?? 2 };
 
-            IMiscItemGetter? pelt0 = null;
-            IMiscItemGetter? pelt1 = null;
-            IMiscItemGetter? pelt2 = null;
-            IMiscItemGetter? pelt3 = null;
+            IConstructibleGetter? pelt0 = null;
+            IConstructibleGetter? pelt1 = null;
+            IConstructibleGetter? pelt2 = null;
+            IConstructibleGetter? pelt3 = null;
 
-            peltRecipe0.Items?[0].Item.Item.TryResolve<IMiscItemGetter>(linkCache, out pelt0);
-            peltRecipe1.Items?[0].Item.Item.TryResolve<IMiscItemGetter>(linkCache, out pelt1);
-            peltRecipe2.Items?[0].Item.Item.TryResolve<IMiscItemGetter>(linkCache, out pelt2);
-            peltRecipe3.Items?[0].Item.Item.TryResolve<IMiscItemGetter>(linkCache, out pelt3);
+            peltRecipe0.Items?[0].Item.Item.TryResolve<IConstructibleGetter>(linkCache, out pelt0);
+            peltRecipe1.Items?[0].Item.Item.TryResolve<IConstructibleGetter>(linkCache, out pelt1);
+            peltRecipe2.Items?[0].Item.Item.TryResolve<IConstructibleGetter>(linkCache, out pelt2);
+            peltRecipe3.Items?[0].Item.Item.TryResolve<IConstructibleGetter>(linkCache, out pelt3);
 
             if (pelt0 is not null && pelt1 is not null && pelt2 is not null && pelt3 is not null)
             {
@@ -306,25 +340,28 @@ sealed public class RecreateInternal
                 if (knownPelts.ContainsKey(plugin))
                 {
                     var known = knownPelts[plugin];
-                    if (found.Equals(known)) Write.Success(2, "Recipe pelts and name-lookup pelts are a match.");
+                    if (found.Item1.Equals(known.Item1) && found.Item2.Equals(known.Item2) && found.Item3.Equals(known.Item3) && found.Item4.Equals(known.Item4))
+                    {
+                        Write.Success(2, "Recipe pelts and name-lookup pelts are a match.");
+                    }
                     else
                     {
-                        Write.Fail(2, "Recipe pelts and deathItem name-match pelts do not match, which is weird but not disastrous.");
-                        if (debuggingMode) 
+                        Write.Fail(2, "Recipe pelts and deathItem name-match pelts do not match -- which is weird but not disastrous.");
+                        if (flagged)
                         {
                             Write.Fail(3, $"Recipe pelts: {found}");
                             Write.Fail(3, $"Name-match pelts: {known}");
-                            Write.Fail(3, $"Recipe: {known.Item1.FormKey,-20} Name: ${found.Item1.FormKey,-20} - {known.Item1.FormKey.Equals(found.Item1.FormKey)}");
-                            Write.Fail(3, $"Recipe: {known.Item2.FormKey,-20} Name: ${found.Item2.FormKey,-20} - {known.Item2.FormKey.Equals(found.Item2.FormKey)}");
-                            Write.Fail(3, $"Recipe: {known.Item3.FormKey,-20} Name: ${found.Item3.FormKey,-20} - {known.Item3.FormKey.Equals(found.Item3.FormKey)}");
-                            Write.Fail(3, $"Recipe: {known.Item4.FormKey,-20} Name: ${found.Item4.FormKey,-20} - {known.Item4.FormKey.Equals(found.Item4.FormKey)}");
+                            Write.Fail(3, $"Recipe: {known.Item1.FormKey,-20} Name: ${found.Item1.FormKey,-20}");
+                            Write.Fail(3, $"Recipe: {known.Item2.FormKey,-20} Name: ${found.Item2.FormKey,-20}");
+                            Write.Fail(3, $"Recipe: {known.Item3.FormKey,-20} Name: ${found.Item3.FormKey,-20}");
+                            Write.Fail(3, $"Recipe: {known.Item4.FormKey,-20} Name: ${found.Item4.FormKey,-20}");
                         }
                     }
                 }
                 else
                 {
                     knownPelts[plugin] = (pelt0, pelt1, pelt2, pelt3);
-                    Write.Fail(2, "HOW CAN THIS EVEN HAPPEN?");
+                    Write.Fail(2, "Recipe pelts were found but DeathItem name-match pelts were not -- which is weird but not disastrous.");
                 }
             }
 
@@ -392,9 +429,9 @@ sealed public class RecreateInternal
     /// <returns>A tuple of (deathItemName, ProperName, SortName)</returns>
     static private (string, string, string) RecreatePluginName(PluginEntry plugin, DeathItemGetter deathItem)
     {
-        if (deathItem.EditorID is string deathItemEdid && DeathItemPrefix.IsMatch(deathItemEdid))
+        if (deathItem.EditorID is string deathItemEdid && SpecialCases.DeathItemPrefix.IsMatch(deathItemEdid))
         {
-            string deathItemName = DeathItemPrefix.Replace(deathItemEdid, "");
+            string deathItemName = SpecialCases.DeathItemPrefix.Replace(deathItemEdid, "");
             if (SpecialCases.EditorToNames.ContainsKey(deathItemName) && SpecialCases.EditorToNames[deathItemName].Count > 0)
             {
                 var parts = SpecialCases.EditorToNames[deathItemName];
@@ -463,7 +500,7 @@ sealed public class RecreateInternal
             var edid = entryItem?.EditorID ?? "";
             if (entryItem == null || edid == null) continue;
 
-            if (DefaultPeltRegex.Matches(edid).Any())
+            if (SpecialCases.DefaultPeltRegex.Matches(edid).Any())
             {
                 if (entryItem is DeathItemGetter lvld)
                 {
@@ -483,10 +520,10 @@ sealed public class RecreateInternal
     }
 
     static private string DeathItemNamer(DeathItemGetter deathItem)
-        => deathItem.EditorID ?? deathItem.ToStandardizedIdentifier().ToString() ?? deathItem.FormKey.ToString();
+        => deathItem.EditorID ?? /*deathItem.ToStandardizedIdentifier().ToString() ??*/ deathItem.FormKey.ToString();
 
     static private string ItemNamer(IItemGetter item)
-        => (item is INamedGetter named ? named.Name?.ToString() : null) ?? item.EditorID ?? item.ToStandardizedIdentifier().ToString() ?? item.FormKey.ToString();
+        => (item is INamedGetter named ? named.Name?.ToString() : null) ?? item.EditorID ?? /*item.ToStandardizedIdentifier().ToString() ??*/ item.FormKey.ToString();
 
     /// <summary>
     /// Flag object indicating that RecreatePluginName did not have a result.
@@ -494,18 +531,8 @@ sealed public class RecreateInternal
     static private (string, string, string) NoRename = ("", "", "");
 
     /// <summary>
-    /// Regular expression used to turn the names of vanilla DeathItems into useful names.
-    /// </summary>
-    static private readonly Regex DeathItemPrefix = new(".*DeathItem", RegexOptions.IgnoreCase);
-
-    /// <summary>
     /// Used to make nice names.
     /// </summary>
     static private readonly TextInfo TextInfo = CultureInfo.CurrentCulture.TextInfo;
-
-    /// <summary>
-    /// Matcher for pre-existing pelts items.
-    /// </summary>
-    static readonly private Regex DefaultPeltRegex = new("Pelt|Hide|Skin|Fur|Wool|Leather", RegexOptions.IgnoreCase);
 
 }
