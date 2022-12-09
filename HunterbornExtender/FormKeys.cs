@@ -59,6 +59,7 @@ sealed public record FormKeys
     
     static readonly public FormLink<IIngestibleGetter> DEFAULT_MEAT = new(new FormKey(HUNTERBORN_MODKEY, 0x014795));
     static readonly public FormLink<IIngestibleGetter> DEFAULT_JERKY = new(new FormKey(HUNTERBORN_MODKEY, 0x2BA6D8));
+    static readonly public FormLink<IIngestibleGetter> DEFAULT_COOKED = new(new FormKey(HUNTERBORN_MODKEY, 0x199A0C));
 
     static readonly public FormLink<IConstructibleObjectGetter> DEFAULT_PELT_POOR_RECIPE = new(new FormKey(HUNTERBORN_MODKEY, 0x069B86));
     static readonly public FormLink<IConstructibleObjectGetter> DEFAULT_PELT_STD_RECIPE = new(new FormKey(HUNTERBORN_MODKEY, 0x069B87));

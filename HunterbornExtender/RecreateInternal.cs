@@ -245,7 +245,7 @@ sealed public class RecreateInternal
             { RecipeType.MeatCooked, new() { "CACO_RecipeFood{0}Cooked", "CACO_RecipeFoodMeat{0}Cooked", "_DS_Recipe_Food_CharredMeat_{0}", "_DS_Recipe_Food_Seared{0}", "RecipeFood{0}Cooked" } },
             { RecipeType.MeatCampfire, new() { "CACO_RecipeFood{0}Cooked_Campfire", "HB_Recipe_FireFood_CharredMeat_{0}", "HB_Recipe_FireFood_Seared{0}", "_Camp_FireFoodRecipe_{0}Cooked", "_Camp_FireFoodRecipe_{0}Cooked_CCO" } },
             { RecipeType.MeatPrimitive, new() { "HB_CACO_RecipeFood{0}Cooked_PrimCook", "_DS_Recipe_Food_Primitive_CharredMeat_{0}", "_DS_Recipe_Food_Primitive_Seared{0}", "_DS_Recipe_Food_Primitive_CharredMeat_{0}" } },
-            { RecipeType.MeatJerky, new() { "CACO_RecipeJerky{0}", "_DS_Food_{0}Jerky", "_DS_Recipe_Food_{0}Jerky"} } };
+            { RecipeType.MeatJerky, new() { "CACO_RecipeJerky{0}", "_DS_Recipe_Food_{0}Jerky"} } };
 
         // @TODO Find soup/stew recipes.
 

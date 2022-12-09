@@ -19,7 +19,6 @@ using static HunterbornExtender.FormKeys;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
 using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
 using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Mutagen.Bethesda.Skyrim.FormList>;
-//using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter>;
 using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
 
 sealed public class Program
@@ -552,9 +551,14 @@ sealed public class Program
     }
 
     /// <summary>
+    /// 
     /// Create a new default pelt for a creature using a pre-existing pelt as a template.
     /// 
     /// </summary>
+    /// <param name="data">Description of the creature to make a pelt for.</param>
+    /// <returns></returns>
+    /// <exception cref="CoreRecordMissing"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
     private MiscItem CreateDefaultPelt(CreatureData data)
     {
         if (DebuggingMode) Write.Action(3, $"Creating new pelt for {data.InternalName}");
@@ -565,13 +569,15 @@ sealed public class Program
         var newPelt = PatchMod.MiscItems.DuplicateInAsNewRecord(DEFAULT_PELT.Resolve(LinkCache));
         if (newPelt == null) throw new InvalidOperationException();
 
+        if (data.Prototype.DefaultPelt == null && data.Prototype.CreateDefaultPelt) data.Prototype.DefaultPelt = newPelt.ToLink();
+
         newPelt.EditorID = $"_DS_Pelt_{data.InternalName}_01";
         newPelt.Name = $"{data.Prototype.ProperName} Pelt";
 
         // @TODO Fill this in with something better.
         newPelt.Value = (uint)data.Prototype.CarcassValue / 2;
 
-        if (DebuggingMode) Write.Success(3, $"Created new default Pelt {newPelt}");
+        if (DebuggingMode) Write.Success(3, $"Created new default Pelt: '{newPelt.Name}' ('{newPelt.EditorID}')");
 
         return newPelt;
     }
@@ -604,7 +610,7 @@ sealed public class Program
         if (!data.Prototype.Meat.IsNull) return data.Prototype.Meat.Resolve(LinkCache);
         else
         {
-            var defaultMeat = GetDefaultMeat(data.DeathItem, std);
+            var defaultMeat = FindDefaultMeat(data.DeathItem, std);
             if (defaultMeat is IItemGetter meat) return meat;
             else if (data.Prototype.CreateDefaultMeat) return CreateDefaultMeat(data);
             else return null;
@@ -619,7 +625,7 @@ sealed public class Program
     /// 
     /// </summary>
     /// 
-    private IItemGetter? GetDefaultMeat(DeathItemGetter data, PatchingRecords std)
+    private IItemGetter? FindDefaultMeat(DeathItemGetter data, PatchingRecords std)
     {
         var entries = data.Entries;
         if (entries == null) return null;
@@ -635,7 +641,7 @@ sealed public class Program
                 if (entryItem is ILeveledItemGetter lvld)
                 {
                     if (DebuggingMode) Write.Action(4, $"Meat search recursing into {DeathItemNamer(lvld)}");
-                    if (lvld.Entries is not null && lvld.Entries.Count == 1 && GetDefaultMeat(lvld, std) is IItemGetter subItem)
+                    if (lvld.Entries is not null && lvld.Entries.Count == 1 && FindDefaultMeat(lvld, std) is IItemGetter subItem)
                         return subItem;
                 }
                 else if (entryItem is IItemGetter item)
@@ -664,19 +670,23 @@ sealed public class Program
         if (DebuggingMode) Write.Action(3, $"Creating new meats for {data.InternalName}");
 
         DEFAULT_MEAT.TryResolve(LinkCache, out var existingMeat);
+        DEFAULT_COOKED.TryResolve(LinkCache, out var existingCooked);
+        DEFAULT_JERKY.TryResolve(LinkCache, out var existingJerky);
         if (existingMeat == null) throw new CoreRecordMissing(DEFAULT_MEAT);
+        if (existingCooked == null) throw new CoreRecordMissing(DEFAULT_COOKED);
+        if (existingJerky == null) throw new CoreRecordMissing(DEFAULT_JERKY);
 
         var newMeat = PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
-        var newCooked = PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
-        var newJerky = PatchMod.Ingestibles.DuplicateInAsNewRecord(existingMeat);
+        var newCooked = PatchMod.Ingestibles.DuplicateInAsNewRecord(existingCooked);
+        var newJerky = PatchMod.Ingestibles.DuplicateInAsNewRecord(existingJerky);
 
         if (newMeat == null) throw new InvalidOperationException();
         if (newCooked == null) throw new InvalidOperationException();
         if (newJerky == null) throw new InvalidOperationException();
 
         newMeat.EditorID = $"_DS_Meat_{data.InternalName}";
-        newCooked.EditorID = $"_DS_Meat_{data.InternalName}";
-        newJerky.EditorID = $"_DS_Meat_{data.InternalName}";
+        newCooked.EditorID = $"_DS_Food_{data.InternalName}Cooked";
+        newJerky.EditorID = $"_DS_Food_{data.InternalName}Jerky";
 
         newMeat.Name = $"{data.Prototype.ProperName} Meat (raw)";
         newCooked.Name = $"{data.Prototype.ProperName} Meat (cooked)";
@@ -686,6 +696,7 @@ sealed public class Program
         newCooked.Keywords ??= new();
         newJerky.Keywords ??= new();
 
+        if (data.Prototype.Meat == null && data.Prototype.CreateDefaultMeat) data.Prototype.Meat = newMeat.ToLink();
         if (!newMeat.HasKeyword(_DS_KW_Food_Raw)) newMeat.Keywords.Add(_DS_KW_Food_Raw);
         if (!newMeat.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)) newMeat.Keywords.Add(Skyrim.Keyword.VendorItemFoodRaw);
 
