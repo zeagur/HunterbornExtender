@@ -34,9 +34,11 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name"/>
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" ToolTip="The name of this creature"/>
         <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Proper Name"/>
@@ -139,5 +141,11 @@
 
         <TextBlock Grid.Row="16" Grid.Column="0" Text="Voice"/>
         <plugins:FormKeyPicker Grid.Row="16" Grid.Column="1" FormKey="{Binding Voice}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding VoiceType}" MaxHeight="250"/>
+
+        <TextBlock Grid.Row="17" Grid.Column="0" Text="Create Default Meat"/>
+        <CheckBox Grid.Row="17" Grid.Column="1" IsChecked="{Binding CreateDefaultMeat}"/>
+
+        <TextBlock Grid.Row="18" Grid.Column="0" Text="Create Default Pelt"/>
+        <CheckBox Grid.Row="18" Grid.Column="1" IsChecked="{Binding CreateDefaultPelt}"/>
     </Grid>
 </UserControl>

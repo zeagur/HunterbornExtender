@@ -10,6 +10,7 @@ using ReactiveUI;
 using HunterbornExtender.Settings;
 using static System.Windows.Forms.AxHost;
 using System;
+using System.Windows.Media.Media3D;
 
 namespace HunterbornExtenderUI;
 
@@ -63,6 +64,10 @@ public class VM_PluginEntry : ViewModel
     public FormKey Voice { get; set; }
     [Reactive]
     public string FilePath { get; set; } = "";
+    [Reactive]
+    public bool CreateDefaultMeat { get; set; } = false;
+    [Reactive]
+    public bool CreateDefaultPelt { get; set; } = true;
     public ILinkCache LinkCache { get; set; }
     public IEnumerable<Type> AnimalSwitchType { get; } = typeof(IGlobalGetter).AsEnumerable();
     public IEnumerable<Type> CarcassMessageBoxType { get; } = typeof(IMessageGetter).AsEnumerable();
@@ -99,6 +104,8 @@ public class VM_PluginEntry : ViewModel
         BloodType = model.BloodType.FormKey;
         Venom = model.Venom.FormKey;
         Voice = model.Voice.FormKey;
+        CreateDefaultMeat = model.CreateDefaultMeat;
+        CreateDefaultPelt = model.CreateDefaultPelt;
     }
 
     public PluginEntry DumpToModel()
@@ -122,6 +129,8 @@ public class VM_PluginEntry : ViewModel
         model.BloodType = BloodType.ToLinkGetter<IItemGetter>();
         model.Venom = Venom.ToLinkGetter<IItemGetter>();
         model.Voice = Voice.ToLinkGetter<IVoiceTypeGetter>();
+        model.CreateDefaultMeat = CreateDefaultMeat;
+        model.CreateDefaultPelt = CreateDefaultPelt;
         return model;
     }
 }
