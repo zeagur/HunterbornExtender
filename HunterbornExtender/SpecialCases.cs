@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
-using static HunterbornExtender.FormKeys;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Plugins.Cache;
 using System.Text.RegularExpressions;
+using static HunterbornExtender.FormKeys;
+using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
 
 /// <summary>
 /// Storage class for big hard-coded Dictionaries that replace one thing with another.
@@ -106,4 +107,112 @@ sealed public class SpecialCases
     /// </summary>
     static public readonly Regex EditorIdFilter = new("[^a-zA-Z0-9_]", RegexOptions.IgnoreCase);
 
+    static public class Lists
+    {
+        /// <summary>
+        /// To be recognized as a creature by the patcher, an Npc must not belong to any of these factions.
+        /// 
+        /// @TODO Addons should be allowed to add to this list.
+        /// 
+        /// </summary>
+        static readonly public HashSet<IFormLinkGetter<IFactionGetter>> ForbiddenFactions = new() {
+        Dawnguard.Faction.DLC1VampireFaction,
+        Dragonborn.Faction.DLC2AshSpawnFaction,
+        Skyrim.Faction.DragonPriestFaction,
+        Skyrim.Faction.DraugrFaction,
+        Skyrim.Faction.DwarvenAutomatonFaction,
+        Skyrim.Faction.IceWraithFaction,
+        Dawnguard.Faction.SoulCairnFaction,
+        Skyrim.Faction.VampireFaction,
+        Skyrim.Faction.WispFaction,
+    };
+
+        /// <summary>
+        /// To be recognized as a creature by the patcher, an Npc must not have any of these keywords.
+        /// 
+        /// @TODO Addons should be allowed to add to this list.
+        /// 
+        /// </summary>
+        static readonly public HashSet<IFormLinkGetter<IKeywordGetter>> ForbiddenKeywords = new() {
+        Skyrim.Keyword.ActorTypeGhost,
+        Skyrim.Keyword.ActorTypeNPC
+    };
+
+        /// <summary>
+        /// Voices of creatures. To be recognized as a creature by the patcher, an Npc must have a voiceType from
+        /// this list.
+        /// 
+        /// VoiceTypes from addons will get added to this list at runtime.
+        /// Isn't that forward thinking? Why don't the other Forbidden/Allowed lists get
+        /// populated from addons?
+        /// 
+        /// </summary>
+        static readonly public HashSet<IFormLinkGetter<IVoiceTypeGetter>> AllowedVoices = new() {
+        Skyrim.VoiceType.CrBearVoice,
+        Skyrim.VoiceType.CrChickenVoice,
+        Skyrim.VoiceType.CrCowVoice,
+        Skyrim.VoiceType.CrDeerVoice,
+        Skyrim.VoiceType.CrDogVoice,
+        Dawnguard.VoiceType.CrDogHusky,
+        Skyrim.VoiceType.CrFoxVoice,
+        Skyrim.VoiceType.CrGoatVoice,
+        Skyrim.VoiceType.CrHareVoice,
+        Skyrim.VoiceType.CrHorkerVoice,
+        Skyrim.VoiceType.CrHorseVoice,
+        Skyrim.VoiceType.CrMammothVoice,
+        Skyrim.VoiceType.CrMudcrabVoice,
+        Skyrim.VoiceType.CrSabreCatVoice,
+        Skyrim.VoiceType.CrSkeeverVoice,
+        Skyrim.VoiceType.CrSlaughterfishVoice,
+        Skyrim.VoiceType.CrWolfVoice,
+        Dragonborn.VoiceType.DLC2CrBristlebackVoice,
+        Skyrim.VoiceType.CrChaurusVoice,
+        Skyrim.VoiceType.CrFrostbiteSpiderVoice,
+        Skyrim.VoiceType.CrFrostbiteSpiderGiantVoice,
+        Skyrim.VoiceType.CrSprigganVoice,
+        Skyrim.VoiceType.CrTrollVoice,
+        Skyrim.VoiceType.CrWerewolfVoice,
+        Skyrim.VoiceType.CrDragonVoice,
+        Dawnguard.VoiceType.CrChaurusInsectVoice
+    };
+
+        /// <summary>
+        /// A list of EditorIDs of creatures that should never be processed.
+        /// I wish this was explained.
+        /// 
+        /// @TODO Addons should be allowed to add to this list.
+        /// 
+        /// </summary>
+        static readonly public HashSet<string> ForbiddenNpcEditorIds = new() { 
+            "HISLCBlackWolf", 
+            "BSKEncRat" 
+        };
+
+        /// <summary>
+        /// A list of creature configuration flags that should never be processed.
+        /// 
+        /// </summary>
+        static readonly public NpcConfiguration.Flag ForbiddenFlags =
+            NpcConfiguration.Flag.Invulnerable |
+            NpcConfiguration.Flag.IsGhost |
+            NpcConfiguration.Flag.Summonable;
+
+        /// <summary>
+        /// A list of DeathItems that should never be processed. 
+        /// Creatures with one of these DeathItems should be ignored by Hunterborn and by this patcher.
+        /// 
+        /// @TODO Addons should be allowed to add to this list.
+        /// 
+        /// </summary>
+        static readonly public HashSet<FormLink<DeathItemGetter>> ForbiddenDeathItems = new() {
+        Skyrim.LeveledItem.DeathItemDragonBonesOnly,
+        Skyrim.LeveledItem.DeathItemVampire,
+        Skyrim.LeveledItem.DeathItemForsworn,
+        Skyrim.LeveledItem.DeathItemGhost,
+        Dawnguard.LeveledItem.DLC1DeathItemDragon06,
+        Dawnguard.LeveledItem.DLC1DeathItemDragon07,
+        new(new FormKey(new("Skyrim Immersive Creatures Special Edition", type : ModType.Plugin), 0x11B217))
+    };
+
+    }
 }

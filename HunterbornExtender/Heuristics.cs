@@ -34,7 +34,7 @@ sealed public class Heuristics
             //
             foreach (var plugin in plugins)
             {
-                if (!plugin.Voice.IsNull) AllowedVoices.Add(plugin.Voice);
+                if (!plugin.Voice.IsNull) SpecialCases.Lists.AllowedVoices.Add(plugin.Voice);
             }
 
             // For each DeathItem, there will be a weighted set of plausible Plugins.
@@ -52,7 +52,7 @@ sealed public class Heuristics
             }
 
             // Scan the list of npcs.
-            foreach (var npc in npcs.Where(IsCreature))
+            foreach (var npc in npcs.Where(n => IsCreature(n, debuggingMode)))
             {
                 //if (settings.DebuggingMode) Write.Action(2, $"Heuristics examining {npc}");
                 if (npc.DeathItem?.IsNull ?? true) continue;
@@ -151,7 +151,7 @@ sealed public class Heuristics
 
         // Try this tokenizing matcher to break ties.
         var npcTokens = Tokenizer.Tokenize(new List<string?>() { npc.Name?.ToString(), npc.EditorID, race.Name?.ToString(), race.EditorID, deathItem?.EditorID });
-        if (debuggingMode) Write.Action(2, $"Tokens for {name}: {npcTokens.Pretty()}");
+        if (debuggingMode) Write.Action(2, $"Tokens for {name} ({npc.EditorID}): {npcTokens.Pretty()}");
 
         foreach (var plugin in plugins)
         {
@@ -172,123 +172,78 @@ sealed public class Heuristics
     }
 
 
-    static public bool IsCreature(INpcGetter npc)
+    static public bool IsCreature(INpcGetter npc, bool debuggingMode = false)
     {
         var deathItem = npc.DeathItem;
         var edid = npc.EditorID;
 
-        if (edid is not null && HasForbiddenEditorId(edid)) return false;
-        else if (deathItem == null) return false;
-        else if (HasForbiddenDeathItem(deathItem)) return false;
-        else if (HasForbiddenKeyword(npc)) return false;
-        else if (HasForbiddenFaction(npc)) return false;
-        else if (!HasAllowedVoice(npc)) return false;
+        if (edid is not null && HasForbiddenEditorId(edid))
+        {
+            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden editorId {edid}");
+            return false;
+        }
+        else if (deathItem == null)
+        {
+            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- no DeathItem");
+            return false;
+        }
+        else if (HasForbiddenDeathItem(deathItem))
+        {
+            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden DeathItem {deathItem}");
+            return false;
+        }
+        else if (HasForbiddenKeyword(npc))
+        {
+            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden DeathItem {GetForbiddenKeyword(npc)}");
+            return false;
+        }
+        else if (HasForbiddenFaction(npc))
+        {
+            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden DeathItem {GetForbiddenFaction(npc)}");
+            return false;
+        }
+        else if (!HasAllowedVoice(npc))
+        {
+            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- voice not allowed ({npc.Voice})");
+            return false;
+        }
+        else if (HasForbiddenFlag(npc))
+        {
+            if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden flag {GetForbiddenFlag(npc)}");
+            return false;
+        }
+        else if (npc.ActorEffect?.Contains(Skyrim.Spell.GhostAbility) ?? false)
+        {
+            if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden NO GHOSTS");
+            return false;
+        }
         else return true;
     }
 
-    static private bool HasForbiddenEditorId(string editorId) => ForbiddenNpcEditorIds.Any(edid => edid.EqualsIgnoreCase(editorId));
+    static private bool HasForbiddenEditorId(string editorId) => SpecialCases.Lists.ForbiddenNpcEditorIds.Any(edid => edid.EqualsIgnoreCase(editorId));
 
-    static private bool HasForbiddenFaction(INpcGetter creature) =>
-        creature.Factions.Any(placement => ForbiddenFactions.Contains(placement.Faction));
+    static private bool HasForbiddenFaction(INpcGetter npc) =>
+        npc.Factions.Any(placement => SpecialCases.Lists.ForbiddenFactions.Contains(placement.Faction));
 
-    static private bool HasForbiddenKeyword(INpcGetter creature) =>
-        creature.Keywords?.Any(keyword => ForbiddenKeywords.Contains(keyword)) ?? false;
+    static private bool HasForbiddenKeyword(INpcGetter npc) =>
+        npc.Keywords?.Any(keyword => SpecialCases.Lists.ForbiddenKeywords.Contains(keyword)) ?? false;
 
-    static private bool HasAllowedVoice(INpcGetter creature) => AllowedVoices.Contains(creature.Voice);
+    static private bool HasAllowedVoice(INpcGetter npc) => SpecialCases.Lists.AllowedVoices.Contains(npc.Voice);
 
-    static private bool HasForbiddenDeathItem(IFormLinkGetter<ILeveledItemGetter> deathItem) => ForbiddenDeathItems.Contains(deathItem);
+    static private bool HasForbiddenDeathItem(IFormLinkGetter<ILeveledItemGetter> deathItem) => SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem);
 
-    /// <summary>
-    /// To be recognized as a creature by the patcher, an Npc must not belong to any of these factions.
-    /// 
-    /// @TODO Addons should be allowed to add to this list.
-    /// 
-    /// </summary>
-    static readonly public HashSet<IFormLinkGetter<IFactionGetter>> ForbiddenFactions = new() {
-        Dawnguard.Faction.DLC1VampireFaction,
-        Dragonborn.Faction.DLC2AshSpawnFaction,
-        Skyrim.Faction.DragonPriestFaction,
-        Skyrim.Faction.DraugrFaction,
-        Skyrim.Faction.DwarvenAutomatonFaction,
-        Skyrim.Faction.IceWraithFaction,
-        Dawnguard.Faction.SoulCairnFaction,
-        Skyrim.Faction.VampireFaction,
-        Skyrim.Faction.WispFaction
-    };
+    static private bool HasForbiddenFlag(INpcGetter npc) => (SpecialCases.Lists.ForbiddenFlags & npc.Configuration.Flags) != 0;
 
-    /// <summary>
-    /// To be recognized as a creature by the patcher, an Npc must not have any of these keywords.
-    /// 
-    /// @TODO Addons should be allowed to add to this list.
-    /// 
-    /// </summary>
-    static readonly public HashSet<IFormLinkGetter<IKeywordGetter>> ForbiddenKeywords = new() {
-        Skyrim.Keyword.ActorTypeGhost,
-        Skyrim.Keyword.ActorTypeNPC
-    };
+    static private string GetForbiddenEditorId(string editorId) 
+        => SpecialCases.Lists.ForbiddenNpcEditorIds.Where(edid => edid.EqualsIgnoreCase(editorId)).FirstOrDefault("");
 
-    /// <summary>
-    /// Voices of creatures. To be recognized as a creature by the patcher, an Npc must have a voiceType from
-    /// this list.
-    /// 
-    /// VoiceTypes from addons will get added to this list at runtime.
-    /// Isn't that forward thinking? Why don't the other Forbidden/Allowed lists get
-    /// populated from addons?
-    /// 
-    /// </summary>
-    static readonly public HashSet<IFormLinkGetter<IVoiceTypeGetter>> AllowedVoices = new() {
-        Skyrim.VoiceType.CrBearVoice,
-        Skyrim.VoiceType.CrChickenVoice,
-        Skyrim.VoiceType.CrCowVoice,
-        Skyrim.VoiceType.CrDeerVoice,
-        Skyrim.VoiceType.CrDogVoice,
-        Dawnguard.VoiceType.CrDogHusky,
-        Skyrim.VoiceType.CrFoxVoice,
-        Skyrim.VoiceType.CrGoatVoice,
-        Skyrim.VoiceType.CrHareVoice,
-        Skyrim.VoiceType.CrHorkerVoice,
-        Skyrim.VoiceType.CrHorseVoice,
-        Skyrim.VoiceType.CrMammothVoice,
-        Skyrim.VoiceType.CrMudcrabVoice,
-        Skyrim.VoiceType.CrSabreCatVoice,
-        Skyrim.VoiceType.CrSkeeverVoice,
-        Skyrim.VoiceType.CrSlaughterfishVoice,
-        Skyrim.VoiceType.CrWolfVoice,
-        Dragonborn.VoiceType.DLC2CrBristlebackVoice,
-        Skyrim.VoiceType.CrChaurusVoice,
-        Skyrim.VoiceType.CrFrostbiteSpiderVoice,
-        Skyrim.VoiceType.CrFrostbiteSpiderGiantVoice,
-        Skyrim.VoiceType.CrSprigganVoice,
-        Skyrim.VoiceType.CrTrollVoice,
-        Skyrim.VoiceType.CrWerewolfVoice,
-        Skyrim.VoiceType.CrDragonVoice,
-        Dawnguard.VoiceType.CrChaurusInsectVoice
-    };
+    static private IRankPlacementGetter? GetForbiddenFaction(INpcGetter npc) =>
+        npc.Factions.Where(placement => SpecialCases.Lists.ForbiddenFactions.Contains(placement.Faction)).First();
 
-    /// <summary>
-    /// A list of EditorIDs of creatures that should never be processed.
-    /// I wish this was explained.
-    /// 
-    /// @TODO Addons should be allowed to add to this list.
-    /// 
-    /// </summary>
-    static readonly public List<string> ForbiddenNpcEditorIds = new() { "HISLCBlackWolf", "BSKEncRat" };
+    static private IFormLinkGetter<IKeywordGetter> GetForbiddenKeyword(INpcGetter npc) =>
+        npc.Keywords?.Where(keyword => SpecialCases.Lists.ForbiddenKeywords.Contains(keyword)).First() ?? new FormLink<IKeywordGetter>();
 
-    /// <summary>
-    /// A list of DeathItems that should never be processed. 
-    /// Creatures with one of these DeathItems should be ignored by Hunterborn and by this patcher.
-    /// 
-    /// @TODO Addons should be allowed to add to this list.
-    /// 
-    /// </summary>
-    static readonly public List<FormLink<DeathItemGetter>> ForbiddenDeathItems = new() {
-        Skyrim.LeveledItem.DeathItemDragonBonesOnly,
-        Skyrim.LeveledItem.DeathItemVampire,
-        Skyrim.LeveledItem.DeathItemForsworn,
-        Dawnguard.LeveledItem.DLC1DeathItemDragon06,
-        Dawnguard.LeveledItem.DLC1DeathItemDragon07,
-        new(new FormKey(new("Skyrim Immersive Creatures Special Edition", type : ModType.Plugin), 0x11B217))
-    };
+    static private NpcConfiguration.Flag GetForbiddenFlag(INpcGetter npc) => (SpecialCases.Lists.ForbiddenFlags & npc.Configuration.Flags);
 
     /// <summary>
     /// This thing is ridiculous but convenient. Can you say "Currying"?

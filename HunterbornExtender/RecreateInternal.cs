@@ -269,7 +269,7 @@ sealed public class RecreateInternal
         if (internalName.ContainsInsensitive("SnowBear")) names.Insert(0, "BearSnow");
         if (internalName.ContainsInsensitive("BearSnow")) names.Insert(0, "SnowBear");
 
-        bool flagged = true;// internalName.ContainsInsensitive("fox") || internalName.ContainsInsensitive("wolf");
+        bool flagged = false;// internalName.ContainsInsensitive("fox") || internalName.ContainsInsensitive("wolf");
         if (flagged) Write.Action(1, names.Pretty());
         var recipes = Edid_Lookups_Fallbacks(names, patterns, linkCache, flagged && debuggingMode);
 
