@@ -39,7 +39,7 @@ sealed public class Heuristics
 
             // For each DeathItem, there will be a weighted set of plausible Plugins.
             // HeuristicMatcher assigns the weights.
-            Dictionary<DeathItemSelection, Dictionary<PluginEntry, int>> selectionWeights = new();
+            Dictionary<DeathItemSelection, Dictionary<PluginEntry, double>> selectionWeights = new();
             Dictionary<DeathItemGetter, DeathItemSelection> indexer = new();
 
             // Tokenize the names of the plugins.
@@ -52,7 +52,7 @@ sealed public class Heuristics
             }
 
             // Scan the list of npcs.
-            foreach (var npc in npcs.Where(n => IsCreature(n, debuggingMode)))
+            foreach (var npc in npcs.Where(n => IsCreature(n, linkCache, debuggingMode)))
             {
                 //if (settings.DebuggingMode) Write.Action(2, $"Heuristics examining {npc}");
                 if (npc.DeathItem?.IsNull ?? true) continue;
@@ -77,7 +77,7 @@ sealed public class Heuristics
                 var itemWeights = selectionWeights[deathItemSelection];
 
                 foreach (PluginEntry plugin in npcWeights.Keys)
-                    itemWeights[plugin] = itemWeights.GetValueOrDefault(plugin, 0) + npcWeights[plugin];
+                    itemWeights[plugin] = itemWeights.GetValueOrDefault(plugin, 0.0) + npcWeights[plugin];
             }
 
             DeathItemSelection[] selections = selectionWeights.Keys.ToArray();
@@ -122,10 +122,10 @@ sealed public class Heuristics
     /// 
     /// </summary>
     /// <returns></returns>
-    static private Dictionary<PluginEntry, int> HeuristicNpcMatcher(INpcGetter npc, List<PluginEntry> plugins, 
+    static private Dictionary<PluginEntry, double> HeuristicNpcMatcher(INpcGetter npc, List<PluginEntry> plugins, 
         ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
     {
-        Dictionary<PluginEntry, int> candidates = new();
+        Dictionary<PluginEntry, double> candidates = new();
         string description = Naming.NpcFB(npc);
 
         var clicker = DictionaryIncrementer(candidates);
@@ -136,7 +136,7 @@ sealed public class Heuristics
             plugins
                 .Where(plugin => !plugin.Voice.IsNull)
                 .Where(plugin => plugin.Voice.Equals(npc.Voice))
-                .ForEach(clicker(10));
+                .ForEach(clicker(10.0));
         }
 
         // Match the creature's editorId, internalName, and race internalName to the names of plugins.
@@ -155,7 +155,8 @@ sealed public class Heuristics
         foreach (var plugin in plugins)
         {
             int intersection = plugin.Tokens.Intersect(npcTokens).Count();
-            if (intersection > 0) clicker(intersection)(plugin);
+            int surplus = 1 + plugin.Tokens.Except(npcTokens).Count();
+            if (intersection > 0) clicker((double)intersection / (double)surplus)(plugin);
         }
 
         // @TODO Add matching for distinctive keywords?
@@ -173,44 +174,46 @@ sealed public class Heuristics
     }
 
 
-    static public bool IsCreature(INpcGetter npc, bool debuggingMode = false)
+    static public bool IsCreature(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
     {
-        var deathItem = npc.DeathItem;
-        var edid = npc.EditorID;
+        PassBlockLists passBlock = new(linkCache, debuggingMode);
 
-        if (edid is not null && HasForbiddenEditorId(edid))
+        var deathItem = npc.DeathItem;
+        var edid = npc.EditorID;       
+
+        if (edid is not null && PassBlockLists.HasForbiddenEditorId(edid))
         {
-            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden editorId {edid}");
+            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden editorId {edid}");
             return false;
-        }
-        else if (deathItem == null)
+        } 
+        else if (deathItem is null)
         {
             //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- no DeathItem");
             return false;
         }
-        else if (HasForbiddenDeathItem(deathItem))
+        else if (passBlock.HasForbiddenDeathItem(npc))
         {
-            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden DeathItem {deathItem}");
+            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden DeathItem {Naming.DeathItemFB(deathItem.Resolve(linkCache))}");
             return false;
         }
-        else if (HasForbiddenKeyword(npc))
+        else if (passBlock.HasForbiddenKeyword(npc))
         {
-            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden DeathItem {GetForbiddenKeyword(npc)}");
+            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden Keyword {npc.Keywords.Pretty()}");
             return false;
         }
-        else if (HasForbiddenFaction(npc))
+        else if (passBlock.HasForbiddenFaction(npc))
         {
-            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden DeathItem {GetForbiddenFaction(npc)}");
+            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden Faction {npc.Factions.Select(f => f.Faction.Resolve(linkCache)).Pretty()}");
             return false;
         }
-        else if (!HasAllowedVoice(npc))
+        else if (!passBlock.HasAllowedVoice(npc))
         {
-            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- voice not allowed ({npc.Voice})");
+            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- voice not allowed ({npc.Voice})");
             return false;
         }
-        else if (HasForbiddenFlag(npc))
+        else if (PassBlockLists.HasForbiddenFlag(npc))
         {
-            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden flag {GetForbiddenFlag(npc)}");
+            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden flag {npc.Configuration.Flags.Pretty()}");
             return false;
         }
         else if (npc.ActorEffect?.Contains(Skyrim.Spell.GhostAbility) ?? false)
@@ -221,30 +224,53 @@ sealed public class Heuristics
         else return true;
     }
 
-    static private bool HasForbiddenEditorId(string editorId) => SpecialCases.Lists.ForbiddenNpcEditorIds.Any(edid => edid.EqualsIgnoreCase(editorId));
+    record PassBlockLists(ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache, bool DebuggingMode)
+    {
+        internal static bool HasForbiddenEditorId(string editorId) => SpecialCases.Lists.ForbiddenNpcEditorIds.Any(edid => edid.EqualsIgnoreCase(editorId));
 
-    static private bool HasForbiddenFaction(INpcGetter npc) =>
-        npc.Factions.Any(placement => SpecialCases.Lists.ForbiddenFactions.Contains(placement.Faction));
+        internal bool HasForbiddenFaction(INpcGetter npc)
+        {
+            if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Factions))
+            {
+                npc.Template.TryResolve(LinkCache, out var spawner);
+                if (spawner is not null && spawner is INpcGetter template) return HasForbiddenFaction(template);
+            }
+            return npc.Factions.Any(placement => SpecialCases.Lists.ForbiddenFactions.Contains(placement.Faction));
+        }
 
-    static private bool HasForbiddenKeyword(INpcGetter npc) =>
-        npc.Keywords?.Any(keyword => SpecialCases.Lists.ForbiddenKeywords.Contains(keyword)) ?? false;
+        internal bool HasForbiddenKeyword(INpcGetter npc)
+        {
+            if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Keywords))
+            {
+                npc.Template.TryResolve(LinkCache, out var spawner);
+                if (spawner is not null && spawner is INpcGetter template) return HasForbiddenKeyword(template);
+            }
+            return npc.Keywords?.Any(keyword => SpecialCases.Lists.ForbiddenKeywords.Contains(keyword)) ?? false;
+        }
 
-    static private bool HasAllowedVoice(INpcGetter npc) => SpecialCases.Lists.AllowedVoices.Contains(npc.Voice);
+        internal bool HasAllowedVoice(INpcGetter npc)
+        {
+            if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
+            {
+                npc.Template.TryResolve(LinkCache, out var spawner);
+                if (spawner is not null && spawner is INpcGetter template) return HasAllowedVoice(template);
+            }
+            return SpecialCases.Lists.AllowedVoices.Contains(npc.Voice);
+        }
 
-    static private bool HasForbiddenDeathItem(IFormLinkGetter<ILeveledItemGetter> deathItem) => SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem);
+        internal bool HasForbiddenDeathItem(INpcGetter npc)
+        {
+            if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
+            {
+                npc.Template.TryResolve(LinkCache, out var spawner);
+                if (spawner is not null && spawner is INpcGetter template) return HasForbiddenDeathItem(template);
+            }
+            return npc.DeathItem is DeathItemGetter deathItem && SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem);
+        }
 
-    static private bool HasForbiddenFlag(INpcGetter npc) => (SpecialCases.Lists.ForbiddenFlags & npc.Configuration.Flags) != 0;
+        internal static bool HasForbiddenFlag(INpcGetter npc) => (SpecialCases.Lists.ForbiddenFlags & npc.Configuration.Flags) != 0;
 
-    static private string GetForbiddenEditorId(string editorId) 
-        => SpecialCases.Lists.ForbiddenNpcEditorIds.Where(edid => edid.EqualsIgnoreCase(editorId)).FirstOrDefault("");
-
-    static private IRankPlacementGetter? GetForbiddenFaction(INpcGetter npc) =>
-        npc.Factions.Where(placement => SpecialCases.Lists.ForbiddenFactions.Contains(placement.Faction)).First();
-
-    static private IFormLinkGetter<IKeywordGetter> GetForbiddenKeyword(INpcGetter npc) =>
-        npc.Keywords?.Where(keyword => SpecialCases.Lists.ForbiddenKeywords.Contains(keyword)).First() ?? new FormLink<IKeywordGetter>();
-
-    static private NpcConfiguration.Flag GetForbiddenFlag(INpcGetter npc) => (SpecialCases.Lists.ForbiddenFlags & npc.Configuration.Flags);
+    }
 
     /// <summary>
     /// This thing is ridiculous but convenient. Can you say "Currying"?
@@ -253,8 +279,8 @@ sealed public class Heuristics
     /// increases the value associated with a key by the amount of the number.
     /// </summary>
     /// 
-    static private Func<int, Action<T>> DictionaryIncrementer<T>(Dictionary<T, int> dict) where T : notnull
-        => val => plugin => { if (val > 0) dict[plugin] = dict.GetValueOrDefault(plugin, 0) + val; };
+    static private Func<double, Action<T>> DictionaryIncrementer<T>(Dictionary<T, double> dict) where T : notnull
+        => val => plugin => { if (val > 0.0) dict[plugin] = dict.GetValueOrDefault(plugin, 0.0) + val; };
 
     /// <summary>
     /// Matcher for plugin names. 
