@@ -64,7 +64,7 @@ sealed public class Heuristics
                 // Try as hard as possible to give the DeathItemSelection a internalName. Fallbacks on fallbacks.
                 if (!indexer.ContainsKey(deathItem))
                 {
-                    indexer[deathItem] = new DeathItemSelection() { DeathItem = deathItem.FormKey, CreatureEntryName = DeathItemNamer(deathItem) };
+                    indexer[deathItem] = new DeathItemSelection() { DeathItem = deathItem.FormKey, CreatureEntryName = Naming.DeathItemFB(deathItem) };
                     selectionWeights[indexer[deathItem]] = new();
                 }
 
@@ -98,14 +98,14 @@ sealed public class Heuristics
 
                     options.Sort((a, b) => itemWeights[b].CompareTo(itemWeights[a]));
                     selection.Selection = options.First();
+
                     if (debuggingMode && !selection.DeathItem.IsNull)
                     {
                         selection.DeathItem.ToLink<DeathItemGetter>().TryResolve(linkCache, out var deathItem);
                         Write.Action(2, $"{deathItem?.EditorID ?? deathItem?.ToString() ?? "NO DEATH ITEM"}: heuristic selected {selection.Selection?.SortName}.");
                         Write.Action(3, $"From: {itemWeights.Pretty()}");
-
-                        var npcNames = selection.AssignedNPCs.Take(6).Select(n => NpcNamer(n)).ToArray().Pretty();
-                        Write.Action(3, $"Archetypes: {npcNames}");
+                        Write.Action(2, $"Archetypes: ");
+                        foreach (var npc in selection.AssignedNPCs.Take(6)) Write.Action(3, Naming.NpcFB(npc));
                     }
                 }
             }
@@ -126,7 +126,7 @@ sealed public class Heuristics
         ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
     {
         Dictionary<PluginEntry, int> candidates = new();
-        string name = NpcNamer(npc);
+        string description = Naming.NpcFB(npc);
 
         var clicker = DictionaryIncrementer(candidates);
 
@@ -151,7 +151,6 @@ sealed public class Heuristics
 
         // Try this tokenizing matcher to break ties.
         var npcTokens = Tokenizer.Tokenize(new List<string?>() { npc.Name?.ToString(), npc.EditorID, race.Name?.ToString(), race.EditorID, deathItem?.EditorID });
-        if (debuggingMode) Write.Action(2, $"Tokens for {name} ({npc.EditorID}): {npcTokens.Pretty()}");
 
         foreach (var plugin in plugins)
         {
@@ -164,7 +163,9 @@ sealed public class Heuristics
 
         if (debuggingMode)
         {
-            Write.Success(2, $"Candidates for {name}:");
+            Write.Action(2, $"Tokens for {description}:");
+            Write.Action(3, npcTokens.Pretty());
+            Write.Success(2, $"Candidates for {description}:");
             Write.Success(3, candidates.Pretty());
         }
 
@@ -179,42 +180,42 @@ sealed public class Heuristics
 
         if (edid is not null && HasForbiddenEditorId(edid))
         {
-            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden editorId {edid}");
+            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden editorId {edid}");
             return false;
         }
         else if (deathItem == null)
         {
-            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- no DeathItem");
+            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- no DeathItem");
             return false;
         }
         else if (HasForbiddenDeathItem(deathItem))
         {
-            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden DeathItem {deathItem}");
+            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden DeathItem {deathItem}");
             return false;
         }
         else if (HasForbiddenKeyword(npc))
         {
-            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden DeathItem {GetForbiddenKeyword(npc)}");
+            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden DeathItem {GetForbiddenKeyword(npc)}");
             return false;
         }
         else if (HasForbiddenFaction(npc))
         {
-            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden DeathItem {GetForbiddenFaction(npc)}");
+            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden DeathItem {GetForbiddenFaction(npc)}");
             return false;
         }
         else if (!HasAllowedVoice(npc))
         {
-            //if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- voice not allowed ({npc.Voice})");
+            //if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- voice not allowed ({npc.Voice})");
             return false;
         }
         else if (HasForbiddenFlag(npc))
         {
-            if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden flag {GetForbiddenFlag(npc)}");
+            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden flag {GetForbiddenFlag(npc)}");
             return false;
         }
         else if (npc.ActorEffect?.Contains(Skyrim.Spell.GhostAbility) ?? false)
         {
-            if (debuggingMode) Write.Fail(3, $"Skipping {npc.EditorID} -- forbidden NO GHOSTS");
+            if (debuggingMode) Write.Fail(2, $"Skipping {npc.EditorID} -- forbidden NO GHOSTS");
             return false;
         }
         else return true;
@@ -265,11 +266,5 @@ sealed public class Heuristics
     /// <returns>The matcher.</returns>
     /// 
     static private Func<PluginEntry, bool> PluginNameMatch(string str) => plugin => str.ContainsInsensitive(plugin.Name);
-
-    static private string DeathItemNamer(DeathItemGetter deathItem)
-        => deathItem.EditorID ?? /*deathItem.ToStandardizedIdentifier().ToString() ??*/ deathItem.FormKey.ToString();
-
-    static private string NpcNamer(INpcGetter npc)
-        => npc.Name?.ToString() ?? npc.EditorID ?? /*npc.ToStandardizedIdentifier().ToString() ??*/ npc.FormKey.ToString();
 
 }

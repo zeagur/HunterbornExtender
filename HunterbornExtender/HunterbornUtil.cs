@@ -23,6 +23,44 @@ using System.Reflection;
 
 namespace HunterbornExtender
 {
+    /// <summary>
+    /// Functions for naming things.
+    /// An "FB" suffix means it has fallbacks to ensure that it doesn't return a null or blank string.
+    /// </summary>
+    public static class Naming
+    {
+        /// <summary>
+        /// Gets the sort name or proper name of a plugin (in that order) depending on which is set.
+        /// </summary>
+        /// 
+        static public string PluginNameFB(PluginEntry plugin)
+        {
+            if (!plugin.SortName.IsNullOrWhitespace()) return plugin.SortName;
+            else if (!plugin.ProperName.IsNullOrWhitespace()) return plugin.ProperName;
+            else return plugin.Name;
+        }
+
+        /// <summary>
+        /// Returns the editorID, StandardizedIdentifier, or FormKey (in that order).
+        /// </summary>
+        /// 
+        static public string DeathItemFB(DeathItemGetter deathItem)
+            => deathItem.EditorID ?? deathItem.ToStandardizedIdentifier().ToString() ?? deathItem.FormKey.ToString();
+
+        /// <summary>
+        /// Returns the editorID, StandardizedIdentifier, or FormKey (in that order).
+        /// </summary>
+        /// 
+        static public string NpcFB(INpcGetter npc)
+        {
+            if (npc.Name is not null && npc.EditorID is not null)
+                return $"{npc.Name} ({npc.EditorID})";
+            else
+                return npc.Name?.ToString() ?? npc.EditorID ?? npc.ToStandardizedIdentifier().ToString() ?? npc.FormKey.ToString();
+        }
+
+    }
+
     public static class ScriptUtil
     {
         /// <summary>

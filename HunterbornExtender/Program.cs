@@ -345,16 +345,11 @@ sealed public class Program
         var deathItem = selection.DeathItem.ToLink<DeathItemGetter>().Resolve(LinkCache);
         var internalName = CreateInternalName(deathItem);
 
-        if (selection.AssignedNPCs.Count == 1 && selection.AssignedNPCs.First() is INpcGetter creature)
-        {
-            var creatureName = creature.Name?.ToString() ?? internalName;
-            return new(deathItem, internalName, creatureName, prototype, prototype.Type == EntryType.Animal, prototype.Type == EntryType.Monster);
-        }
-        else
-        {
-            var descriptiveName = $"{prototype.ProperName} - {internalName}";
-            return new(deathItem, internalName, descriptiveName, prototype, prototype.Type == EntryType.Animal, prototype.Type == EntryType.Monster);
-        }
+        var descriptiveName = (selection.AssignedNPCs.Count == 1 && selection.AssignedNPCs.First() is INpcGetter creature)
+            ? $"{Naming.PluginNameFB(prototype)} - {creature.Name?.ToString() ?? internalName}"
+            : $"{Naming.PluginNameFB(prototype)} - {internalName}";
+
+        return new(deathItem, internalName, descriptiveName, prototype, prototype.Type == EntryType.Animal, prototype.Type == EntryType.Monster);
     }
 
     /// <summary>

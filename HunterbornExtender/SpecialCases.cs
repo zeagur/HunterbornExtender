@@ -116,16 +116,16 @@ sealed public class SpecialCases
         /// 
         /// </summary>
         static readonly public HashSet<IFormLinkGetter<IFactionGetter>> ForbiddenFactions = new() {
-        Dawnguard.Faction.DLC1VampireFaction,
-        Dragonborn.Faction.DLC2AshSpawnFaction,
-        Skyrim.Faction.DragonPriestFaction,
-        Skyrim.Faction.DraugrFaction,
-        Skyrim.Faction.DwarvenAutomatonFaction,
-        Skyrim.Faction.IceWraithFaction,
-        Dawnguard.Faction.SoulCairnFaction,
-        Skyrim.Faction.VampireFaction,
-        Skyrim.Faction.WispFaction,
-    };
+            Dawnguard.Faction.DLC1VampireFaction,
+            Dragonborn.Faction.DLC2AshSpawnFaction,
+            Skyrim.Faction.DragonPriestFaction,
+            Skyrim.Faction.DraugrFaction,
+            Skyrim.Faction.DwarvenAutomatonFaction,
+            Skyrim.Faction.IceWraithFaction,
+            Dawnguard.Faction.SoulCairnFaction,
+            Skyrim.Faction.VampireFaction,
+            Skyrim.Faction.WispFaction,
+        };
 
         /// <summary>
         /// To be recognized as a creature by the patcher, an Npc must not have any of these keywords.
@@ -134,9 +134,9 @@ sealed public class SpecialCases
         /// 
         /// </summary>
         static readonly public HashSet<IFormLinkGetter<IKeywordGetter>> ForbiddenKeywords = new() {
-        Skyrim.Keyword.ActorTypeGhost,
-        Skyrim.Keyword.ActorTypeNPC
-    };
+            Skyrim.Keyword.ActorTypeGhost,
+            Skyrim.Keyword.ActorTypeNPC
+        };
 
         /// <summary>
         /// Voices of creatures. To be recognized as a creature by the patcher, an Npc must have a voiceType from
@@ -148,33 +148,33 @@ sealed public class SpecialCases
         /// 
         /// </summary>
         static readonly public HashSet<IFormLinkGetter<IVoiceTypeGetter>> AllowedVoices = new() {
-        Skyrim.VoiceType.CrBearVoice,
-        Skyrim.VoiceType.CrChickenVoice,
-        Skyrim.VoiceType.CrCowVoice,
-        Skyrim.VoiceType.CrDeerVoice,
-        Skyrim.VoiceType.CrDogVoice,
-        Dawnguard.VoiceType.CrDogHusky,
-        Skyrim.VoiceType.CrFoxVoice,
-        Skyrim.VoiceType.CrGoatVoice,
-        Skyrim.VoiceType.CrHareVoice,
-        Skyrim.VoiceType.CrHorkerVoice,
-        Skyrim.VoiceType.CrHorseVoice,
-        Skyrim.VoiceType.CrMammothVoice,
-        Skyrim.VoiceType.CrMudcrabVoice,
-        Skyrim.VoiceType.CrSabreCatVoice,
-        Skyrim.VoiceType.CrSkeeverVoice,
-        Skyrim.VoiceType.CrSlaughterfishVoice,
-        Skyrim.VoiceType.CrWolfVoice,
-        Dragonborn.VoiceType.DLC2CrBristlebackVoice,
-        Skyrim.VoiceType.CrChaurusVoice,
-        Skyrim.VoiceType.CrFrostbiteSpiderVoice,
-        Skyrim.VoiceType.CrFrostbiteSpiderGiantVoice,
-        Skyrim.VoiceType.CrSprigganVoice,
-        Skyrim.VoiceType.CrTrollVoice,
-        Skyrim.VoiceType.CrWerewolfVoice,
-        Skyrim.VoiceType.CrDragonVoice,
-        Dawnguard.VoiceType.CrChaurusInsectVoice
-    };
+            Skyrim.VoiceType.CrBearVoice,
+            Skyrim.VoiceType.CrChickenVoice,
+            Skyrim.VoiceType.CrCowVoice,
+            Skyrim.VoiceType.CrDeerVoice,
+            Skyrim.VoiceType.CrDogVoice,
+            Dawnguard.VoiceType.CrDogHusky,
+            Skyrim.VoiceType.CrFoxVoice,
+            Skyrim.VoiceType.CrGoatVoice,
+            Skyrim.VoiceType.CrHareVoice,
+            Skyrim.VoiceType.CrHorkerVoice,
+            Skyrim.VoiceType.CrHorseVoice,
+            Skyrim.VoiceType.CrMammothVoice,
+            Skyrim.VoiceType.CrMudcrabVoice,
+            Skyrim.VoiceType.CrSabreCatVoice,
+            Skyrim.VoiceType.CrSkeeverVoice,
+            Skyrim.VoiceType.CrSlaughterfishVoice,
+            Skyrim.VoiceType.CrWolfVoice,
+            Dragonborn.VoiceType.DLC2CrBristlebackVoice,
+            Skyrim.VoiceType.CrChaurusVoice,
+            Skyrim.VoiceType.CrFrostbiteSpiderVoice,
+            Skyrim.VoiceType.CrFrostbiteSpiderGiantVoice,
+            Skyrim.VoiceType.CrSprigganVoice,
+            Skyrim.VoiceType.CrTrollVoice,
+            Skyrim.VoiceType.CrWerewolfVoice,
+            Skyrim.VoiceType.CrDragonVoice,
+            Dawnguard.VoiceType.CrChaurusInsectVoice
+        };
 
         /// <summary>
         /// A list of EditorIDs of creatures that should never be processed.
@@ -205,14 +205,14 @@ sealed public class SpecialCases
         /// 
         /// </summary>
         static readonly public HashSet<FormLink<DeathItemGetter>> ForbiddenDeathItems = new() {
-        Skyrim.LeveledItem.DeathItemDragonBonesOnly,
-        Skyrim.LeveledItem.DeathItemVampire,
-        Skyrim.LeveledItem.DeathItemForsworn,
-        Skyrim.LeveledItem.DeathItemGhost,
-        Dawnguard.LeveledItem.DLC1DeathItemDragon06,
-        Dawnguard.LeveledItem.DLC1DeathItemDragon07,
-        new(new FormKey(new("Skyrim Immersive Creatures Special Edition", type : ModType.Plugin), 0x11B217))
-    };
+            Skyrim.LeveledItem.DeathItemDragonBonesOnly,
+            Skyrim.LeveledItem.DeathItemVampire,
+            Skyrim.LeveledItem.DeathItemForsworn,
+            Skyrim.LeveledItem.DeathItemGhost,
+            Dawnguard.LeveledItem.DLC1DeathItemDragon06,
+            Dawnguard.LeveledItem.DLC1DeathItemDragon07,
+            new(new FormKey(new("Skyrim Immersive Creatures Special Edition", type : ModType.Plugin), 0x11B217))
+        };
 
     }
 }

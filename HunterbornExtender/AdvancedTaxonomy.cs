@@ -16,9 +16,9 @@ internal sealed class AdvancedTaxonomy
     public void AddCreature(PluginEntry plugin)
     {
         if (plugin.Type == EntryType.Animal)
-            AnimalNames.Add(plugin.SortName);
+            AnimalNames.Add(Naming.PluginNameFB(plugin));
         else
-            MonsterNames.Add(plugin.SortName);
+            MonsterNames.Add(Naming.PluginNameFB(plugin));
     }
 
     public void AddCreature(Program.CreatureData creature)
@@ -34,7 +34,9 @@ internal sealed class AdvancedTaxonomy
         var animalMapping = new List<int>(Enumerable.Range(0, AnimalNames.Count));
         var monsterMapping = new List<int>(Enumerable.Range(0, MonsterNames.Count));
         QuickCoSort(AnimalNames, animalMapping, 0, AnimalNames.Count - 1);
+        Write.Success(1, "Co-sorted animal names.");
         QuickCoSort(MonsterNames, monsterMapping, 0, MonsterNames.Count - 1);
+        Write.Success(1, "Co-sorted monster names.");
 
         linkCache.TryResolve<IMagicEffectGetter>(ADVANCED_TAXONOMY, out var baseRecord);
         if (baseRecord is not null && patchMod.MagicEffects.GetOrAddAsOverride(baseRecord) is MagicEffect advancedTaxonomy)
@@ -44,18 +46,23 @@ internal sealed class AdvancedTaxonomy
             var propertyAnimalMapping = ScriptUtil.GetProperty<ScriptIntListProperty>(advancedTaxonomy, "_DS_HB_mgef_AdvancedTaxonomy", "animalMapping");
             var propertyMonsterMapping = ScriptUtil.GetProperty<ScriptIntListProperty>(advancedTaxonomy, "_DS_HB_mgef_AdvancedTaxonomy", "monsterMapping");
             var propertyInitialized = ScriptUtil.GetProperty<ScriptBoolProperty>(advancedTaxonomy, "_DS_HB_mgef_AdvancedTaxonomy", "initialized");
+            Write.Success(1, "Loaded script properties.");
 
             propertyAnimalNames.Data.Clear();
             propertyAnimalNames.Data.AddRange(AnimalNames);
+            Write.Success(1, "Added animal names.");
 
             propertyMonsterNames.Data.Clear();
             propertyMonsterNames.Data.AddRange(MonsterNames);
+            Write.Success(1, "Added monster names.");
 
             propertyAnimalMapping.Data.Clear();
             propertyAnimalMapping.Data.AddRange(animalMapping);
+            Write.Success(1, "Added animal sorting.");
 
             propertyMonsterMapping.Data.Clear();
             propertyMonsterMapping.Data.AddRange(monsterMapping);
+            Write.Success(1, "Added monster sorting.");
 
             propertyInitialized.Data = true;
         }
