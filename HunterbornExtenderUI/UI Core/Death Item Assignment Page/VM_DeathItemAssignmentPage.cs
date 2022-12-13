@@ -40,13 +40,14 @@ sealed public class VM_DeathItemAssignmentPage : ViewModel
     public void Initialize()
     {
         ScanForPluginEntries();
+        RaceLinkNamer.State = _stateProvider;
         var deathItems = Heuristics.MakeHeuristicSelections(_stateProvider.LoadOrder.PriorityOrder.OnlyEnabledAndExisting().WinningOverrides<INpcGetter>(), _pluginEntries.ToList(), _settingsProvider.PatcherSettings.DeathItemSelections, _stateProvider.LinkCache);
-        DeathItemSelectionList.DeathItems.SetTo(_vmDeathItemLoader.GetDeathItemVMs(deathItems).Where(x => x.DeathItemList != null));
+        DeathItemSelectionList.DeathItems.SetTo(_vmDeathItemLoader.GetDeathItemVMs(deathItems).Where(x => x.DeathItem != null));
     }
         
     private void ScanForPluginEntries()
     {
-        _pluginEntries = new(RecreateInternal.RecreateInternalPluginsUI(_stateProvider.LinkCache));
+        _pluginEntries = new(RecreateInternal.RecreateInternalPluginsUI(_stateProvider.LinkCache, true));
         foreach (var pluginEntry in _pluginVMList.Plugins.SelectMany(x => x.Entries).Select(x => x.DumpToModel()))
         {
             _pluginEntries.Add(pluginEntry);

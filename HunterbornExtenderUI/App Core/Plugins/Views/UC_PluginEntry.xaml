@@ -38,23 +38,23 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" ToolTip="The name of this creature"/>
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Internal Name" ToolTip="The creature's internal name is used for the EditorIDs of Forms."/>
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" ToolTip="The creature's internal name: used for the editorIDs of Forms."/>
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Proper Name"/>
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ProperName, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Display Name" ToolTip="The creature's display name is used for messages and prompts."/>
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ProperName, UpdateSourceTrigger=PropertyChanged}" ToolTip="The creature's display name: used for messages and prompts."/>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Sort Name"/>
         <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SortName, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="Type"/>
-        <ComboBox Grid.Row="3" Grid.Column="1" Width="auto" HorizontalAlignment="Left" SelectedValue="{Binding Type}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type local:EntryTypeClone}}}" IsSynchronizedWithCurrentItem="True"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Type" ToolTip="The creature's sorting name is used to group similar creatures in lists."/>
+        <ComboBox Grid.Row="3" Grid.Column="1" Width="auto" HorizontalAlignment="Left" SelectedValue="{Binding Type}" ItemsSource="{Binding Source={local:EnumBindingSource {x:Type local:EntryTypeClone}}}" IsSynchronizedWithCurrentItem="True" ToolTip="The creature's sorting name is used to group similar creatures in lists."/>
 
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="Toggle"/>
-        <plugins:FormKeyPicker Grid.Row="4" Grid.Column="1" FormKey="{Binding Toggle}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding AnimalSwitchType}" MaxHeight="250"/>
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Toggle" ToolTip="(Optional) A GlobalVariable that controls whether Hunterborn processes this type of creature."/>
+        <plugins:FormKeyPicker Grid.Row="4" Grid.Column="1" FormKey="{Binding Toggle}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding AnimalSwitchType}" MaxHeight="250" ToolTip="(Optional) A GlobalVariable that controls whether Hunterborn processes this type of creature."/>
 
-        <TextBlock Grid.Row="5" Grid.Column="0" Text="Carcass Message Box"/>
-        <plugins:FormKeyPicker Grid.Row="5" Grid.Column="1" FormKey="{Binding CarcassMessageBox}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding CarcassMessageBoxType}" MaxHeight="250"/>
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Carcass Message Box" ToolTip="(Optional) A MessageBox to display when activating the carcass of this of creature."/>
+        <plugins:FormKeyPicker Grid.Row="5" Grid.Column="1" FormKey="{Binding CarcassMessageBox}" LinkCache="{Binding LinkCache}" ScopedTypes="{Binding CarcassMessageBoxType}" MaxHeight="250" ToolTip="(Optional) A MessageBox to display when activating the carcass of this of creature."/>
 
         <TextBlock Grid.Row="6" Grid.Column="0" Text="Carcass Size"/>
         <xctk:IntegerUpDown Grid.Row="6" Grid.Column="1" Value="{Binding CarcassSize}" Foreground="White" MinWidth="25"/>
