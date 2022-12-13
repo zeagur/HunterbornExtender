@@ -284,7 +284,7 @@ namespace HunterbornExtender
     /// <summary>
     /// Thrown to indicate that a problem occurred during Heuristics.
     /// </summary>
-    sealed class HeuristicsError : Exception
+    public sealed class HeuristicsError : Exception
     {
         public HeuristicsError(Exception cause) : base("An error occurred during heuristic selection.", cause) { }
     }
@@ -292,7 +292,7 @@ namespace HunterbornExtender
     /// <summary>
     /// Thrown to indicate that a problem occurred during internal plugin recreation.
     /// </summary>
-    sealed class RecreationError : Exception
+    public sealed class RecreationError : Exception
     {
         public RecreationError(Exception cause) : base("An error occurred while recreating internal plugins.", cause) { }
     }

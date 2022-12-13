@@ -12,6 +12,7 @@ using HunterbornExtender;
 using Mutagen.Bethesda.Plugins.Cache;
 using static System.Diagnostics.DebuggableAttribute;
 using System.Collections.Generic;
+using System.Windows;
 
 namespace HunterbornExtenderUI;
 
@@ -39,15 +40,29 @@ sealed public class VM_DeathItemAssignmentPage : ViewModel
 
     public void Initialize()
     {
-        ScanForPluginEntries();
-        RaceLinkNamer.State = _stateProvider;
-        var deathItems = Heuristics.MakeHeuristicSelections(_stateProvider.LoadOrder.PriorityOrder.OnlyEnabledAndExisting().WinningOverrides<INpcGetter>(), _pluginEntries.ToList(), _settingsProvider.PatcherSettings.DeathItemSelections, _stateProvider.LinkCache);
-        DeathItemSelectionList.DeathItems.SetTo(_vmDeathItemLoader.GetDeathItemVMs(deathItems).Where(x => x.DeathItem != null));
+        try
+        {
+            ScanForPluginEntries();
+            RaceLinkNamer.State = _stateProvider;
+            var deathItems = Heuristics.MakeHeuristicSelections(_stateProvider.LoadOrder.PriorityOrder.OnlyEnabledAndExisting().WinningOverrides<INpcGetter>(), _pluginEntries.ToList(), _settingsProvider.PatcherSettings.DeathItemSelections, _stateProvider.LinkCache);
+            DeathItemSelectionList.DeathItems.SetTo(_vmDeathItemLoader.GetDeathItemVMs(deathItems).Where(x => x.DeathItem != null));
+        }
+        catch (Exception ex) when (ex is RecreationError || ex is HeuristicsError)
+        {
+            MessageBox.Show($"{ex.Message}\n{ex.InnerException?.Message}", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+            Console.WriteLine(ex.ToString());
+        }
+        catch (HeuristicsError ex)
+        {
+            MessageBox.Show($"{ex.Message}", "Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+            Console.WriteLine(ex.ToString());
+        }
     }
         
     private void ScanForPluginEntries()
     {
         _pluginEntries = new(RecreateInternal.RecreateInternalPluginsUI(_stateProvider.LinkCache, true));
+
         foreach (var pluginEntry in _pluginVMList.Plugins.SelectMany(x => x.Entries).Select(x => x.DumpToModel()))
         {
             _pluginEntries.Add(pluginEntry);
