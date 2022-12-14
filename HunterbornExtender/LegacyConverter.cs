@@ -7,34 +7,74 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Plugins.Exceptions;
 using HunterbornExtender.Settings;
 using Mutagen.Bethesda.Plugins.Cache;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using DynamicData;
+using System.IO.Abstractions;
 
 namespace HunterbornExtender
 {
     sealed public class LegacyConverter
     {
-        static public List<AddonPluginEntry> ImportAndConvert(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+        static public List<AddonPluginEntry> ImportAndConvert(string pluginsPath, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
         {
-            // LOAD JSONS
-            Console.WriteLine($"\tCurrent directory: {Directory.GetCurrentDirectory()}");
-            Directory.SetCurrentDirectory("c:\\users\\Mark\\source\\repos\\HunterbornExtender\\HunterbornExtender\\Zedit");
-            Console.WriteLine($"\tChanged directory to: {Directory.GetCurrentDirectory()}");
+            List<string> directoriesToTry = new();
 
+            if (Directory.Exists(pluginsPath))
+            {
+                Write.Success(1, $"PluginsPath parameter: {pluginsPath} (EXISTS)");
+                directoriesToTry.Add(pluginsPath);
+            }
+            else Write.Action(1, $"PluginsPath parameter: {pluginsPath} (MISSING))");
+
+            string synthesisSubdirectory = $"{Directory.GetCurrentDirectory()}\\Data\\Skyrim Special Edition\\HunterbornExtender";
+            if (Directory.Exists(synthesisSubdirectory))
+            {
+                Write.Success(1, $"Synthesis subdirectory: {synthesisSubdirectory} (EXISTS)");
+                directoriesToTry.Add(pluginsPath);
+            }
+            else Write.Action(1, $"Synthesis subdirectory: {synthesisSubdirectory} (MISSING))");
+
+            string projectSubdirectory = $"{Directory.GetCurrentDirectory()}\\..\\..\\..\\zedit";
+            if (Directory.Exists(projectSubdirectory))
+            {
+                Write.Success(1, $"VS project subdirectory: {projectSubdirectory} (EXISTS)");
+                directoriesToTry.Add(pluginsPath);
+            }
+            else Write.Action(1, $"VS project subdirectory: {projectSubdirectory} (MISSING))");
+
+            HashSet<string> previousFilenames = new();
             List<AddonPluginEntry> plugins = new();
             var serializationOptions = new JsonSerializerOptions { WriteIndented = true };
 
-            foreach (var fileName in Directory.EnumerateFiles(".", "*.json"))
+            foreach (var path in directoriesToTry)
             {
-                try
+                if (Directory.Exists(path))
                 {
-                    Console.WriteLine($"\tReading legacy zedit plugin set: {fileName}");
-                    var filePlugins = ReadFile(fileName, linkCache);
-                    plugins.AddRange(filePlugins);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                    Console.WriteLine(ex.StackTrace);
-                    break;
+                    Directory.SetCurrentDirectory(path);
+                    Write.Action(1, $"Changed directory to: {Directory.GetCurrentDirectory()}");
+                    var filenames = Directory.EnumerateFiles(path, "*.json").ToList();
+                    if (filenames.Count > 0) Write.Success(1, $"Found {filenames.Count} json files.");
+                    else Write.Fail(1, $"No json files found.");
+
+                    foreach (var filename in filenames)
+                    {
+                        if (filename is not null && !previousFilenames.Contains(filename))
+                        {
+                            try
+                            {
+                                var fullPath = filename;
+                                Write.Action(1, $"Reading legacy zedit plugin set: {fullPath}");
+                                var filePlugins = ReadFile(fullPath, linkCache);
+                                plugins.AddRange(filePlugins);
+                                previousFilenames.Add(filename);
+                            }
+                            catch (Exception ex)
+                            {
+                                Write.Fail(0, ex.ToString());
+                                //break;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -44,12 +84,12 @@ namespace HunterbornExtender
         static List<AddonPluginEntry> ReadFile(String fileName, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
         {
             string jsonString = File.ReadAllText(fileName);
-            Console.WriteLine($"\t\t o Successfully read {fileName}");
+            Write.Success(2, $"Successfully read {fileName}");
 
             var jsonLegacy = JsonSerializer.Deserialize<List<HBJsonDataLegacy>>(jsonString);
             if (jsonLegacy == null)
             {
-                Console.WriteLine($"\t\t x Deserialization failed.");
+                Write.Fail(2, $"Deserialization failed.");
                 return new();
             }
 
@@ -60,36 +100,28 @@ namespace HunterbornExtender
                 {
                     var plugin = legacy.ToPlugin(linkCache);
                     plugins.Add(plugin);
-                    Console.WriteLine($"\t\t\t o Added plugin for {plugin.Name}.");
-    
-                    if (legacy.name.ToLower().ContainsInsensitive("hagraven"))
-                    {
-                        TestImportConversion(legacy, plugin);
-                    }
+                    Write.Success(3, $"Added plugin for {plugin.Name}.");
+   
+                    //if (legacy.name.ToLower().ContainsInsensitive("hagraven")) TestImportConversion(legacy, plugin);
                 }
                 catch (MissingRecordException ex)
                 {
-                    Console.WriteLine($"\t\t\t x Conversion of [{ex.EditorID}] from \"{legacy.name}\" in {fileName} to Mutagen failed -- record missing.");
-                    //Console.WriteLine(ex.Message);
-                    //Console.WriteLine(ex.StackTrace);
+                    Write.Fail(3, $"Conversion of [{ex.EditorID}] from \"{legacy.name}\" in {fileName} to Mutagen failed -- record missing.");
                     continue;
                 }
                 catch (RecordException ex)
                 {
-                    Console.WriteLine("========================");
-                    Console.WriteLine($"\t\t\t x Conversion of [{ex.EditorID}] from \"{legacy.name}\" in {fileName} to Mutagen failed.");
-                    Console.WriteLine(ex.Message);
-                    Console.WriteLine(ex.StackTrace);
-                    //Console.WriteLine(JSONhandler<HBJsonDataLegacy>.Serialize(jsonLegacy[0]));
-                    Console.WriteLine("========================");
+                    Write.Divider(0);
+                    Write.Fail(3, $"Conversion of [{ex.EditorID}] from \"{legacy.name}\" in {fileName} to Mutagen failed.");
+                    Write.Fail(0, ex.ToString());
+                    Write.Divider(0);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("========================");
-                    Console.WriteLine($"\t\t\t x Conversion of \"{legacy.name}\" to Mutagen failed: {ex.Message}.");
-                    Console.WriteLine(ex.Message);
-                    Console.WriteLine(ex.StackTrace);
-                    Console.WriteLine("========================");
+                    Write.Divider(0);
+                    Write.Fail(3, $"Conversion of \"{legacy.name}\" in {fileName} to Mutagen failed.");
+                    Write.Fail(0, ex.ToString());
+                    Write.Divider(0);
                 }
             }
 
