@@ -85,6 +85,7 @@ sealed public class RecreateInternal
                 }
             }
 
+            plugins.Insert(0, PluginEntry.SKIP);
             return (plugins, KnownDeathItems, KnownCarcasses, KnownPelts);
         }
         catch (Exception ex)
