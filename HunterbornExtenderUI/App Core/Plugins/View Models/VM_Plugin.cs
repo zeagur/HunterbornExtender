@@ -12,12 +12,17 @@ namespace HunterbornExtenderUI;
 public class VM_Plugin : ViewModel
 {
     private IStateProvider _state;
-    public VM_Plugin(IStateProvider state)
+    private readonly Func<VM_PluginEntry> _pluginFactory;
+    
+    public VM_Plugin(
+        IStateProvider state,
+        Func<VM_PluginEntry> pluginFactory)
     {
         _state = state;
+        _pluginFactory = pluginFactory;
 
         AddEntry = ReactiveCommand.Create(
-            () => Entries.Add(new VM_PluginEntry(_state)));
+            () => Entries.Add(_pluginFactory()));
 
         DeleteEntry = ReactiveCommand.Create<VM_PluginEntry>(
             x => Entries.Remove(x));
