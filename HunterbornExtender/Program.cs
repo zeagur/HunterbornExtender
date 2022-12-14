@@ -184,7 +184,7 @@ sealed public class Program
             PluginEntry? prototype = selection.Selection;
 
             // null is used to indicate "SKIP".
-            if (prototype == null)
+            if (prototype == null || PluginEntry.SKIP.Equals(prototype))
             {
                 if (Settings.DebuggingMode) Write.Title(0, $"(SKIPPED) {name}");
                 continue;

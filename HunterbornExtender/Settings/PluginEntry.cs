@@ -90,7 +90,7 @@ sealed class Skip : PluginEntry
     static readonly private Skip instance = new();
 
 
-    private Skip() : base(EntryType.Animal, "Skip") { }
+    private Skip() : base(EntryType.Animal, "__Skip__") { }
     public override bool Equals(object? obj) => obj is Skip;
     public override int GetHashCode() => "SKIP PLUGIN".GetHashCode();
 }
