@@ -1,0 +1,176 @@
+[{
+    "type": "monster",
+    "name": "Werebear",
+	"properName": "Werebear",
+	"sortName": "Werebear",
+    "animalSwitch": "_DS_Hunterborn_IncludeMonsterWerewolves",
+    "carcassMessageBox": "",
+    "carcassSize": "5",
+    "carcassWeight": "",
+    "carcassValue": "",
+    "peltCount": ["4", "2", "2", "2"],
+    "furPlateCount": ["2", "4", "8", "16"],
+    "meat": "_DS_Food_Raw_Bear",
+    "mats": [{
+        "BearClaws": 1,
+        "_DS_BearTooth": 1
+      }, {
+        "HumanFlesh": 1,
+        "BearClaws": 1,
+        "_DS_BearTooth": 1,
+        "_DS_BearEyeball": 1
+      }, {
+        "HumanFlesh": 1,
+        "BearClaws": 2,
+        "_DS_BearTooth": 2,
+        "_DS_BearEyeball": 2,
+        "_DS_BearHeart": 1
+      }, {
+        "HumanFlesh": 1,
+        "BearClaws": 1,
+        "_DS_BearTooth": 1,
+        "_DS_AnimalBone_Large": 3,
+        "_DS_AnimalBone_Superb": 1
+      }, {
+        "_DS_LargeBearClaws": 1,
+        "_DS_FlawlessBearTooth": 1
+      }, {
+        "_DS_RiteClaw_Bear": 1
+      }
+    ],
+    "negativeTreasure": ["BearClaws", "BearPelt", "HumanFlesh"],
+    "sharedDeathItems": "",
+    "bloodType": "_DS_Blood_Werebear",
+    "venom": "",
+    "voice": "CrWerewolfVoice"
+  }, {
+    "type": "monster",
+    "name": "SpiderAlbino",
+	"properName": "Albino Spider",
+	"sortName": "Spider, Albino",
+    "animalSwitch": "_DS_Hunterborn_IncludeMonsterSpiders",
+    "carcassMessageBox": "",
+    "carcassSize": "3",
+    "carcassWeight": "",
+    "carcassValue": "",
+    "peltCount": ["2", "1", "2", "2"],
+    "furPlateCount": ["1", "1", "2", "3"],
+    "meat": "_DS_Food_Raw_Spider",
+    "mats": [{
+        "SpiderEgg": 1,
+        "DLC2ExpSpiderAlbinoButtDamaged": 1,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "SpiderEgg": 1,
+        "DLC2ExpSpiderAlbinoButtDamaged": 1,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "SpiderEgg": 2,
+        "DLC2ExpSpiderAlbinoButt": 1,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "_DS_AnimalBone_Small": 1
+      }
+    ],
+    "negativeTreasure": ["DLC2ExpSpiderAlbinoButt", "DLC2ExpSpiderAlbinoButtDamaged"],
+    "sharedDeathItems": "",
+    "bloodType": "",
+    "venom": "FrostbiteVenom",
+    "voice": "CrFrostbiteSpiderVoice"
+  }, {
+    "type": "animal",
+    "name": "AshHopper",
+	"properName": "Ash Hopper",
+	"sortName": "Ash Hopper",
+    "animalSwitch": "",
+    "carcassMessageBox": "_DS_MsgBox_FreshCarcass",
+    "carcassSize": "1",
+    "carcassWeight": "10",
+    "carcassValue": "20",
+    "peltCount": ["2", "1", "2", "2"],
+    "furPlateCount": ["1", "1", "2", "3"],
+    "meat": "DLC2FoodAshHopperMeat",
+    "mats": [{
+        "DLC2ChitinPlate": 1,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "DLC2FoodAshHopperLeg": 1,
+        "DLC2ChitinPlate": 1,
+        "DLC2AshHopperJelly": 1,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "DLC2FoodAshHopperLeg": 2,
+        "DLC2ChitinPlate": 2,
+        "DLC2AshHopperJelly": 2,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "_DS_AnimalBone_Small": 1
+      }
+    ],
+    "negativeTreasure": [],
+    "sharedDeathItems": "",
+    "bloodType": "",
+    "venom": "",
+    "voice": "CrScribVoice"
+  }, {
+    "type": "animal",
+    "name": "Netch",
+	"properName": "Netch",
+	"sortName": "Netch",
+    "animalSwitch": "",
+    "carcassMessageBox": "_DS_MsgBox_FreshCarcass",
+    "carcassSize": "1",
+    "carcassWeight": "50",
+    "carcassValue": "100",
+    "peltCount": ["2", "1", "2", "2"],
+    "furPlateCount": ["1", "2", "4", "8"],
+    "meat": "",
+    "mats": [{
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "DLC2NetchJelly": 1,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "DLC2NetchJelly": 2,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "_DS_AnimalBone_Small": 1
+      }
+    ],
+    "negativeTreasure": [],
+    "sharedDeathItems": "",
+    "bloodType": "",
+    "venom": "",
+    "voice": "CrNetchVoice"
+  }, {
+    "type": "animal",
+    "name": "NetchCalf",
+	"properName": "Netch Calf",
+	"sortName": "Netch, Calf",
+    "animalSwitch": "",
+    "carcassMessageBox": "_DS_MsgBox_FreshCarcass",
+    "carcassSize": "1",
+    "carcassWeight": "25",
+    "carcassValue": "50",
+    "peltCount": ["2", "1", "2", "2"],
+    "furPlateCount": ["1", "2", "4", "8"],
+    "meat": "",
+    "mats": [{
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "DLC2NetchJelly": 1,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "DLC2NetchJelly": 2,
+        "_DS_AnimalBone_Small": 1
+      }, {
+        "_DS_AnimalBone_Small": 1
+      }
+    ],
+    "negativeTreasure": [],
+    "sharedDeathItems": "",
+    "bloodType": "",
+    "venom": "",
+    "voice": "CrNetchVoice"
+  }
+]
