@@ -15,9 +15,6 @@ public partial class MainWindow : MahApps.Metro.Controls.MetroWindow
         builder.RegisterModule<MainModule>();
         var container = builder.Build();
 
-        container.Resolve<StateProvider>();
-        container.Resolve<EDIDtoForm>();
-
         var mvm = container.Resolve<MainWindowVM>();
         this.DataContext = mvm;
     }

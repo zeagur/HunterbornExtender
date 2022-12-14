@@ -9,16 +9,13 @@ using Noggog;
 using HunterbornExtenderUI.App_Core.Death_Item_Selection;
 using HunterbornExtender.Settings;
 using HunterbornExtender;
-using Mutagen.Bethesda.Plugins.Cache;
-using static System.Diagnostics.DebuggableAttribute;
-using System.Collections.Generic;
 using System.Windows;
 
 namespace HunterbornExtenderUI;
 
 sealed public class VM_DeathItemAssignmentPage : ViewModel
 {
-    private StateProvider _stateProvider;
+    private IStateProvider _stateProvider;
     private VM_PluginList _pluginVMList;
     private ObservableCollection<PluginEntry> _pluginEntries = new();
     private readonly SettingsProvider _settingsProvider;
@@ -29,7 +26,7 @@ sealed public class VM_DeathItemAssignmentPage : ViewModel
 
     [Reactive]
     public VM_DeathItemSelectionList DeathItemSelectionList { get; set; }
-    public VM_DeathItemAssignmentPage(StateProvider stateProvider, SettingsProvider settingsProvider, VM_PluginList pluginList, VM_DeathItemSelectionList deathItemList, DeathItemSettingsLoader deathItemSettingsLoader, VMLoader_DeathItems deathItemVMLoader)
+    public VM_DeathItemAssignmentPage(IStateProvider stateProvider, SettingsProvider settingsProvider, VM_PluginList pluginList, VM_DeathItemSelectionList deathItemList, DeathItemSettingsLoader deathItemSettingsLoader, VMLoader_DeathItems deathItemVMLoader)
     {
         _stateProvider = stateProvider;
         _settingsProvider = settingsProvider;

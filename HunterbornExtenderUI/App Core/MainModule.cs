@@ -9,7 +9,7 @@ public class MainModule : Autofac.Module
     protected override void Load(ContainerBuilder builder)
     {
         // Singletons
-        builder.RegisterType<StateProvider>().AsSelf().SingleInstance();
+        builder.RegisterType<StateProvider>().AsImplementedInterfaces().SingleInstance();
         builder.RegisterType<EDIDtoForm>().AsSelf().SingleInstance();
 
         builder.RegisterType<SettingsProvider>().AsSelf().SingleInstance();

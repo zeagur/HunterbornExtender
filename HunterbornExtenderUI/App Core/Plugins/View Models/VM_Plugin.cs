@@ -11,8 +11,8 @@ namespace HunterbornExtenderUI;
 
 public class VM_Plugin : ViewModel
 {
-    private StateProvider _state;
-    public VM_Plugin(StateProvider state)
+    private IStateProvider _state;
+    public VM_Plugin(IStateProvider state)
     {
         _state = state;
 

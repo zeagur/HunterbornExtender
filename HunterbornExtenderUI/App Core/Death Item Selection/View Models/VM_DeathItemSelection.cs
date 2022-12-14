@@ -12,13 +12,13 @@ namespace HunterbornExtenderUI
 {
     sealed public class VM_DeathItemSelection
     {
-        private StateProvider _state;
+        private IStateProvider _state;
         public ILeveledItemGetter? DeathItem { get; set; }
         public string CreatureEntryName { get; set; } = String.Empty;
         public VM_DeathItemAssignmentPage ParentMenu { get; set; }
         public ObservableCollection<INpcGetter> AssignedNPCs { get; set; } = new();
 
-        public VM_DeathItemSelection(StateProvider state, VM_DeathItemAssignmentPage parentMenu)
+        public VM_DeathItemSelection(IStateProvider state, VM_DeathItemAssignmentPage parentMenu)
         {
             _state = state;
             ParentMenu = parentMenu;
@@ -83,7 +83,7 @@ namespace HunterbornExtenderUI
     [ValueConversion(typeof(IFormLinkGetter), typeof(string))]
     public sealed class RaceLinkNamer: IValueConverter
     {
-        static public StateProvider? State { get; set; }
+        static public IStateProvider? State { get; set; }
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

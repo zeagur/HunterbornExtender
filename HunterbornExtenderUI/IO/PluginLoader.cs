@@ -6,9 +6,9 @@ namespace HunterbornExtenderUI;
 
 public class PluginLoader
 {
-    private StateProvider _state;
+    private IStateProvider _state;
     private EDIDtoForm _edidToForm;
-    public PluginLoader(StateProvider state, EDIDtoForm edidToForm)
+    public PluginLoader(IStateProvider state, EDIDtoForm edidToForm)
     {
         _state = state;
         _edidToForm = edidToForm;

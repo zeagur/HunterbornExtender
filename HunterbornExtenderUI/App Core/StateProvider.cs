@@ -5,15 +5,23 @@ using Mutagen.Bethesda.Plugins.Cache;
 using Mutagen.Bethesda.Plugins.Order;
 using Mutagen.Bethesda.Skyrim;
 using System.Reflection;
+using Noggog;
 
 namespace HunterbornExtenderUI;
 
-public class StateProvider 
+public interface IStateProvider
 {
-    public ILoadOrder<IModListing<ISkyrimModGetter>> LoadOrder { get; set; }
+    ILoadOrderGetter<IModListingGetter<ISkyrimModGetter>> LoadOrder { get; }
+    ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache { get; }
+    DirectoryPath ExtraSettingsDataPath { get; }
+}
+
+public class StateProvider : IStateProvider
+{
+    public ILoadOrderGetter<IModListingGetter<ISkyrimModGetter>> LoadOrder { get; set; }
     public ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache { get; set; }
     public ISkyrimMod PatchMod { get; set; }
-    public string ExtraSettingsDataPath { get; set; } = String.Empty;
+    public DirectoryPath ExtraSettingsDataPath { get; set; } = String.Empty;
 
     public StateProvider()
     {

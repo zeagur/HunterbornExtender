@@ -16,8 +16,8 @@ namespace HunterbornExtenderUI;
 
 public class VM_PluginEntry : ViewModel
 {
-    private StateProvider _state;
-    public VM_PluginEntry(StateProvider state)
+    private IStateProvider _state;
+    public VM_PluginEntry(IStateProvider state)
     {
         _state = state;
         LinkCache = state.LinkCache;
