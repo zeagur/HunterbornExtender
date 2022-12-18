@@ -1,5 +1,4 @@
 using Autofac;
-using HunterbornExtender;
 using HunterbornExtenderUI.App_Core.Death_Item_Selection;
 
 namespace HunterbornExtenderUI;
@@ -9,7 +8,6 @@ public class MainModule : Autofac.Module
     protected override void Load(ContainerBuilder builder)
     {
         // Singletons
-        builder.RegisterType<StateProvider>().AsImplementedInterfaces().SingleInstance();
         builder.RegisterType<EDIDtoForm>().AsSelf().SingleInstance();
 
         builder.RegisterType<SettingsProvider>().AsSelf().SingleInstance();
