@@ -11,8 +11,8 @@ namespace HunterbornExtenderUI
 {
     public class DeathItemSettingsLoader
     {
-        private StateProvider _state;
-        public DeathItemSettingsLoader(StateProvider state, EDIDtoForm edidToForm)
+        private IStateProvider _state;
+        public DeathItemSettingsLoader(IStateProvider state, EDIDtoForm edidToForm)
         {
             _state = state;
         }

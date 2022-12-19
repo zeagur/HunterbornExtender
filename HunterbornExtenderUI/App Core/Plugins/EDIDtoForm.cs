@@ -6,8 +6,8 @@ namespace HunterbornExtenderUI;
 
 public class EDIDtoForm
 {
-    private StateProvider _state;
-    public EDIDtoForm(StateProvider state)
+    private IStateProvider _state;
+    public EDIDtoForm(IStateProvider state)
     {
         _state = state;
     }
