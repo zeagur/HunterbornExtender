@@ -55,6 +55,6 @@ public partial class App : Application
 
     private async Task RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
     {
-        throw new NotImplementedException();
+        HunterbornExtender.Program.RunPatch(state);
     }
 }
