@@ -15,6 +15,7 @@ public interface IStateProvider
     ILoadOrderGetter<IModListingGetter<ISkyrimModGetter>> LoadOrder { get; }
     ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache { get; }
     DirectoryPath ExtraSettingsDataPath { get; }
+    DirectoryPath InternalDataPath { get; }
 }
 
 public interface IOutputStateProvider : IStateProvider
@@ -28,6 +29,7 @@ public class StandaloneRunStateProvider : IOutputStateProvider
     public ILoadOrderGetter<IModListingGetter<ISkyrimModGetter>> LoadOrder => _environment.LoadOrder;
     public ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache => _environment.LinkCache;
     public DirectoryPath ExtraSettingsDataPath { get; set; }
+    public DirectoryPath InternalDataPath { get; set; }
     public ISkyrimMod OutputMod { get; }
 
     public StandaloneRunStateProvider()
@@ -40,6 +42,7 @@ public class StandaloneRunStateProvider : IOutputStateProvider
         }
 
         ExtraSettingsDataPath = exeLocation ?? throw new Exception("Could not locate running assembly");
+        InternalDataPath = System.IO.Path.Combine(ExtraSettingsDataPath, "InternalData");
 
         OutputMod = new SkyrimMod(ModKey.FromName("HunterBornExtender", ModType.Plugin), SkyrimRelease.SkyrimSE);
 
@@ -67,4 +70,5 @@ public class OpenForSettingsWrapper : IStateProvider
     public ILoadOrderGetter<IModListingGetter<ISkyrimModGetter>> LoadOrder => _env.Value.LoadOrder;
     public ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache => _env.Value.LinkCache;
     public DirectoryPath ExtraSettingsDataPath => _state.ExtraSettingsDataPath ?? throw new Exception("Could not locate Extra Settings Data Path");
+    public DirectoryPath InternalDataPath => _state.InternalDataPath ?? throw new Exception("Could not locate Extra Settings Data Path");
 }

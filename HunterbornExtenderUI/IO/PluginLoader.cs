@@ -17,7 +17,7 @@ public class PluginLoader
     public HashSet<Plugin> LoadPlugins()
     {
         HashSet<Plugin> plugins = new ();
-        var pluginsPath = Path.Combine(_state.ExtraSettingsDataPath, "Plugins");
+        var pluginsPath = Path.Combine(_state.InternalDataPath, "Plugins");
         if (Directory.Exists(pluginsPath))
         {
             foreach (var path in Directory.EnumerateFiles(pluginsPath))

@@ -11,43 +11,43 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Plugins\Complete Alchemy &amp; Cooking Overhaul.json" />
-    <None Remove="Plugins\Dawnguard.json" />
-    <None Remove="Plugins\DiverseDragonsCollectionSE.json" />
-    <None Remove="Plugins\Dragonborn.json" />
-    <None Remove="Plugins\Gray Fox Cowl.json" />
-    <None Remove="Plugins\moonpath.json" />
-    <None Remove="Plugins\Skyrim Immersive Creatures Special Edition.json" />
-    <None Remove="Plugins\Skyrim.json" />
-    <None Remove="Plugins\SkyTEST-RealisticAnimals&amp;Predators.json" />
+    <None Remove="InternalData\Plugins\Complete Alchemy &amp; Cooking Overhaul.json" />
+    <None Remove="InternalData\Plugins\Dawnguard.json" />
+    <None Remove="InternalData\Plugins\DiverseDragonsCollectionSE.json" />
+    <None Remove="InternalData\Plugins\Dragonborn.json" />
+    <None Remove="InternalData\Plugins\Gray Fox Cowl.json" />
+    <None Remove="InternalData\Plugins\moonpath.json" />
+    <None Remove="InternalData\Plugins\Skyrim Immersive Creatures Special Edition.json" />
+    <None Remove="InternalData\Plugins\Skyrim.json" />
+    <None Remove="InternalData\Plugins\SkyTEST-RealisticAnimals&amp;Predators.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Plugins\Complete Alchemy &amp; Cooking Overhaul.json">
+    <Content Include="InternalData\Plugins\Complete Alchemy &amp; Cooking Overhaul.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Plugins\Dawnguard.json">
+    <Content Include="InternalData\Plugins\Dawnguard.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Plugins\DiverseDragonsCollectionSE.json">
+    <Content Include="InternalData\Plugins\DiverseDragonsCollectionSE.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Plugins\Dragonborn.json">
+    <Content Include="InternalData\Plugins\Dragonborn.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Plugins\Gray Fox Cowl.json">
+    <Content Include="InternalData\Plugins\Gray Fox Cowl.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Plugins\moonpath.json">
+    <Content Include="InternalData\Plugins\moonpath.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Plugins\Skyrim Immersive Creatures Special Edition.json">
+    <Content Include="InternalData\Plugins\Skyrim Immersive Creatures Special Edition.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Plugins\Skyrim.json">
+    <Content Include="InternalData\Plugins\Skyrim.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Plugins\SkyTEST-RealisticAnimals&amp;Predators.json">
+    <Content Include="InternalData\Plugins\SkyTEST-RealisticAnimals&amp;Predators.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
