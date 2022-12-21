@@ -70,7 +70,7 @@ public class MainWindowVM : ViewModel
 
         SaveSettings = ReactiveCommand.Create(() =>
         {
-            SaveSettingsMethod();
+            SaveSettingsMethod(true);
         });
 
         Application.Current.Exit += OnApplicationExit;
@@ -93,16 +93,18 @@ public class MainWindowVM : ViewModel
     private void OnApplicationExit(object sender, ExitEventArgs e)
     {
         // Perform any necessary cleanup or save data here
-
+        SaveSettingsMethod(false);
     }
 
-    private void SaveSettingsMethod()
+    private void SaveSettingsMethod(bool withClick)
     {
-        var settings = PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList);
         if (WelcomePage.SettingsDir != string.Empty)
         {
             PatcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir, PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList));
-            MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));
+            if (withClick)
+            {
+                MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));
+            }
         }
         else
         {
