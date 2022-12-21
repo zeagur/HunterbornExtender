@@ -99,14 +99,14 @@ public class MainWindowVM : ViewModel
     private void SaveSettingsMethod()
     {
         var settings = PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList);
-        if (WelcomePage.SettingsDir != string.Empty && System.IO.Directory.Exists(WelcomePage.SettingsDir))
+        if (WelcomePage.SettingsDir != string.Empty)
         {
             PatcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir, PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList));
             MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));
         }
         else
         {
-            MessageBox.Show("Could not find directory " + WelcomePage.SettingsDir);
+            MessageBox.Show("Cannot save settings until a valid output directory is set.");
         }
     }
 }
