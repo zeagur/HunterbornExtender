@@ -32,7 +32,13 @@ public partial class App : Application
         var container = builder.Build();
         
         var window = new MainWindow();
-        window.DataContext = container.Resolve<MainWindowVM>();
+        var mainVM = container.Resolve<MainWindowVM>();
+        window.DataContext = mainVM;
+        if (state.ExtraSettingsDataPath != null)
+        {
+            mainVM.WelcomePage.ForceSettingsDir(state.ExtraSettingsDataPath.Value);
+        }
+        
         window.Show();
         window.CenterAround(state.RecommendedOpenLocation);
 
@@ -55,6 +61,12 @@ public partial class App : Application
 
     private async Task RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
     {
-        HunterbornExtender.Program.RunPatch(state);
+        HunterbornExtender.Settings.Settings settings = new();
+        if (state.ExtraSettingsDataPath != null)
+        {
+            settings = PatcherSettingsIO.LoadFromDisk(System.IO.Path.Combine(state.ExtraSettingsDataPath, "settings.json"));
+        }
+
+        HunterbornExtender.Program.RunPatch(state, settings);
     }
 }

@@ -28,10 +28,9 @@ sealed public class Program
     }
 
 
-    public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+    public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
     {
         var pluginsPath = $"{state.DataFolderPath}\\skse\\plugins\\HunterbornExtender";
-        var settings = _settings.Value;
         Program program = new(pluginsPath, settings, state);
         program.Initialize();
         program.Patch();

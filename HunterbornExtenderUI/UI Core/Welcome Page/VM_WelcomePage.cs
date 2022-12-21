@@ -52,4 +52,9 @@ public class VM_WelcomePage : ViewModel
             });
         // end directory setting
     }
+
+    public void ForceSettingsDir(string settingsDir)
+    {
+        SettingsDir = settingsDir;
+    }
 }
