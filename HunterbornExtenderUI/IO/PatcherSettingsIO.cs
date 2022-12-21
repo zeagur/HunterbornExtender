@@ -1,5 +1,6 @@
 ﻿using HunterbornExtender.Settings;
 using SynthEBD;
+using System.IO;
 
 namespace HunterbornExtenderUI
 {
@@ -23,6 +24,7 @@ namespace HunterbornExtenderUI
         public static void SaveToDisk(string folderPath, Settings settings)
         {
             var path = System.IO.Path.Combine(folderPath, "settings.json");
+            Directory.CreateDirectory(folderPath);
             JSONhandler<Settings>.SaveJSONFile(settings, path);
         }
 

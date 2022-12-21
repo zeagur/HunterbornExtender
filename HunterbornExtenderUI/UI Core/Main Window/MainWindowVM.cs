@@ -70,17 +70,10 @@ public class MainWindowVM : ViewModel
 
         SaveSettings = ReactiveCommand.Create(() =>
         {
-            var settings = PatcherSettingsIO.DumpToSettings(deathItemSelectionList, pluginList);
-            if (WelcomePage.SettingsDir != string.Empty && System.IO.Directory.Exists(WelcomePage.SettingsDir))
-            {
-                PatcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir, PatcherSettingsIO.DumpToSettings(deathItemSelectionList, pluginList));
-                MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));
-            }
-            else
-            {
-                MessageBox.Show("Could not find directory " + WelcomePage.SettingsDir);
-            }
+            SaveSettingsMethod();
         });
+
+        Application.Current.Exit += OnApplicationExit;
     }
     
     public void Init()
@@ -95,5 +88,25 @@ public class MainWindowVM : ViewModel
                 _deathItemLoader.LoadDeathItemSettings()));
         */
         DeathItemMenu.Initialize();
+    }
+
+    private void OnApplicationExit(object sender, ExitEventArgs e)
+    {
+        // Perform any necessary cleanup or save data here
+
+    }
+
+    private void SaveSettingsMethod()
+    {
+        var settings = PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList);
+        if (WelcomePage.SettingsDir != string.Empty && System.IO.Directory.Exists(WelcomePage.SettingsDir))
+        {
+            PatcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir, PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList));
+            MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));
+        }
+        else
+        {
+            MessageBox.Show("Could not find directory " + WelcomePage.SettingsDir);
+        }
     }
 }
