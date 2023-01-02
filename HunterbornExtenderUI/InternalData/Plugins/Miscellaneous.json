@@ -1,0 +1,103 @@
+{
+  "Entries": [
+    {
+      "Type": "Monster",
+      "Name": "Durzog",
+      "ProperName": "Durzog",
+      "SortName": "Durzog",
+      "Toggle": "Null",
+      "CarcassMessageBox": "Null",
+      "Meat": "00081A:CACO_SkyrimImmersiveCreaturesSE_Patch.esp",
+      "CarcassSize": 3,
+      "CarcassWeight": 10,
+      "CarcassValue": 200,
+      "PeltCount": [
+        4,
+        2,
+        2,
+        2
+      ],
+      "FurPlateCount": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "Materials": [
+        {
+          "Items": {
+            "720D74:Skyrim Immersive Creatures Special Edition.esp<IItemGetter>": 1
+          }
+        },
+        {
+          "Items": {
+            "720D74:Skyrim Immersive Creatures Special Edition.esp<IItemGetter>": 2
+          }
+        },
+        {
+          "Items": {
+            "720D74:Skyrim Immersive Creatures Special Edition.esp<IItemGetter>": 3
+          }
+        },
+        {
+          "Items": {
+            "720D74:Skyrim Immersive Creatures Special Edition.esp<IItemGetter>": 4
+          }
+        }
+      ],
+      "Discard": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "024C3E:Dragonborn.esm"
+    },
+    {
+      "Type": "Monster",
+      "Name": "Scamp",
+      "ProperName": "Scamp",
+      "SortName": "Scamp",
+      "Toggle": "Null",
+      "CarcassMessageBox": "Null",
+      "Meat": "Null",
+      "CarcassSize": 2,
+      "CarcassWeight": 10,
+      "CarcassValue": 10,
+      "PeltCount": [
+        4,
+        2,
+        2,
+        2
+      ],
+      "FurPlateCount": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "Materials": [
+        {
+          "Items": {}
+        },
+        {
+          "Items": {}
+        },
+        {
+          "Items": {
+            "03AD5B:Skyrim.esm<IItemGetter>": 1
+          }
+        },
+        {
+          "Items": {
+            "03AD5B:Skyrim.esm<IItemGetter>": 1
+          }
+        }
+      ],
+      "Discard": [],
+      "SharedDeathItems": "Null",
+      "BloodType": "Null",
+      "Venom": "Null",
+      "Voice": "Null"
+    }
+  ],
+  "FilePath": ""
+}
