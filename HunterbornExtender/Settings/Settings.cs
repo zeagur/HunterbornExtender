@@ -12,4 +12,6 @@ sealed public class Settings
 
     public bool AdvancedTaxonomy { get; set; } = true;
 
+    public bool QuickLootPatch { get; set; } = true;
+
 }

@@ -7,13 +7,16 @@ using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Plugins.Aspects;
 using Mutagen.Bethesda.Plugins.Cache;
 using Mutagen.Bethesda.Plugins.Exceptions;
+using Mutagen.Bethesda.Plugins.Internals;
 using Mutagen.Bethesda.Plugins.Order;
 using Mutagen.Bethesda.Plugins.Records;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Noggog;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using static HunterbornExtender.FormKeys;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
 using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
@@ -282,13 +285,6 @@ sealed public class Program
     /// 
     private void AddRecordFor(CreatureData data, PatchingRecords std)
     {
-        var token = CreateToken(data, std);
-        var mats = CreateMaterials(data, std);
-        var pelts = CreatePelts(data, std);
-        var deathDescriptor = CreateDeathDescriptor(data, pelts, mats, std);
-        if (data.IsAnimal) CreateCarcass(data, std);
-        if (data.IsMonster) CreateDiscards(data, std);
-
         std.GetCCFor(data).RaceIndex.Data.Add(data.DescriptiveName);
         std.GetCCFor(data).CarcassSizes.Data.Add(data.Prototype.CarcassSize);
         std.GetCCFor(data).Switches.Objects.Add(CreateProperty(data.Prototype.Toggle));
@@ -315,6 +311,16 @@ sealed public class Program
         {
             std.Animals.CarcassMessages.Objects.Add(CreateProperty(data.Prototype.CarcassMessageBox));
         }
+
+        var token = CreateToken(data, std);
+        var pelts = CreatePelts(data, std);
+
+        // Do this last because if quicklootpatch is enabled, pelts and meat could end up in materials.
+        var mats = CreateMaterials(data, std);
+
+        var deathDescriptor = CreateDeathDescriptor(data, pelts, mats, std);
+        if (data.IsAnimal) CreateCarcass(data, std);
+        if (data.IsMonster) CreateDiscards(data, std);
 
         if (DebuggingMode)
         {
@@ -437,8 +443,21 @@ sealed public class Program
     /// 
     private FormList CreateMaterials(CreatureData data, PatchingRecords std)
     {
-        //DEFAULT_MATS.TryResolve(LinkCache, out var existingMaterials);
-        //if (existingMaterials == null) throw new CoreRecordMissing(DEFAULT_MATS.FormKey);
+        // QuickLoot patching data.
+        Dictionary<IFormLinkGetter<IItemGetter>, int> deathItemStuff = new();
+        if (Settings.QuickLootPatch && data.DeathItem.Entries is IReadOnlyList<ILeveledItemEntryGetter> diEntries)
+        {
+            foreach (var entry in diEntries)
+            {
+                if (entry?.Data?.Reference is IItemGetter item && entry?.Data?.Count is short count)
+                {
+                    deathItemStuff[item.ToLinkGetter()] = count;
+                }
+                
+            }
+            LeveledItem patchedItems = PatchMod.LeveledItems.GetOrAddAsOverride(data.DeathItem);
+            patchedItems.Entries?.Clear();
+        }
 
         var matsFormList = PatchMod.FormLists.AddNew();
         if (matsFormList == null) throw new InvalidOperationException();
@@ -449,13 +468,30 @@ sealed public class Program
         matsFormList.EditorID = $"_DS_FL_Mats_{data.InternalName}";
         matsPerfectLvld.EditorID = $"_DS_FL_Mats_Perfect_{data.InternalName}";
 
-        for (int index = 0; index < data.Prototype.Materials.Count; index++)
-        {
-            var skillLevel = data.Prototype.Materials[index];
+        int index = 0;
+        foreach (MaterialLevel skillLevel in data.Prototype.Materials)
+        { 
+            // QuickLoot correction.
+            if (Settings.QuickLootPatch)
+            {
+                if (skillLevel.Items is Dictionary<IFormLinkGetter<IItemGetter>, int> items)
+                {
+                    foreach (var diEntry in deathItemStuff)
+                    {
+                        if (!items.ContainsKey(diEntry.Key))
+                        {
+                            items[diEntry.Key] = diEntry.Value;
+                        }
+                    }
+                }
+            }
+
             var mat = PatchMod.LeveledItems.AddNew();
             if (mat == null) throw new InvalidOperationException();
 
             mat.EditorID = $"{matsFormList.EditorID}{index:D2}";
+            index++;
+
             var entries = mat.Entries = new();
 
             foreach (var itemEntry in skillLevel.Items)
@@ -492,6 +528,14 @@ sealed public class Program
         if (!KnownPelts.ContainsKey(data.Prototype))
         {
             var standard = GetDefaultPelt(data);
+
+            // QuickLoot patch.
+            if (standard is not null && Settings.QuickLootPatch)
+            {
+                LeveledItem patchedItems = PatchMod.LeveledItems.GetOrAddAsOverride(data.DeathItem);
+                patchedItems.Entries?.RemoveAll(entry => entry?.Data?.Reference.Equals(standard) ?? false);
+            }
+
             bool createdDefaultPelt = standard is not null;
             standard ??= CreateDefaultPelt(data);
 
@@ -599,6 +643,14 @@ sealed public class Program
         else
         {
             var defaultMeat = FindDefaultMeat(data.DeathItem, std);
+
+            // QuickLoot patch.
+            if (defaultMeat is not null && Settings.QuickLootPatch)
+            {
+                LeveledItem patchedItems = PatchMod.LeveledItems.GetOrAddAsOverride(data.DeathItem);
+                patchedItems.Entries?.RemoveAll(entry => entry?.Data?.Reference.Equals(defaultMeat) ?? false);
+            }
+
             if (defaultMeat is IItemGetter meat) return meat;
             else if (data.Prototype.CreateDefaultMeat) return CreateDefaultMeat(data);
             else return null;
