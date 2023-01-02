@@ -63,7 +63,7 @@ namespace HunterbornExtender
                             try
                             {
                                 var fullPath = filename;
-                                Write.Action(1, $"Reading legacy zedit plugin set: {fullPath}");
+                                //Write.Action(1, $"Reading legacy zedit plugin set: {fullPath}");
                                 var filePlugins = ReadFile(fullPath, linkCache);
                                 plugins.AddRange(filePlugins);
                                 previousFilenames.Add(filename);
@@ -84,7 +84,7 @@ namespace HunterbornExtender
         static List<AddonPluginEntry> ReadFile(String fileName, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
         {
             string jsonString = File.ReadAllText(fileName);
-            Write.Success(2, $"Successfully read {fileName}");
+            //Write.Success(2, $"Successfully read {fileName}");
 
             var jsonLegacy = JsonSerializer.Deserialize<List<HBJsonDataLegacy>>(jsonString);
             if (jsonLegacy == null)
@@ -100,7 +100,7 @@ namespace HunterbornExtender
                 {
                     var plugin = legacy.ToPlugin(linkCache);
                     plugins.Add(plugin);
-                    Write.Success(3, $"Added plugin for {plugin.Name}.");
+                    Write.Success(3, $"Added plugin for {plugin.Name} from {fileName}.");
    
                     //if (legacy.name.ToLower().ContainsInsensitive("hagraven")) TestImportConversion(legacy, plugin);
                 }

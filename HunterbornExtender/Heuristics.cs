@@ -46,9 +46,9 @@ sealed public class Heuristics
             foreach (var plugin in plugins) plugin.Tokens = Tokenizer.Tokenize(plugin.Name, plugin.SortName, plugin.ProperName);
             if (debuggingMode)
             {
-                Write.Title(1, "Tokenizing plugin names.");
-                plugins.ForEach(p => Write.Action(2, $"Plugin: {p.Name} -> {p.Tokens.Pretty()}"));
-                Write.Title(1, "Analyzing NPCs.");
+                //Write.Title(1, "Tokenizing plugin names.");
+                //plugins.ForEach(p => Write.Action(2, $"Plugin: {p.Name} -> {p.Tokens.Pretty()}"));
+                //Write.Title(1, "Analyzing NPCs.");
             }
 
             // Scan the list of npcs.
@@ -164,10 +164,8 @@ sealed public class Heuristics
 
         if (debuggingMode)
         {
-            Write.Action(2, $"Tokens for {description}:");
-            Write.Action(3, npcTokens.Pretty());
-            Write.Success(2, $"Candidates for {description}:");
-            Write.Success(3, candidates.Pretty());
+            Write.Action(2, $"Tokens for {description}: {npcTokens.Pretty()}");
+            Write.Success(2, $"Candidates for {description}: {candidates.Pretty()}");
         }
 
         return candidates;

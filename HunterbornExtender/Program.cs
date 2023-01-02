@@ -195,7 +195,7 @@ sealed public class Program
                 {
                     Write.Fail(1, $"Skipped {name}: DeathItem already processed.");
                 }
-                else
+                else if (!SpecialCases.Lists.ForbiddenDeathItems.Contains(data.DeathItem))
                 {
                     AddRecordFor(data, std);
                     KnownDeathItems.Add(data.DeathItem, prototype);
