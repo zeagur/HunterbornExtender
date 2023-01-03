@@ -40,7 +40,7 @@ namespace HunterbornExtender
 
                     if (filenames.Count > 0) Write.Success(1, $"Found {filenames.Count} json files.");
                     else Write.Fail(1, $"No json files found.");
-                    print(previousFilenames);
+                    Write.Action(0, $"Previous filenames: {previousFilenames}");
 
                     foreach (var filename in filenames)
                     {
