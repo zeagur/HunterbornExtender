@@ -19,9 +19,9 @@ namespace HunterbornExtender
         {
             List<string> directoriesToTry = new();
             var x = new DirectoryPath("");
-            directoriesToTry.AddRange(CheckPath("Settings Data Path", state.ExtraSettingsDataPath));
-            directoriesToTry.AddRange(CheckPath("Internal Data Path", state.InternalDataPath));
-            directoriesToTry.AddRange(CheckPath("Game Data", $"{state.OutputPath}\\skse\\plugins\\HunterbornExtender"));
+            directoriesToTry.AddRange(CheckPath("Game Data", $"{state.DataFolderPath}\\skse\\plugins\\HunterbornExtender"));
+            directoriesToTry.AddRange(CheckPath("Settings Data Path", $"{state.ExtraSettingsDataPath}"));
+            directoriesToTry.AddRange(CheckPath("Internal Data Path", $"{state.InternalDataPath}\\Plugins"));
 
             HashSet<string> previousFilenames = new();
             List<AddonPluginEntry> plugins = new();
