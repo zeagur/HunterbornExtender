@@ -33,7 +33,7 @@ sealed public class Program
 
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
     {
-        var pluginsPath = $"{state.DataFolderPath}\\skse\\plugins\\HunterbornExtender";
+        var pluginsPath = Path.Combine(state.ExtraSettingsDataPath?.Path ?? throw new Exception("Could not find Extra Settings Data Path"), "Plugins");
         Program program = new(pluginsPath, settings, state);
         program.Initialize();
         program.Patch();
