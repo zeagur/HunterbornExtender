@@ -53,7 +53,10 @@ sealed public class Program
         Write.Success(2, $"{settings.Plugins.Pretty()}");
 
         string settingsFilename = "settings.json";
-        string jsonInputStr = File.ReadAllText(settingsFilename);
+        string settingsPath = $"{state.ExtraSettingsDataPath}\\{settingsFilename}";
+        string jsonInputStr = File.ReadAllText(settingsPath);
+        Write.Title(0, settingsPath);
+
         var obj = JsonConvert.DeserializeObject<Settings.Settings>(jsonInputStr, GetCustomJSONSettings());
         if (obj is Settings.Settings settings2)
         {
