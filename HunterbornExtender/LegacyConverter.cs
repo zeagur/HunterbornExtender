@@ -44,7 +44,7 @@ namespace HunterbornExtender
                             try
                             {
                                 var fullPath = filename;
-                                //Write.Action(1, $"Reading legacy zedit plugin set: {fullPath}");
+                                Write.Action(1, $"Reading legacy zedit plugin set: {fullPath}");
                                 var filePlugins = ReadFile(fullPath, state.LinkCache);
                                 plugins.AddRange(filePlugins);
                                 previousFilenames.Add(filename);
