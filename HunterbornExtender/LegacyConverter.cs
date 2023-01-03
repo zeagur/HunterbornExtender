@@ -18,10 +18,10 @@ namespace HunterbornExtender
         static public List<AddonPluginEntry> ImportAndConvert(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             List<string> directoriesToTry = new();
-
-            directoriesToTry.AddRange(CheckPath("Converted Files", state.ExtraSettingsDataPath));
-            directoriesToTry.AddRange(CheckPath("Game Data", $"{Directory.GetCurrentDirectory()}\\Data\\Skyrim Special Edition\\HunterbornExtender"));
-            directoriesToTry.AddRange(CheckPath("Debugging Data", $"{Directory.GetCurrentDirectory()}\\..\\..\\..\\zedit"));
+            var x = new DirectoryPath("");
+            directoriesToTry.AddRange(CheckPath("Settings Data Path", state.ExtraSettingsDataPath));
+            directoriesToTry.AddRange(CheckPath("Internal Data Path", state.InternalDataPath));
+            directoriesToTry.AddRange(CheckPath("Game Data", $"{state.OutputPath}\\skse\\plugins\\HunterbornExtender"));
 
             HashSet<string> previousFilenames = new();
             List<AddonPluginEntry> plugins = new();
