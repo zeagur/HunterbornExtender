@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using Noggog;
 using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -88,6 +89,12 @@ public class VM_Plugin : ViewModel
             dialog.Filter = "JSON|*.json";
 
             dialog.Title = "Select Save Location";
+
+            var defaultFileName = Path.GetFileNameWithoutExtension(FileName);
+            if (!defaultFileName.IsNullOrWhitespace())
+            {
+                dialog.FileName = defaultFileName;
+            }
 
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
