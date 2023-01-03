@@ -33,24 +33,25 @@ namespace HunterbornExtender
                 {
                     Directory.SetCurrentDirectory(path);
                     Write.Action(1, $"Changed directory to: {Directory.GetCurrentDirectory()}");
-                    var filenames = Directory
+                    var filePaths = Directory
                         .EnumerateFiles(path, "*.json")
                         .Where(path => !path.ContainsInsensitive("settings.json"))
                         .ToList();
 
-                    if (filenames.Count > 0) Write.Success(1, $"Found {filenames.Count} json files.");
+                    if (filePaths.Count > 0) Write.Success(1, $"Found {filePaths.Count} json files.");
                     else Write.Fail(1, $"No json files found.");
                     Write.Action(0, $"Previous filenames: {previousFilenames.Pretty()}");
 
-                    foreach (var filename in filenames)
+                    foreach (var filePath in filePaths)
                     {
-                        if (filename is not null && !previousFilenames.Contains(filename))
+                        var filename = Path.GetFileName(filePath).ToLower();
+
+                        if (filePath is not null && !previousFilenames.Contains(filename))
                         {
                             try
                             {
-                                var fullPath = filename;
-                                Write.Action(1, $"Reading legacy zedit plugin set: {fullPath}");
-                                var filePlugins = ReadFile(fullPath, state.LinkCache);
+                                Write.Action(1, $"Reading legacy zedit plugin set: {filePath}");
+                                var filePlugins = ReadFile(filePath, state.LinkCache);
                                 plugins.AddRange(filePlugins);
                                 previousFilenames.Add(filename);
                             }
