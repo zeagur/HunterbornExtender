@@ -33,7 +33,11 @@ namespace HunterbornExtender
                 {
                     Directory.SetCurrentDirectory(path);
                     Write.Action(1, $"Changed directory to: {Directory.GetCurrentDirectory()}");
-                    var filenames = Directory.EnumerateFiles(path, "*.json").ToList();
+                    var filenames = Directory
+                        .EnumerateFiles(path, "*.json")
+                        .Where(path => !path.ContainsInsensitive("settings.json"))
+                        .ToList();
+
                     if (filenames.Count > 0) Write.Success(1, $"Found {filenames.Count} json files.");
                     else Write.Fail(1, $"No json files found.");
 
