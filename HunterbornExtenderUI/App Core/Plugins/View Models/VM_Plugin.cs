@@ -28,7 +28,7 @@ public class VM_Plugin : ViewModel
             x => Entries.Remove(x));
 
         SavePlugin = ReactiveCommand.Create(
-            () => SaveToDisk());
+            () => SaveToDisk(true));
     }
 
     public ObservableCollection<VM_PluginEntry> Entries { get; set; } = new();
@@ -65,11 +65,11 @@ public class VM_Plugin : ViewModel
         return SourceDTO;
     }
 
-    public void SaveToDisk()
+    public void SaveToDisk(bool verbose)
     {
         var model = DumpToModel();
         string savePath = string.Empty;
-        if (FilePath != String.Empty && File.Exists(FilePath))
+        if (FilePath != String.Empty)
         {
             savePath = FilePath;
         }
@@ -81,6 +81,7 @@ public class VM_Plugin : ViewModel
 
             if (pluginsPath != "")
             {
+                Directory.CreateDirectory(pluginsPath); // does nothing if the directory already exists
                 dialog.InitialDirectory = pluginsPath;
             }
 
@@ -98,8 +99,11 @@ public class VM_Plugin : ViewModel
 
         if (savePath != string.Empty)
         {
-            JSONhandler<Plugin>.SaveJSONFile(model, FilePath);
-            MessageBox.Show("Saved to " + FilePath);
+            JSONhandler<Plugin>.SaveJSONFile(model, savePath);
+            if (verbose)
+            {
+                MessageBox.Show("Saved to " + FilePath);
+            }
         }
     }
 }

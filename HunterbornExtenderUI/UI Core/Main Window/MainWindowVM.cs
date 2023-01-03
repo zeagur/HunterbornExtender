@@ -101,6 +101,10 @@ public class MainWindowVM : ViewModel
         if (WelcomePage.SettingsDir != string.Empty)
         {
             PatcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir, PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList));
+            foreach (var plugin in _pluginList.Plugins)
+            {
+                plugin.SaveToDisk(false);   
+            }
             if (withClick)
             {
                 MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));

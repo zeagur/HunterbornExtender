@@ -17,23 +17,42 @@ public class PluginLoader
     public HashSet<Plugin> LoadPlugins()
     {
         HashSet<Plugin> plugins = new ();
-        var pluginsPath = Path.Combine(_state.InternalDataPath, "Plugins");
-        if (Directory.Exists(pluginsPath))
+
+        var userPluginsPath = Path.Combine(_state.ExtraSettingsDataPath, "Plugins");
+        var defaultPluginsPath = Path.Combine(_state.InternalDataPath, "Plugins");
+
+        LoadPluginsFromDirectory(userPluginsPath, plugins, false);
+        LoadPluginsFromDirectory(defaultPluginsPath, plugins, true);
+
+        return plugins;
+    }
+
+    public void LoadPluginsFromDirectory(string directoryPath, HashSet<Plugin> plugins, bool fromInternalData)
+    {
+        if (Directory.Exists(directoryPath))
         {
-            foreach (var path in Directory.EnumerateFiles(pluginsPath))
+            foreach (var path in Directory.EnumerateFiles(directoryPath))
             {
                 if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                 {
-                    var loadedPlugin = new Plugin();
-                    var entries = JSONhandler<List<PluginEntry>>.LoadJSONFile(path);
-                    if (entries == null)
+                    if (fromInternalData && plugins.Where(x => Path.GetFileNameWithoutExtension(x.FilePath) == Path.GetFileNameWithoutExtension(path)).Any()) { continue; } // do not overwrite user's customized plugins with the originals packaged with the patcher
+
+                    var loadedPlugin = JSONhandler<Plugin>.LoadJSONFile(path);
+                    if (loadedPlugin == null)
                     {
                         loadedPlugin = ConvertPluginFromzEdit(path);
+                    }
+                    else
+                    {
+                        loadedPlugin.FilePath = path;
                     }
 
                     if (loadedPlugin != null)
                     {
-                        loadedPlugin.FilePath = path;
+                        if (fromInternalData)
+                        {
+                            loadedPlugin.FilePath = Path.Combine(_state.ExtraSettingsDataPath, "Plugins", Path.GetFileName(path)); // remap plugins from the default InternalDataPath to save in the user's ExtraSettingsDataPath
+                        }
                         plugins.Add(loadedPlugin);
                     }
                     else
@@ -47,7 +66,6 @@ public class PluginLoader
         {
             //log
         }
-        return plugins;
     }
 
     public Plugin? ConvertPluginFromzEdit(string path)
