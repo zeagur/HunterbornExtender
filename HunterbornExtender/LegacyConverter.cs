@@ -15,36 +15,17 @@ namespace HunterbornExtender
 {
     sealed public class LegacyConverter
     {
-        static public List<AddonPluginEntry> ImportAndConvert(string pluginsPath, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+        static public List<AddonPluginEntry> ImportAndConvert(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             List<string> directoriesToTry = new();
 
-            if (Directory.Exists(pluginsPath))
-            {
-                Write.Success(1, $"PluginsPath parameter: {pluginsPath} (EXISTS)");
-                directoriesToTry.Add(pluginsPath);
-            }
-            else Write.Action(1, $"PluginsPath parameter: {pluginsPath} (MISSING))");
-
-            string synthesisSubdirectory = $"{Directory.GetCurrentDirectory()}\\Data\\Skyrim Special Edition\\HunterbornExtender";
-            if (Directory.Exists(synthesisSubdirectory))
-            {
-                Write.Success(1, $"Synthesis subdirectory: {synthesisSubdirectory} (EXISTS)");
-                directoriesToTry.Add(pluginsPath);
-            }
-            else Write.Action(1, $"Synthesis subdirectory: {synthesisSubdirectory} (MISSING))");
-
-            string projectSubdirectory = $"{Directory.GetCurrentDirectory()}\\..\\..\\..\\zedit";
-            if (Directory.Exists(projectSubdirectory))
-            {
-                Write.Success(1, $"VS project subdirectory: {projectSubdirectory} (EXISTS)");
-                directoriesToTry.Add(pluginsPath);
-            }
-            else Write.Action(1, $"VS project subdirectory: {projectSubdirectory} (MISSING))");
+            directoriesToTry.AddRange(CheckPath("Converted Files", state.ExtraSettingsDataPath));
+            directoriesToTry.AddRange(CheckPath("Game Data", $"{Directory.GetCurrentDirectory()}\\Data\\Skyrim Special Edition\\HunterbornExtender"));
+            directoriesToTry.AddRange(CheckPath("Debugging Data", $"{Directory.GetCurrentDirectory()}\\..\\..\\..\\zedit"));
 
             HashSet<string> previousFilenames = new();
             List<AddonPluginEntry> plugins = new();
-            var serializationOptions = new JsonSerializerOptions { WriteIndented = true };
+            new JsonSerializerOptions { WriteIndented = true };
 
             foreach (var path in directoriesToTry)
             {
@@ -64,7 +45,7 @@ namespace HunterbornExtender
                             {
                                 var fullPath = filename;
                                 //Write.Action(1, $"Reading legacy zedit plugin set: {fullPath}");
-                                var filePlugins = ReadFile(fullPath, linkCache);
+                                var filePlugins = ReadFile(fullPath, state.LinkCache);
                                 plugins.AddRange(filePlugins);
                                 previousFilenames.Add(filename);
                             }
@@ -79,6 +60,22 @@ namespace HunterbornExtender
             }
 
             return plugins;
+        }
+
+        static IEnumerable<string> CheckPath(string name, DirectoryPath? directory)
+        {           
+            if (directory is not null && Directory.Exists(directory))
+            {
+                Write.Success(1, $"{name}: {directory} (EXISTS)");
+                return new List<string>() { directory };
+            }
+            else
+            {
+                Write.Action(1, $"{name}: {directory} (MISSING))");
+                return new List<string>();
+            }
+
+
         }
 
         static List<AddonPluginEntry> ReadFile(String fileName, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)

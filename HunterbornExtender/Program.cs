@@ -33,8 +33,8 @@ sealed public class Program
 
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
     {
-        var pluginsPath = Path.Combine(state.ExtraSettingsDataPath?.Path ?? throw new Exception("Could not find Extra Settings Data Path"), "Plugins");
-        Program program = new(pluginsPath, settings, state);
+        //var pluginsPath = Path.Combine(state.ExtraSettingsDataPath?.Path ?? throw new Exception("Could not find Extra Settings Data Path"), "Plugins");
+        Program program = new(settings, state);
         program.Initialize();
         program.Patch();
     }
@@ -42,24 +42,22 @@ sealed public class Program
     /// <summary>
     /// Creates a new instance of Program.
     /// </summary>
-    /// <param name="pluginsPath">File path to where the json plugin files are installed.</param>
     /// <param name="settings"></param>
     /// <param name="state"></param>
-    public Program(string pluginsPath, Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state) : this(pluginsPath, settings, state.PatchMod, state.LoadOrder, state.LinkCache) { }
+    //public Program(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state) : this(pluginsPath, settings, state.PatchMod, state.LoadOrder, state.LinkCache) { }
 
     /// <summary>
     /// Creates a new instance of Program.
     /// </summary>
-    /// <param name="pluginsPath">File path to where the json plugin files are installed.</param>
     /// <param name="settings"></param>
     /// <param name="state"></param>
-    public Program(string pluginsPath, Settings.Settings settings, ISkyrimMod patchMod, ILoadOrder<IModListing<ISkyrimModGetter>> loadOrder, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+    public Program(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
     {
-        PluginsPath = pluginsPath;
+        State = state;
         Settings = settings;
-        LinkCache = linkCache;
-        LoadOrder = loadOrder;
-        PatchMod = patchMod;
+        LinkCache = State.LinkCache;
+        LoadOrder = State.LoadOrder;
+        PatchMod = State.PatchMod;
         FormLinkSubstitution = SpecialCases.GetCACOSub(LoadOrder.ContainsKey(CACO_MODKEY));
         ItemSubstitution = SpecialCases.GetCACOSubResolved(LoadOrder.ContainsKey(CACO_MODKEY), LinkCache);
     }
@@ -68,7 +66,7 @@ sealed public class Program
     {
         Write.Divider(0);
         Write.Action(0, "Importing plugins.");
-        var addonPlugins = LegacyConverter.ImportAndConvert(PluginsPath, LinkCache);
+        var addonPlugins = LegacyConverter.ImportAndConvert(State);
         Write.Success(0, $"{addonPlugins.Count} creature types imported.");
 
         //
@@ -1049,14 +1047,15 @@ sealed public class Program
     /// </summary>
     private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
 
-    private string PluginsPath { get; }
+    //private string PluginsPath { get; }
     private Settings.Settings Settings { get; }
+    private IPatcherState<ISkyrimMod, ISkyrimModGetter> State { get; }
     private ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache { get; }
     private ILoadOrder<IModListing<ISkyrimModGetter>> LoadOrder { get; }
     private ISkyrimMod PatchMod { get; }
     private bool DebuggingMode { get { return Settings.DebuggingMode; } }
 
-    private AdvancedTaxonomy Taxonomy = new();
+    private readonly AdvancedTaxonomy Taxonomy = new();
 
 }
 
