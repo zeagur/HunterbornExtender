@@ -1,4 +1,6 @@
 ﻿namespace HunterbornExtender;
+
+using DynamicData;
 using HunterbornExtender.Settings;
 //using Microsoft.CodeAnalysis;
 using Mutagen.Bethesda;
@@ -177,17 +179,17 @@ sealed public class Program
             // null is used to indicate "SKIP".
             if (prototype == null || PluginEntry.SKIP.Equals(prototype))
             {
-                if (Settings.DebuggingMode) Write.Title(0, $"(SKIPPED) {name}");
+                if (Settings.DebuggingMode) Write.Action(0, $"(SKIPPING) {name}");
                 continue;
             }
 
-            Write.Title(0, $"{name} -> {prototype.Name}");
+            //Write.Title(0, $"{name} -> {prototype.Name}");
 
             try
             {
                 var deathItem = LinkCache.Resolve<DeathItemGetter>(selection.DeathItem);
                 var data = CreateCreatureData(selection, prototype);
-                if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
+                //if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
 
                 if (KnownDeathItems.ContainsKey(data.DeathItem))
                 {
@@ -316,19 +318,11 @@ sealed public class Program
         // Do this last because if quicklootpatch is enabled, pelts and meat could end up in materials.
         var mats = CreateMaterials(data, std);
 
-        var deathDescriptor = CreateDeathDescriptor(data, pelts, mats, std);
+        (var deathDescriptor, var tokens) = CreateDeathDescriptor(data, pelts, mats, std);
         if (data.IsAnimal) CreateCarcass(data, std);
         if (data.IsMonster) CreateDiscards(data, std);
 
-        if (DebuggingMode)
-        {
-            Write.Success(1, $"Created new forms:");
-            Write.Success(2, $"ID Token: {token}");
-            Write.Success(2, $"Materials: {mats}");
-            Write.Success(2, $"Pelts: {pelts.Pretty()}");
-            Write.Success(2, $"Descriptor: {deathDescriptor}");
-            Write.Success(2, $"Updated quest script properties.");
-        }
+        Write.Success(1, $"{DeathItemNamer(data.DeathItem)} => {data.Prototype.Name} ({tokens})");
     }
 
     /// <summary>
@@ -800,40 +794,43 @@ sealed public class Program
     /// 
     /// </summary>
     /// 
-    private ILeveledItemGetter CreateDeathDescriptor(CreatureData data, IFormListGetter pelts, FormList mats, PatchingRecords std)
+    private (ILeveledItemGetter, List<IFormLinkGetter<IItemGetter>>) 
+        CreateDeathDescriptor(CreatureData data, IFormListGetter pelts, FormList mats, PatchingRecords std)
     {
         // Create the new descriptor.
         LeveledItem deathDescriptor = PatchMod.LeveledItems.AddNew();
         deathDescriptor.EditorID = $"_DS_DeathItem_{data.InternalName}";
         deathDescriptor.Entries = new();
         deathDescriptor.Flags = LeveledItem.Flag.UseAll;
+        
+        List<IFormLinkGetter<IItemGetter>> tokens = new();
 
         // If the pelts FormList isn't empty, then harvesting pelts is enabled.
-        if (pelts.Items is not null && pelts.Items.Count > 0)
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Pelt, 1, 1));
+        if (pelts.Items is not null && pelts.Items.Count > 0) tokens.Add(_DS_Token_Pelt);
 
         // If the materials FormList isn't empty, then harvesting materials is enabled.
-        if (mats.Items is not null && mats.Items.Count > 0)
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Mat, 1, 1));
+        if (mats.Items is not null && mats.Items.Count > 0) tokens.Add(_DS_Token_Mat);
 
         // Animals need to be cleaned. Monsters apparently not?
-        if (data.IsAnimal)
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Carcass_Clean, 1, 1));
+        if (data.IsAnimal) tokens.Add(_DS_Token_Carcass_Clean);
 
         // If the Meat field in the PluginEntry isn't null then harvesting meat is enabled.
         if (!data.Prototype.Meat.IsNull)
         {
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Meat, 1, 1));
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Meat_Fresh, 1, 1));
+            tokens.Add(_DS_Token_Meat);
+            tokens.Add(_DS_Token_Meat_Fresh);
         }
 
         // If the Venom or Blood fields in the PluginEntry aren't null then harvesting venom and/or blood is enabled.
         if (data.IsMonster)
         {
-            if (!data.Prototype.Venom.IsNull)
-                deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Venom, 1, 1));
-            if (!data.Prototype.BloodType.IsNull)
-                deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Venom, 1, 1));
+            if (!data.Prototype.Venom.IsNull) tokens.Add(_DS_Token_Venom);
+            if (!data.Prototype.BloodType.IsNull) tokens.Add(_DS_Token_Blood);
+        }
+
+        foreach (var token in tokens)
+        {
+            deathDescriptor.Entries.Add(CreateLeveledItemEntry(token, 1, 1));
         }
 
         // Add the creature's actual DeathItem to the appropriate FormList.
@@ -844,7 +841,7 @@ sealed public class Program
         // Add the DeathDescriptor to the quest array property.
         std.GetCCFor(data).DeathDescriptors.Objects.Add(new() { Object = deathDescriptor.ToLink() });
 
-        return deathDescriptor;
+        return (deathDescriptor, tokens);
     }
 
     /// <summary>
