@@ -322,7 +322,7 @@ sealed public class Program
         if (data.IsAnimal) CreateCarcass(data, std);
         if (data.IsMonster) CreateDiscards(data, std);
 
-        Write.Success(0, $"{DeathItemNamer(data.DeathItem)} => {data.Prototype.Name} ({tokens.Pretty()})");
+        Write.Success(0, $"{DeathItemNamer(data.DeathItem)} => {data.Prototype.Name} {tokens.Select(t=>ItemNamer(t)).ToList().Pretty()}");
     }
 
     /// <summary>
@@ -794,7 +794,7 @@ sealed public class Program
     /// 
     /// </summary>
     /// 
-    private (ILeveledItemGetter, List<IFormLinkGetter<IItemGetter>>) 
+    private (ILeveledItemGetter, List<IFormLinkGetter<IMiscItemGetter>>) 
         CreateDeathDescriptor(CreatureData data, IFormListGetter pelts, FormList mats, PatchingRecords std)
     {
         // Create the new descriptor.
@@ -803,7 +803,7 @@ sealed public class Program
         deathDescriptor.Entries = new();
         deathDescriptor.Flags = LeveledItem.Flag.UseAll;
         
-        List<IFormLinkGetter<IItemGetter>> tokens = new();
+        List<IFormLinkGetter<IMiscItemGetter>> tokens = new();
 
         // If the pelts FormList isn't empty, then harvesting pelts is enabled.
         if (pelts.Items is not null && pelts.Items.Count > 0) tokens.Add(_DS_Token_Pelt);
@@ -981,6 +981,11 @@ sealed public class Program
 
     private static string ItemNamer(IItemGetter item) => FormNamer(item);
 
+    private string ItemNamer(IFormLinkGetter<IMiscItemGetter> link)
+    {
+        LinkCache.TryResolve(link, out var item);
+        return FormNamer(item);
+    }
 
     //private string NpcNamerFallback(INpcGetter npc) => NpcNamer(npc) ?? NpcRaceNamer(npc) ?? FormIDNamer(npc);
     //static private string DeathItemNamerFallback(DeathItemGetter deathItem) => DeathItemNamer(deathItem) ?? FormIDNamer(deathItem);
