@@ -50,7 +50,7 @@ namespace HunterbornExtender
                         {
                             try
                             {
-                                Write.Action(1, $"Reading legacy zedit plugin set: {filePath}");
+                                Write.Action(1, $"Reading zedit plugin set: {filePath}");
                                 var filePlugins = ReadFile(filePath, state.LinkCache);
                                 plugins.AddRange(filePlugins);
                                 previousFilenames.Add(filename);
@@ -88,6 +88,9 @@ namespace HunterbornExtender
         {
             string jsonString = File.ReadAllText(fileName);
             //Write.Success(2, $"Successfully read {fileName}");
+
+            var jsonPlugin = JsonSerializer.Deserialize<List<AddonPluginEntry>>(jsonString);
+            if (jsonPlugin is List<AddonPluginEntry> importedPlugins) return importedPlugins;
 
             var jsonLegacy = JsonSerializer.Deserialize<List<HBJsonDataLegacy>>(jsonString);
             if (jsonLegacy == null)
