@@ -10,6 +10,7 @@ using Mutagen.Bethesda.Plugins.Cache;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using DynamicData;
 using System.IO.Abstractions;
+//using Newtonsoft.Json;
 
 namespace HunterbornExtender
 {
@@ -89,6 +90,7 @@ namespace HunterbornExtender
             string jsonString = File.ReadAllText(fileName);
             //Write.Success(2, $"Successfully read {fileName}");
 
+            //JsonConvert.DeserializeObject<Settings.Settings>(jsonInputStr, GetCustomJSONSettings());
             var jsonPlugin = JsonSerializer.Deserialize<List<AddonPluginEntry>>(jsonString);
             if (jsonPlugin is List<AddonPluginEntry> importedPlugins) return importedPlugins;
 
@@ -217,6 +219,17 @@ namespace HunterbornExtender
         {
             return $"{o}";
         }
+
+        /*public static JsonSerializerSettings GetCustomJSONSettings()
+        {
+            var jsonSettings = new JsonSerializerSettings();
+            jsonSettings.AddMutagenConverters();
+            jsonSettings.ObjectCreationHandling = ObjectCreationHandling.Replace;
+            jsonSettings.Formatting = Formatting.Indented;
+            jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter()); // https://stackoverflow.com/questions/2441290/javascriptserializer-json-serialization-of-enum-as-string
+
+            return jsonSettings;
+        }*/
 
         static public void TestImportConversion(HBJsonDataLegacy legacy, PluginEntry plugin)
         {

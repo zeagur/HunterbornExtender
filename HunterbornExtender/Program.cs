@@ -5,6 +5,7 @@ using HunterbornExtender.Settings;
 //using Microsoft.CodeAnalysis;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using Mutagen.Bethesda.Json;
 using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Plugins.Aspects;
 using Mutagen.Bethesda.Plugins.Cache;
@@ -14,11 +15,10 @@ using Mutagen.Bethesda.Plugins.Order;
 using Mutagen.Bethesda.Plugins.Records;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
+using Newtonsoft.Json;
 using Noggog;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using static HunterbornExtender.FormKeys;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
 using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
@@ -32,21 +32,46 @@ sealed public class Program
         return 0;
     }
 
+    public static JsonSerializerSettings GetCustomJSONSettings()
+    {
+        var jsonSettings = new JsonSerializerSettings();
+        jsonSettings.AddMutagenConverters();
+        jsonSettings.ObjectCreationHandling = ObjectCreationHandling.Replace;
+        jsonSettings.Formatting = Formatting.Indented;
+        jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter()); // https://stackoverflow.com/questions/2441290/javascriptserializer-json-serialization-of-enum-as-string
+
+        return jsonSettings;
+    }
+
 
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
     {
-        //var pluginsPath = Path.Combine(state.ExtraSettingsDataPath?.Path ?? throw new Exception("Could not find Extra Settings Data Path"), "Plugins");
-        Program program = new(settings, state);
-        program.Initialize();
-        program.Patch();
-    }
+        Write.Title(0, "PARAMETER SETTINGS");
+        Write.Success(2, $"{settings.QuickLootPatch}");
+        Write.Success(2, $"{settings.ReuseSelections}");
+        Write.Success(2, $"{settings.DeathItemSelections.Pretty()}");
+        Write.Success(2, $"{settings.Plugins.Pretty()}");
 
-    /// <summary>
-    /// Creates a new instance of Program.
-    /// </summary>
-    /// <param name="settings"></param>
-    /// <param name="state"></param>
-    //public Program(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state) : this(pluginsPath, settings, state.PatchMod, state.LoadOrder, state.LinkCache) { }
+        string settingsFilename = "settings.json";
+        string jsonInputStr = File.ReadAllText(settingsFilename);
+        var obj = JsonConvert.DeserializeObject<Settings.Settings>(jsonInputStr, GetCustomJSONSettings());
+        if (obj is Settings.Settings settings2)
+        {
+            Write.Title(0, "MANUALLY READ SETTINGS");
+            Write.Success(2, $"{settings2.QuickLootPatch}");
+            Write.Success(2, $"{settings2.ReuseSelections}");
+            Write.Success(2, $"{settings2.DeathItemSelections.Pretty()}");
+            Write.Success(2, $"{settings2.Plugins.Pretty()}");
+        }
+        else
+        {
+            Write.Title(0, "Failure.");
+        }
+
+        //Program program = new(settings, state);
+        //program.Initialize();
+        //program.Patch();
+    }
 
     /// <summary>
     /// Creates a new instance of Program.
@@ -122,7 +147,7 @@ sealed public class Program
             deathItem.Selection = plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault(PluginEntry.SKIP);
         }
 
-        Write.Success(0, $"Imported death plugin support for {plugins.Count} creatures");
+        Write.Success(0, $"Found {plugins.Count} creature types.");
         Write.Success(0, $"Imported {Settings.DeathItemSelections.Length} death item selections");
 
         // Heuristic matching and user selections should already be done.
