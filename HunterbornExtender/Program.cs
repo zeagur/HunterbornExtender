@@ -322,7 +322,7 @@ sealed public class Program
         if (data.IsAnimal) CreateCarcass(data, std);
         if (data.IsMonster) CreateDiscards(data, std);
 
-        Write.Success(1, $"{DeathItemNamer(data.DeathItem)} => {data.Prototype.Name} ({tokens})");
+        Write.Success(0, $"{DeathItemNamer(data.DeathItem)} => {data.Prototype.Name} ({tokens.Pretty()})");
     }
 
     /// <summary>
