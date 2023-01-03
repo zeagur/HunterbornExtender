@@ -45,6 +45,10 @@ public class JSONhandler<T>
 
     public static void SaveJSONFile(T input, string saveLoc)
     {
+        if (Path.GetDirectoryName(saveLoc) is string dir && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
         File.WriteAllText(saveLoc, Serialize(input));
     }
 }
