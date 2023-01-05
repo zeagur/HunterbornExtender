@@ -475,7 +475,7 @@ sealed public class RecreateInternal
                 {
                     if (entry.Data is not null && entry.Data.Reference is not null)
                     {
-                        skillLevel.Items.Add((entry.Data.Reference, entry.Data.Count));
+                        skillLevel.Add(entry.Data.Reference, entry.Data.Count);
                     }
                 }
             }

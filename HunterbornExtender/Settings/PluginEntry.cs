@@ -134,7 +134,12 @@ public class InternalPluginEntry : PluginEntry
 public class MaterialLevel
 {
     //public Dictionary<IFormLinkGetter<IItemGetter>, int> Items { get; set; } = new();
-    public List<(IFormLinkGetter<IItemGetter> Item, int Count)> Items { get; set; } = new();
+    public List<MaterialItem> Items { get; set; } = new();
+
+    public void Add(IFormLinkGetter<IItemGetter> item, int count)
+    {
+        Items.Add(new() { Item = item, Count = count });
+    }
 
     public Dictionary<IFormLinkGetter<IItemGetter>, int> ToDict()
     {
@@ -148,10 +153,16 @@ public class MaterialLevel
         MaterialLevel result = new();
         foreach (var item in dict)
         {
-            result.Items.Add((item.Key, item.Value));
+            result.Add(item.Key, item.Value);
         }
         return result;
     }
+}
+
+public class MaterialItem
+{
+    public IFormLinkGetter<IItemGetter> Item { get; set; } = FormLinkGetter<IItemGetter>.Null;
+    public int Count { get; set; } = 1;
 }
 
 /// <summary>

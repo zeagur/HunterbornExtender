@@ -509,7 +509,7 @@ sealed public class Program
             if (Settings.QuickLootPatch)
             {
                 //if (skillLevel.Items is Dictionary<IFormLinkGetter<IItemGetter>, int> items)
-                if (skillLevel.Items is List<(IFormLinkGetter<IItemGetter>, int)> items)
+                if (skillLevel.Items is List<MaterialItem> items)
                 {
                     foreach (var diEntry in deathItemStuff)
                     {
@@ -517,9 +517,9 @@ sealed public class Program
                         {
                             items[diEntry.Key] = diEntry.Value;
                         }*/
-                        if (!items.Any(item => item.Item1.Equals(diEntry.Key)))
+                        if (!items.Any(item => item.Item.Equals(diEntry.Key)))
                         {
-                            items.Add((diEntry.Key, diEntry.Value));
+                            skillLevel.Add(diEntry.Key, diEntry.Value);
                         }
                     }
                 }
