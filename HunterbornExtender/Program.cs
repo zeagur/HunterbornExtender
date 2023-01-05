@@ -2,8 +2,6 @@
 
 using DynamicData;
 using HunterbornExtender.Settings;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-//using Microsoft.CodeAnalysis;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Mutagen.Bethesda.Json;
@@ -11,7 +9,6 @@ using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Plugins.Aspects;
 using Mutagen.Bethesda.Plugins.Cache;
 using Mutagen.Bethesda.Plugins.Exceptions;
-using Mutagen.Bethesda.Plugins.Internals;
 using Mutagen.Bethesda.Plugins.Order;
 using Mutagen.Bethesda.Plugins.Records;
 using Mutagen.Bethesda.Skyrim;
@@ -73,7 +70,9 @@ sealed public class Program
             }
             else
             {
+                
                 Write.Fail(0, "Failure to parse " + Environment.NewLine + errorString);
+                new Program(settings, state).Initialize().Patch();
             }
         } 
     }
