@@ -33,7 +33,7 @@ namespace HunterbornExtenderUI
             var path = System.IO.Path.Combine(folderPath, "settings.json");
             if (System.IO.File.Exists(path))
             {
-                return JSONhandler<Settings>.LoadJSONFile(path) ?? new Settings();
+                return JSONhandler<Settings>.LoadJSONFile(path, out string exceptionStr) ?? new Settings();
             }
             return new Settings();
         }

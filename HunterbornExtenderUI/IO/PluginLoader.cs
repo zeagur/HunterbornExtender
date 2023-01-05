@@ -37,7 +37,7 @@ public class PluginLoader
                 {
                     if (fromInternalData && plugins.Where(x => Path.GetFileNameWithoutExtension(x.FilePath) == Path.GetFileNameWithoutExtension(path)).Any()) { continue; } // do not overwrite user's customized plugins with the originals packaged with the patcher
 
-                    var loadedPlugin = JSONhandler<Plugin>.LoadJSONFile(path);
+                    var loadedPlugin = JSONhandler<Plugin>.LoadJSONFile(path, out _);
                     if (loadedPlugin == null)
                     {
                         loadedPlugin = ConvertPluginFromzEdit(path);
@@ -72,7 +72,7 @@ public class PluginLoader
     {
         try
         {
-            var entries = JSONhandler<List<PluginEntryLegacyzEdit>>.LoadJSONFile(path);
+            var entries = JSONhandler<List<PluginEntryLegacyzEdit>>.LoadJSONFile(path, out _);
             if (entries != null)
             {
                 PluginLegacyzEdit legacyPlugin = new();

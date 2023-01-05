@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using Autofac;
+using HunterbornExtender;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Noggog.WPF;
@@ -64,9 +65,14 @@ public partial class App : Application
         HunterbornExtender.Settings.Settings settings = new();
         if (state.ExtraSettingsDataPath != null)
         {
+            Write.Success(0, "Loading settings in RunPatch from " + state.ExtraSettingsDataPath);
             settings = PatcherSettingsIO.LoadFromDisk(System.IO.Path.Combine(state.ExtraSettingsDataPath, "settings.json"));
+            if (settings != null)
+            {
+                Write.Success(0, "Loaded settings in RunPatch from " + state.ExtraSettingsDataPath);
+            }
         }
 
-        HunterbornExtender.Program.RunPatch(state, settings);
+        HunterbornExtender.Program.RunPatch(state, settings ?? new HunterbornExtender.Settings.Settings());
     }
 }

@@ -57,7 +57,7 @@ sealed public class Program
         
         Write.Title(0, settingsPath);
 
-        var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath);
+        var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath, out string settingsException);
         if (obj is Settings.Settings settings2)
         {
             Write.Title(0, "MANUALLY READ SETTINGS");
@@ -68,7 +68,7 @@ sealed public class Program
         }
         else
         {
-            Write.Title(0, "Failure.");
+            Write.Title(0, "Failure: " + Environment.NewLine + settingsException);
         }
 
         //Program program = new(settings, state);

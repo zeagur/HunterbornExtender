@@ -22,7 +22,11 @@ namespace HunterbornExtenderUI
             var deathItemsPath = Path.Combine(_state.ExtraSettingsDataPath, "DeathItems.json");
             if (File.Exists(deathItemsPath))
             {
-                deathItems = JSONhandler<HashSet<DeathItemSelection>>.LoadJSONFile(deathItemsPath) ?? new();
+                deathItems = JSONhandler<HashSet<DeathItemSelection>>.LoadJSONFile(deathItemsPath, out string exceptionStr) ?? new();
+                if (!string.IsNullOrEmpty(exceptionStr))
+                {
+                    // log
+                }
             }
             return deathItems;
         }
