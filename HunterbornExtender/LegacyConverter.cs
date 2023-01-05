@@ -10,41 +10,23 @@ using Mutagen.Bethesda.Plugins.Cache;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using DynamicData;
 using System.IO.Abstractions;
+//using Newtonsoft.Json;
 
 namespace HunterbornExtender
 {
     sealed public class LegacyConverter
     {
-        static public List<AddonPluginEntry> ImportAndConvert(string pluginsPath, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+        static public List<AddonPluginEntry> ImportAndConvert(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             List<string> directoriesToTry = new();
-
-            if (Directory.Exists(pluginsPath))
-            {
-                Write.Success(1, $"PluginsPath parameter: {pluginsPath} (EXISTS)");
-                directoriesToTry.Add(pluginsPath);
-            }
-            else Write.Action(1, $"PluginsPath parameter: {pluginsPath} (MISSING))");
-
-            string synthesisSubdirectory = $"{Directory.GetCurrentDirectory()}\\Data\\Skyrim Special Edition\\HunterbornExtender";
-            if (Directory.Exists(synthesisSubdirectory))
-            {
-                Write.Success(1, $"Synthesis subdirectory: {synthesisSubdirectory} (EXISTS)");
-                directoriesToTry.Add(pluginsPath);
-            }
-            else Write.Action(1, $"Synthesis subdirectory: {synthesisSubdirectory} (MISSING))");
-
-            string projectSubdirectory = $"{Directory.GetCurrentDirectory()}\\..\\..\\..\\zedit";
-            if (Directory.Exists(projectSubdirectory))
-            {
-                Write.Success(1, $"VS project subdirectory: {projectSubdirectory} (EXISTS)");
-                directoriesToTry.Add(pluginsPath);
-            }
-            else Write.Action(1, $"VS project subdirectory: {projectSubdirectory} (MISSING))");
+            var x = new DirectoryPath("");
+            directoriesToTry.AddRange(CheckPath("Game Data", $"{state.DataFolderPath}\\skse\\plugins\\HunterbornExtender"));
+            directoriesToTry.AddRange(CheckPath("Settings Data Path", $"{state.ExtraSettingsDataPath}"));
+            directoriesToTry.AddRange(CheckPath("Internal Data Path", $"{state.InternalDataPath}\\Plugins"));
 
             HashSet<string> previousFilenames = new();
             List<AddonPluginEntry> plugins = new();
-            var serializationOptions = new JsonSerializerOptions { WriteIndented = true };
+            new JsonSerializerOptions { WriteIndented = true };
 
             foreach (var path in directoriesToTry)
             {
@@ -52,19 +34,25 @@ namespace HunterbornExtender
                 {
                     Directory.SetCurrentDirectory(path);
                     Write.Action(1, $"Changed directory to: {Directory.GetCurrentDirectory()}");
-                    var filenames = Directory.EnumerateFiles(path, "*.json").ToList();
-                    if (filenames.Count > 0) Write.Success(1, $"Found {filenames.Count} json files.");
-                    else Write.Fail(1, $"No json files found.");
+                    var filePaths = Directory
+                        .EnumerateFiles(path, "*.json")
+                        .Where(path => !path.ContainsInsensitive("settings.json"))
+                        .ToList();
 
-                    foreach (var filename in filenames)
+                    if (filePaths.Count > 0) Write.Success(1, $"Found {filePaths.Count} json files.");
+                    else Write.Fail(1, $"No json files found.");
+                    Write.Action(0, $"Previous filenames: {previousFilenames.Pretty()}");
+
+                    foreach (var filePath in filePaths)
                     {
-                        if (filename is not null && !previousFilenames.Contains(filename))
+                        var filename = Path.GetFileName(filePath).ToLower();
+
+                        if (filePath is not null && !previousFilenames.Contains(filename))
                         {
                             try
                             {
-                                var fullPath = filename;
-                                //Write.Action(1, $"Reading legacy zedit plugin set: {fullPath}");
-                                var filePlugins = ReadFile(fullPath, linkCache);
+                                Write.Action(1, $"Reading zedit plugin set: {filePath}");
+                                var filePlugins = ReadFile(filePath, state.LinkCache);
                                 plugins.AddRange(filePlugins);
                                 previousFilenames.Add(filename);
                             }
@@ -81,10 +69,30 @@ namespace HunterbornExtender
             return plugins;
         }
 
+        static IEnumerable<string> CheckPath(string name, DirectoryPath? directory)
+        {           
+            if (directory is not null && Directory.Exists(directory))
+            {
+                Write.Success(1, $"{name}: {directory} (EXISTS)");
+                return new List<string>() { directory };
+            }
+            else
+            {
+                Write.Action(1, $"{name}: {directory} (MISSING))");
+                return new List<string>();
+            }
+
+
+        }
+
         static List<AddonPluginEntry> ReadFile(String fileName, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
         {
             string jsonString = File.ReadAllText(fileName);
             //Write.Success(2, $"Successfully read {fileName}");
+
+            //JsonConvert.DeserializeObject<Settings.Settings>(jsonInputStr, GetCustomJSONSettings());
+            var jsonPlugin = JsonSerializer.Deserialize<List<AddonPluginEntry>>(jsonString);
+            if (jsonPlugin is List<AddonPluginEntry> importedPlugins) return importedPlugins;
 
             var jsonLegacy = JsonSerializer.Deserialize<List<HBJsonDataLegacy>>(jsonString);
             if (jsonLegacy == null)
@@ -211,6 +219,17 @@ namespace HunterbornExtender
         {
             return $"{o}";
         }
+
+        /*public static JsonSerializerSettings GetCustomJSONSettings()
+        {
+            var jsonSettings = new JsonSerializerSettings();
+            jsonSettings.AddMutagenConverters();
+            jsonSettings.ObjectCreationHandling = ObjectCreationHandling.Replace;
+            jsonSettings.Formatting = Formatting.Indented;
+            jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter()); // https://stackoverflow.com/questions/2441290/javascriptserializer-json-serialization-of-enum-as-string
+
+            return jsonSettings;
+        }*/
 
         static public void TestImportConversion(HBJsonDataLegacy legacy, PluginEntry plugin)
         {

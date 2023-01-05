@@ -6,7 +6,7 @@ using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Plugins;
 using Noggog;
 
-abstract public class PluginEntry
+public class PluginEntry
 {
     static readonly public PluginEntry SKIP = Skip.Instance;
     public EntryType Type { get; set; } = EntryType.Animal;

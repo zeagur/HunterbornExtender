@@ -1,8 +1,12 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Reflection;
+using System.Windows;
 using Autofac;
+using HunterbornExtender;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Noggog.WPF;
+using static System.Windows.Forms.AxHost;
 
 namespace HunterbornExtenderUI;
 
@@ -53,7 +57,16 @@ public partial class App : Application
         var container = builder.Build();
         
         var window = new MainWindow();
-        window.DataContext = container.Resolve<MainWindowVM>();
+        var mainVM = container.Resolve<MainWindowVM>();
+        window.DataContext = mainVM;
+
+        var assembly = Assembly.GetEntryAssembly() ?? throw new ArgumentNullException();
+        var rootPath = Path.GetDirectoryName(assembly.Location);
+        if (rootPath != null)
+        {
+            mainVM.WelcomePage.ForceSettingsDir(Path.Combine(rootPath, "Settings"));
+        }
+
         window.Show();
         
         return 0;
@@ -64,9 +77,14 @@ public partial class App : Application
         HunterbornExtender.Settings.Settings settings = new();
         if (state.ExtraSettingsDataPath != null)
         {
+            Write.Success(0, "Loading settings in RunPatch from " + state.ExtraSettingsDataPath);
             settings = PatcherSettingsIO.LoadFromDisk(System.IO.Path.Combine(state.ExtraSettingsDataPath, "settings.json"));
+            if (settings != null)
+            {
+                Write.Success(0, "Loaded settings in RunPatch from " + state.ExtraSettingsDataPath);
+            }
         }
 
-        HunterbornExtender.Program.RunPatch(state, settings);
+        HunterbornExtender.Program.RunPatch(state, settings ?? new HunterbornExtender.Settings.Settings());
     }
 }

@@ -1,8 +1,11 @@
 ﻿namespace HunterbornExtender;
+
+using DynamicData;
 using HunterbornExtender.Settings;
 //using Microsoft.CodeAnalysis;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using Mutagen.Bethesda.Json;
 using Mutagen.Bethesda.Plugins;
 using Mutagen.Bethesda.Plugins.Aspects;
 using Mutagen.Bethesda.Plugins.Cache;
@@ -12,11 +15,10 @@ using Mutagen.Bethesda.Plugins.Order;
 using Mutagen.Bethesda.Plugins.Records;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
+using Newtonsoft.Json;
 using Noggog;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using static HunterbornExtender.FormKeys;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
 using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
@@ -30,36 +32,62 @@ sealed public class Program
         return 0;
     }
 
+    public static JsonSerializerSettings GetCustomJSONSettings()
+    {
+        var jsonSettings = new JsonSerializerSettings();
+        jsonSettings.AddMutagenConverters();
+        jsonSettings.ObjectCreationHandling = ObjectCreationHandling.Replace;
+        jsonSettings.Formatting = Formatting.Indented;
+        jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter()); // https://stackoverflow.com/questions/2441290/javascriptserializer-json-serialization-of-enum-as-string
+
+        return jsonSettings;
+    }
+
 
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
     {
-        var pluginsPath = $"{state.DataFolderPath}\\skse\\plugins\\HunterbornExtender";
-        Program program = new(pluginsPath, settings, state);
-        program.Initialize();
-        program.Patch();
+        Write.Title(0, "PARAMETER SETTINGS");
+        Write.Success(2, $"{settings.QuickLootPatch}");
+        Write.Success(2, $"{settings.ReuseSelections}");
+        Write.Success(2, $"{settings.DeathItemSelections.Pretty()}");
+        Write.Success(2, $"{settings.PluginEntries.Pretty()}");
+
+        string settingsFilename = "settings.json";
+        string settingsPath = $"{state.ExtraSettingsDataPath}\\{settingsFilename}";
+        
+        Write.Title(0, settingsPath);
+
+        var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath, out string settingsException);
+        if (obj is Settings.Settings settings2)
+        {
+            Write.Title(0, "MANUALLY READ SETTINGS");
+            Write.Success(2, $"{settings2.QuickLootPatch}");
+            Write.Success(2, $"{settings2.ReuseSelections}");
+            Write.Success(2, $"{settings2.DeathItemSelections.Pretty()}");
+            Write.Success(2, $"{settings2.PluginEntries.Pretty()}");
+        }
+        else
+        {
+            Write.Title(0, "Failure: " + Environment.NewLine + settingsException);
+        }
+
+        //Program program = new(settings, state);
+        //program.Initialize();
+        //program.Patch();
     }
 
     /// <summary>
     /// Creates a new instance of Program.
     /// </summary>
-    /// <param name="pluginsPath">File path to where the json plugin files are installed.</param>
     /// <param name="settings"></param>
     /// <param name="state"></param>
-    public Program(string pluginsPath, Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state) : this(pluginsPath, settings, state.PatchMod, state.LoadOrder, state.LinkCache) { }
-
-    /// <summary>
-    /// Creates a new instance of Program.
-    /// </summary>
-    /// <param name="pluginsPath">File path to where the json plugin files are installed.</param>
-    /// <param name="settings"></param>
-    /// <param name="state"></param>
-    public Program(string pluginsPath, Settings.Settings settings, ISkyrimMod patchMod, ILoadOrder<IModListing<ISkyrimModGetter>> loadOrder, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+    public Program(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
     {
-        PluginsPath = pluginsPath;
+        State = state;
         Settings = settings;
-        LinkCache = linkCache;
-        LoadOrder = loadOrder;
-        PatchMod = patchMod;
+        LinkCache = State.LinkCache;
+        LoadOrder = State.LoadOrder;
+        PatchMod = State.PatchMod;
         FormLinkSubstitution = SpecialCases.GetCACOSub(LoadOrder.ContainsKey(CACO_MODKEY));
         ItemSubstitution = SpecialCases.GetCACOSubResolved(LoadOrder.ContainsKey(CACO_MODKEY), LinkCache);
     }
@@ -68,7 +96,7 @@ sealed public class Program
     {
         Write.Divider(0);
         Write.Action(0, "Importing plugins.");
-        var addonPlugins = LegacyConverter.ImportAndConvert(PluginsPath, LinkCache);
+        var addonPlugins = LegacyConverter.ImportAndConvert(State);
         Write.Success(0, $"{addonPlugins.Count} creature types imported.");
 
         //
@@ -109,7 +137,7 @@ sealed public class Program
         List<PluginEntry> plugins = new();
         plugins.AddRange(internalPlugins);
         plugins.AddRange(addonPlugins);
-        Settings.Plugins = plugins;
+        Settings.PluginEntries = plugins;
         Write.Success(0, $"Add-on creatures and hard-coded creatures merged; {plugins.Count} total.");
 
         internalPlugins.ForEach(plugin => Taxonomy.AddCreature(plugin));
@@ -122,7 +150,7 @@ sealed public class Program
             deathItem.Selection = plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault(PluginEntry.SKIP);
         }
 
-        Write.Success(0, $"Imported death plugin support for {plugins.Count} creatures");
+        Write.Success(0, $"Found {plugins.Count} creature types.");
         Write.Success(0, $"Imported {Settings.DeathItemSelections.Length} death item selections");
 
         // Heuristic matching and user selections should already be done.
@@ -179,17 +207,17 @@ sealed public class Program
             // null is used to indicate "SKIP".
             if (prototype == null || PluginEntry.SKIP.Equals(prototype))
             {
-                if (Settings.DebuggingMode) Write.Title(0, $"(SKIPPED) {name}");
+                if (Settings.DebuggingMode) Write.Action(0, $"(SKIPPING) {name}");
                 continue;
             }
 
-            Write.Title(0, $"{name} -> {prototype.Name}");
+            //Write.Title(0, $"{name} -> {prototype.Name}");
 
             try
             {
                 var deathItem = LinkCache.Resolve<DeathItemGetter>(selection.DeathItem);
                 var data = CreateCreatureData(selection, prototype);
-                if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
+                //if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
 
                 if (KnownDeathItems.ContainsKey(data.DeathItem))
                 {
@@ -318,19 +346,11 @@ sealed public class Program
         // Do this last because if quicklootpatch is enabled, pelts and meat could end up in materials.
         var mats = CreateMaterials(data, std);
 
-        var deathDescriptor = CreateDeathDescriptor(data, pelts, mats, std);
+        (var deathDescriptor, var tokens) = CreateDeathDescriptor(data, pelts, mats, std);
         if (data.IsAnimal) CreateCarcass(data, std);
         if (data.IsMonster) CreateDiscards(data, std);
 
-        if (DebuggingMode)
-        {
-            Write.Success(1, $"Created new forms:");
-            Write.Success(2, $"ID Token: {token}");
-            Write.Success(2, $"Materials: {mats}");
-            Write.Success(2, $"Pelts: {pelts.Pretty()}");
-            Write.Success(2, $"Descriptor: {deathDescriptor}");
-            Write.Success(2, $"Updated quest script properties.");
-        }
+        Write.Success(0, $"{DeathItemNamer(data.DeathItem)} => {data.Prototype.Name} {tokens.Select(t=>ItemNamer(t)).ToList().Pretty()}");
     }
 
     /// <summary>
@@ -802,40 +822,43 @@ sealed public class Program
     /// 
     /// </summary>
     /// 
-    private ILeveledItemGetter CreateDeathDescriptor(CreatureData data, IFormListGetter pelts, FormList mats, PatchingRecords std)
+    private (ILeveledItemGetter, List<IFormLinkGetter<IMiscItemGetter>>) 
+        CreateDeathDescriptor(CreatureData data, IFormListGetter pelts, FormList mats, PatchingRecords std)
     {
         // Create the new descriptor.
         LeveledItem deathDescriptor = PatchMod.LeveledItems.AddNew();
         deathDescriptor.EditorID = $"_DS_DeathItem_{data.InternalName}";
         deathDescriptor.Entries = new();
         deathDescriptor.Flags = LeveledItem.Flag.UseAll;
+        
+        List<IFormLinkGetter<IMiscItemGetter>> tokens = new();
 
         // If the pelts FormList isn't empty, then harvesting pelts is enabled.
-        if (pelts.Items is not null && pelts.Items.Count > 0)
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Pelt, 1, 1));
+        if (pelts.Items is not null && pelts.Items.Count > 0) tokens.Add(_DS_Token_Pelt);
 
         // If the materials FormList isn't empty, then harvesting materials is enabled.
-        if (mats.Items is not null && mats.Items.Count > 0)
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Mat, 1, 1));
+        if (mats.Items is not null && mats.Items.Count > 0) tokens.Add(_DS_Token_Mat);
 
         // Animals need to be cleaned. Monsters apparently not?
-        if (data.IsAnimal)
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Carcass_Clean, 1, 1));
+        if (data.IsAnimal) tokens.Add(_DS_Token_Carcass_Clean);
 
         // If the Meat field in the PluginEntry isn't null then harvesting meat is enabled.
         if (!data.Prototype.Meat.IsNull)
         {
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Meat, 1, 1));
-            deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Meat_Fresh, 1, 1));
+            tokens.Add(_DS_Token_Meat);
+            tokens.Add(_DS_Token_Meat_Fresh);
         }
 
         // If the Venom or Blood fields in the PluginEntry aren't null then harvesting venom and/or blood is enabled.
         if (data.IsMonster)
         {
-            if (!data.Prototype.Venom.IsNull)
-                deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Venom, 1, 1));
-            if (!data.Prototype.BloodType.IsNull)
-                deathDescriptor.Entries.Add(CreateLeveledItemEntry(_DS_Token_Venom, 1, 1));
+            if (!data.Prototype.Venom.IsNull) tokens.Add(_DS_Token_Venom);
+            if (!data.Prototype.BloodType.IsNull) tokens.Add(_DS_Token_Blood);
+        }
+
+        foreach (var token in tokens)
+        {
+            deathDescriptor.Entries.Add(CreateLeveledItemEntry(token, 1, 1));
         }
 
         // Add the creature's actual DeathItem to the appropriate FormList.
@@ -846,7 +869,7 @@ sealed public class Program
         // Add the DeathDescriptor to the quest array property.
         std.GetCCFor(data).DeathDescriptors.Objects.Add(new() { Object = deathDescriptor.ToLink() });
 
-        return deathDescriptor;
+        return (deathDescriptor, tokens);
     }
 
     /// <summary>
@@ -986,6 +1009,11 @@ sealed public class Program
 
     private static string ItemNamer(IItemGetter item) => FormNamer(item);
 
+    private string ItemNamer(IFormLinkGetter<IMiscItemGetter> link)
+    {
+        LinkCache.TryResolve(link, out var item);
+        return FormNamer(item);
+    }
 
     //private string NpcNamerFallback(INpcGetter npc) => NpcNamer(npc) ?? NpcRaceNamer(npc) ?? FormIDNamer(npc);
     //static private string DeathItemNamerFallback(DeathItemGetter deathItem) => DeathItemNamer(deathItem) ?? FormIDNamer(deathItem);
@@ -1049,14 +1077,15 @@ sealed public class Program
     /// </summary>
     private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
 
-    private string PluginsPath { get; }
+    //private string PluginsPath { get; }
     private Settings.Settings Settings { get; }
+    private IPatcherState<ISkyrimMod, ISkyrimModGetter> State { get; }
     private ILinkCache<ISkyrimMod, ISkyrimModGetter> LinkCache { get; }
     private ILoadOrder<IModListing<ISkyrimModGetter>> LoadOrder { get; }
     private ISkyrimMod PatchMod { get; }
     private bool DebuggingMode { get { return Settings.DebuggingMode; } }
 
-    private AdvancedTaxonomy Taxonomy = new();
+    private readonly AdvancedTaxonomy Taxonomy = new();
 
 }
 

@@ -14,8 +14,6 @@ public class MainWindowVM : ViewModel
     private PluginLoader _pluginLoader;
     private readonly VMLoader_Plugins _vmPluginLoader;
     private readonly VM_PluginList _pluginList;
-
-    private DeathItemSettingsLoader _deathItemLoader;
     private readonly VMLoader_DeathItems _vmDeathItemLoader;
     private readonly VM_DeathItemSelectionList _deathItemSelectionList;
     private SettingsProvider _settingsProvider;
@@ -33,7 +31,6 @@ public class MainWindowVM : ViewModel
     public MainWindowVM(
         SettingsProvider settingsProvider,
         PluginLoader pluginLoader,
-        DeathItemSettingsLoader deathItemSettingsLoader,
         VM_WelcomePage welcomePage,
         VM_PluginEditorPage pluginEditorPage,
         VMLoader_Plugins vmPluginLoader,
@@ -44,7 +41,6 @@ public class MainWindowVM : ViewModel
     {
         _settingsProvider = settingsProvider;
         _pluginLoader = pluginLoader;
-        _deathItemLoader = deathItemSettingsLoader;
 
         _pluginList = pluginList;
         _deathItemSelectionList = deathItemSelectionList;
@@ -101,6 +97,10 @@ public class MainWindowVM : ViewModel
         if (WelcomePage.SettingsDir != string.Empty)
         {
             PatcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir, PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList));
+            foreach (var plugin in _pluginList.Plugins)
+            {
+                plugin.SaveToDisk(false);   
+            }
             if (withClick)
             {
                 MessageBox.Show("Saved to " + System.IO.Path.Combine(WelcomePage.SettingsDir, "settings.json"));

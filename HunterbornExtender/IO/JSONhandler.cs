@@ -1,9 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Mutagen.Bethesda.Json;
 using System.IO;
-using HunterbornExtenderUI;
 
-namespace SynthEBD;
+namespace HunterbornExtender;
 
 public class JSONhandler<T>
 {
@@ -18,8 +17,9 @@ public class JSONhandler<T>
         return jsonSettings;
     }
 
-    public static T? Deserialize(string jsonInputStr)
+    public static T? Deserialize(string jsonInputStr, out string errorString)
     {
+        errorString = "";
         try
         {
             return JsonConvert.DeserializeObject<T>(jsonInputStr, GetCustomJSONSettings());
@@ -27,15 +27,15 @@ public class JSONhandler<T>
         catch (Exception ex)
         {
             // log
-            string error = ExceptionRecorder.GetExceptionStack(ex, "");
+            errorString = ExceptionRecorder.GetExceptionStack(ex, "");
             //MessageBox.Show(error);
             return default;
         }
     }
 
-    public static T? LoadJSONFile(string loadLoc)
+    public static T? LoadJSONFile(string loadLoc, out string errorString)
     {
-        return Deserialize(File.ReadAllText(loadLoc));
+        return Deserialize(File.ReadAllText(loadLoc), out errorString);
     }
 
     public static string Serialize(T input)
@@ -45,6 +45,10 @@ public class JSONhandler<T>
 
     public static void SaveJSONFile(T input, string saveLoc)
     {
+        if (Path.GetDirectoryName(saveLoc) is string dir && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
         File.WriteAllText(saveLoc, Serialize(input));
     }
 }

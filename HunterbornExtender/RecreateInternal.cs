@@ -61,12 +61,12 @@ sealed public class RecreateInternal
             foreach (EntryType type in Enum.GetValues(typeof(EntryType)))
             {
                 int count = std.GetCCFor(type).RaceIndex.Data.Count;
-                Write.Action(1, $"Recreating {count} {type} plugin entries.");
+                Write.Action(0, $"Recreating {count} {type} plugin entries.");
 
                 if (debuggingMode)
                 {
                     if (type == EntryType.Animal) Console.WriteLine($"\tChecks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}, carcasses={std.Animals._DS_FL_CarcassObjects.Items.Count}");
-                    else Write.Action(1, $"Checks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}");
+                    else Write.Action(0, $"Checks: names={std.GetCCFor(type)._DS_FL_DeathItems.Items.Count}, pelts={std.GetCCFor(type)._DS_FL_PeltLists.Items.Count}");
                 }
 
                 for (int index = 0; index < count; index++)
@@ -122,7 +122,7 @@ sealed public class RecreateInternal
             var renaming = RecreatePluginName(plugin, deathItem);
 
             if (!renaming.Equals(NoRename)) (internalName, plugin.ProperName, plugin.SortName) = renaming;
-            if (debuggingMode) Write.Action(2, $"Recreating {plugin.Name} from {DeathItemNamer(deathItem)} (proper name '{plugin.ProperName}', sort name '{plugin.SortName}')");
+            //if (debuggingMode) Write.Action(2, $"Recreating {plugin.Name} from {DeathItemNamer(deathItem)} (proper name '{plugin.ProperName}', sort name '{plugin.SortName}')");
 
             var toggle = std.GetCCFor(type).Switches.Objects[index].Object;
             if (toggle.IsNull) plugin.Toggle = new FormLink<IGlobalGetter>();
@@ -209,7 +209,7 @@ sealed public class RecreateInternal
 
             FindRecipes(plugin, internalName, deathItem, knownPelts, linkCache, debuggingMode);
 
-            Write.Success(1, $"Recreation of {internalName} complete.");
+            if (debuggingMode) Write.Action(2, $"Recreated {plugin.Name} from {DeathItemNamer(deathItem)} (proper name '{plugin.ProperName}', sort name '{plugin.SortName}')");
             return plugin;
 
         }
@@ -297,7 +297,7 @@ sealed public class RecreateInternal
         {
             if (foundPelt is not null && !foundPelt.IsNull)
             {
-                if (debuggingMode) Write.Success(2, $"Found default pelt from tanning recipe {peltRecipe1.EditorID}.");
+                //if (debuggingMode) Write.Success(2, $"Found default pelt from tanning recipe {peltRecipe1.EditorID}.");
                 plugin.DefaultPelt = foundPelt.FormKey.ToLink<IMiscItemGetter>();
             }
         }
@@ -306,7 +306,7 @@ sealed public class RecreateInternal
             var defaultPelt = FindDefaultPelt(deathItem, linkCache, debuggingMode);
             if (defaultPelt is not null)
             {
-                if (debuggingMode) Write.Success(2, $"Found default pelt from DeathItem {deathItem.EditorID}.");
+                //if (debuggingMode) Write.Success(2, $"Found default pelt from DeathItem {deathItem.EditorID}.");
                 plugin.DefaultPelt = defaultPelt.ToLink();
             }
         }
@@ -318,7 +318,7 @@ sealed public class RecreateInternal
 
         if (peltRecipe0 is not null && peltRecipe1 is not null && peltRecipe2 is not null && peltRecipe3 is not null)
         {
-            if (debuggingMode) Write.Success(2, "Found a full set of leather-making recipes.");
+            //if (debuggingMode) Write.Success(2, "Found a full set of leather-making recipes.");
             //var peltRecipeSet = (peltRecipe0, peltRecipe1, peltRecipe2, peltRecipe3);
             //plugin.Recipes.PeltRecipes = peltRecipeSet;
 
@@ -343,7 +343,7 @@ sealed public class RecreateInternal
                     var known = knownPelts[plugin];
                     if (found.Item1.Equals(known.Item1) && found.Item2.Equals(known.Item2) && found.Item3.Equals(known.Item3) && found.Item4.Equals(known.Item4))
                     {
-                        Write.Success(2, "Recipe pelts and name-lookup pelts are a match.");
+                        //Write.Success(2, "Recipe pelts and name-lookup pelts are a match.");
                     }
                     else
                     {
@@ -374,7 +374,7 @@ sealed public class RecreateInternal
 
         if (furRecipe0 is not null && furRecipe1 is not null && furRecipe2 is not null)
         {
-            if (debuggingMode) Write.Success(2, "Found a full set of fur-plating recipes.");
+            //if (debuggingMode) Write.Success(2, "Found a full set of fur-plating recipes.");
             plugin.FurPlateCount = new int[] { furRecipe0.CreatedObjectCount ?? 1, furRecipe1.CreatedObjectCount ?? 2, furRecipe2.CreatedObjectCount ?? 4 };
         }
         else if (furRecipe0 is not null || furRecipe1 is not null || furRecipe2 is not null)
@@ -391,7 +391,7 @@ sealed public class RecreateInternal
         if (meatCooked is not null || meatCampfire is not null || meatPrimitive is not null || meatJerky is not null)
         {
             var meatRecipes = (meatCooked, meatCooked, meatPrimitive, meatJerky);
-            if (debuggingMode) Write.Success(2, $"Found meat recipes: {meatRecipes}");
+            //if (debuggingMode) Write.Success(2, $"Found meat recipes: {meatRecipes}");
         }
         else if (!plugin.Meat.IsNull && debuggingMode) Write.Fail(2, $"No meat recipes found.");
 
@@ -505,13 +505,13 @@ sealed public class RecreateInternal
             {
                 if (entryItem is DeathItemGetter lvld)
                 {
-                    if (debuggingMode) Write.Action(3, $"Pelt search recursing into {DeathItemNamer(lvld)}");
+                    //if (debuggingMode) Write.Action(3, $"Pelt search recursing into {DeathItemNamer(lvld)}");
                     if (lvld.Entries is not null && lvld.Entries.Count == 1 && FindDefaultPelt(lvld, linkCache, debuggingMode) is IMiscItemGetter subItem)
                         return subItem;
                 }
                 else if (entryItem is IMiscItemGetter item)
                 {
-                    if (debuggingMode) Write.Action(3, $"Pelt search found {ItemNamer(item)} in {DeathItemNamer(deathItem)}");
+                    //if (debuggingMode) Write.Action(3, $"Pelt search found {ItemNamer(item)} in {DeathItemNamer(deathItem)}");
                     return item;
                 }
             }

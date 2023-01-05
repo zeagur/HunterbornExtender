@@ -54,12 +54,12 @@
 
   <ItemGroup>
     <PackageReference Include="Extended.Wpf.Toolkit" Version="4.4.0" />
-    <PackageReference Include="Mutagen.Bethesda.Json" Version="0.40.0-pr007" />
-    <PackageReference Include="Mutagen.Bethesda.Skyrim" Version="0.40.0-pr007" />
-    <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.25.0-pr005" />
+    <PackageReference Include="Mutagen.Bethesda.Json" Version="0.40.0" />
+    <PackageReference Include="Mutagen.Bethesda.Skyrim" Version="0.40.0" />
+    <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.25.0" />
     <PackageReference Include="Mutagen.Bethesda.Synthesis.WPF" Version="0.25.0-pr005" />
-    <PackageReference Include="Mutagen.Bethesda.WPF" Version="0.40.0-pr007" />
-    <PackageReference Include="Noggog.Autofac" Version="2.53.0" />
+    <PackageReference Include="Mutagen.Bethesda.WPF" Version="0.40.0" />
+    <PackageReference Include="Noggog.Autofac" Version="2.54.0" />
   </ItemGroup>
 
   <ItemGroup>

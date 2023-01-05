@@ -1,5 +1,5 @@
 ﻿using HunterbornExtender.Settings;
-using SynthEBD;
+using HunterbornExtender;
 using System.IO;
 
 namespace HunterbornExtenderUI
@@ -15,7 +15,7 @@ namespace HunterbornExtenderUI
             {
                 foreach (var entry in plugin.Entries)
                 {
-                    settings.Plugins.Add(entry.DumpToModel());
+                    settings.PluginEntries.Add(entry.DumpToModel());
                 }
             }
             return settings;
@@ -33,7 +33,7 @@ namespace HunterbornExtenderUI
             var path = System.IO.Path.Combine(folderPath, "settings.json");
             if (System.IO.File.Exists(path))
             {
-                return JSONhandler<Settings>.LoadJSONFile(path) ?? new Settings();
+                return JSONhandler<Settings>.LoadJSONFile(path, out string exceptionStr) ?? new Settings();
             }
             return new Settings();
         }

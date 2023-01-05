@@ -31,7 +31,7 @@
                                         <ColumnDefinition Width="auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Column="0" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" MinWidth="100"/>
+                                    <TextBox Grid.Column="0" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" MinWidth="100"/>
                                     <Button Grid.Column="1" HorizontalAlignment="Right" Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type UserControl}}, Path=DataContext.DeletePlugin}" CommandParameter="{Binding}" Foreground="Firebrick">X</Button>
                                 </Grid>
                             </Border>
@@ -39,6 +39,21 @@
                     </ListBox.ItemTemplate>
 
                     <!-- the following ItemContainerStyle makes selecting the TextBox containing Category also toggle the ListBoxItem.IsSelected property to focus on that ListBox Item-->
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <Style.Triggers>
+                                <EventTrigger RoutedEvent="PreviewGotKeyboardFocus">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="(ListBoxItem.IsSelected)">
+                                                <DiscreteBooleanKeyFrame KeyTime="0" Value="True"/>
+                                            </BooleanAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>

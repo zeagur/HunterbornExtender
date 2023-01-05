@@ -1,7 +1,7 @@
 ﻿using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using SynthEBD;
+using HunterbornExtender;
 using System.Reflection;
 using System.Windows.Input;
 
@@ -30,7 +30,7 @@ public class VM_WelcomePage : ViewModel
         var saveInfoPath = System.IO.Path.Combine(exeLocation, "SavePath.json");
         if (System.IO.File.Exists(saveInfoPath))
         {
-            var saveInfo = JSONhandler<string>.LoadJSONFile(saveInfoPath);
+            var saveInfo = JSONhandler<string>.LoadJSONFile(saveInfoPath, out _);
             if (saveInfo != null)
             {
                 SettingsDir = saveInfo;
