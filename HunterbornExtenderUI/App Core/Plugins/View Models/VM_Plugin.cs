@@ -6,7 +6,7 @@ using Noggog;
 using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using SynthEBD;
+using HunterbornExtender;
 
 namespace HunterbornExtenderUI;
 

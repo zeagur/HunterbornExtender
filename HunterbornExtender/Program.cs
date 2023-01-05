@@ -54,10 +54,10 @@ sealed public class Program
 
         string settingsFilename = "settings.json";
         string settingsPath = $"{state.ExtraSettingsDataPath}\\{settingsFilename}";
-        string jsonInputStr = File.ReadAllText(settingsPath);
+        
         Write.Title(0, settingsPath);
 
-        var obj = JsonConvert.DeserializeObject<Settings.Settings>(jsonInputStr, GetCustomJSONSettings());
+        var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath);
         if (obj is Settings.Settings settings2)
         {
             Write.Title(0, "MANUALLY READ SETTINGS");

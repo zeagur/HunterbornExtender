@@ -1,9 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Mutagen.Bethesda.Json;
 using System.IO;
-using HunterbornExtenderUI;
 
-namespace SynthEBD;
+namespace HunterbornExtender;
 
 public class JSONhandler<T>
 {

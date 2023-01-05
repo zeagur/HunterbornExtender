@@ -1,5 +1,5 @@
 ﻿using HunterbornExtender.Settings;
-using SynthEBD;
+using HunterbornExtender;
 using System.IO;
 
 namespace HunterbornExtenderUI

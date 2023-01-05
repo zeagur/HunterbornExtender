@@ -1,4 +1,4 @@
-﻿using SynthEBD;
+﻿using HunterbornExtender;
 using System.IO;
 using HunterbornExtender.Settings;
 

@@ -1,4 +1,4 @@
-﻿namespace HunterbornExtenderUI;
+﻿namespace HunterbornExtender;
 
 public class ExceptionRecorder
 {

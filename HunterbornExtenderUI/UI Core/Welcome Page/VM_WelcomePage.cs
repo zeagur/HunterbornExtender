@@ -1,7 +1,7 @@
 ﻿using Noggog.WPF;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using SynthEBD;
+using HunterbornExtender;
 using System.Reflection;
 using System.Windows.Input;
 
