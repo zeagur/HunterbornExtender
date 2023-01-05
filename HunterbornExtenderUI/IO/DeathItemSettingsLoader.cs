@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HunterbornExtender.Settings;
+using System.Windows;
 
 namespace HunterbornExtenderUI
 {
@@ -19,13 +20,19 @@ namespace HunterbornExtenderUI
         public HashSet<DeathItemSelection> LoadDeathItemSettings()
         {
             HashSet<DeathItemSelection> deathItems = new();
-            var deathItemsPath = Path.Combine(_state.ExtraSettingsDataPath, "DeathItems.json");
-            if (File.Exists(deathItemsPath))
+            var settingsPath = Path.Combine(_state.ExtraSettingsDataPath, "Settings.json");
+            if (File.Exists(settingsPath))
             {
-                deathItems = JSONhandler<HashSet<DeathItemSelection>>.LoadJSONFile(deathItemsPath, out string exceptionStr) ?? new();
+                var settings = JSONhandler<Settings>.LoadJSONFile(settingsPath, out var exceptionStr);
+                
+                if (settings != null)
+                {
+                    deathItems = settings.DeathItemSelections.ToHashSet();
+                }
+
                 if (!string.IsNullOrEmpty(exceptionStr))
                 {
-                    // log
+                    MessageBox.Show("Could not read Settings.json: " + Environment.NewLine + exceptionStr);
                 }
             }
             return deathItems;
