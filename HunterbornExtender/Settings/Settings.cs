@@ -1,6 +1,6 @@
 ﻿namespace HunterbornExtender.Settings;
 
-sealed public class Settings
+public class Settings
 {
     public List<PluginEntry> Plugins { get; set; } = new();
 
