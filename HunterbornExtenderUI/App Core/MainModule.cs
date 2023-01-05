@@ -13,7 +13,6 @@ public class MainModule : Autofac.Module
         builder.RegisterType<SettingsProvider>().AsSelf().SingleInstance();
 
         builder.RegisterType<PluginLoader>().AsSelf().SingleInstance();
-        builder.RegisterType<DeathItemSettingsLoader>().AsSelf().SingleInstance();
 
         builder.RegisterType<VM_PluginList>().AsSelf().SingleInstance();
         builder.RegisterType<VM_DeathItemSelectionList>().AsSelf().SingleInstance();

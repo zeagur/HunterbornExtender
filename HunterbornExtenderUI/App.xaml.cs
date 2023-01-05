@@ -1,9 +1,12 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Reflection;
+using System.Windows;
 using Autofac;
 using HunterbornExtender;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Noggog.WPF;
+using static System.Windows.Forms.AxHost;
 
 namespace HunterbornExtenderUI;
 
@@ -54,7 +57,16 @@ public partial class App : Application
         var container = builder.Build();
         
         var window = new MainWindow();
-        window.DataContext = container.Resolve<MainWindowVM>();
+        var mainVM = container.Resolve<MainWindowVM>();
+        window.DataContext = mainVM;
+
+        var assembly = Assembly.GetEntryAssembly() ?? throw new ArgumentNullException();
+        var rootPath = Path.GetDirectoryName(assembly.Location);
+        if (rootPath != null)
+        {
+            mainVM.WelcomePage.ForceSettingsDir(Path.Combine(rootPath, "Settings"));
+        }
+
         window.Show();
         
         return 0;

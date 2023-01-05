@@ -26,7 +26,7 @@ sealed public class VM_DeathItemAssignmentPage : ViewModel
 
     [Reactive]
     public VM_DeathItemSelectionList DeathItemSelectionList { get; set; }
-    public VM_DeathItemAssignmentPage(IStateProvider stateProvider, SettingsProvider settingsProvider, VM_PluginList pluginList, VM_DeathItemSelectionList deathItemList, DeathItemSettingsLoader deathItemSettingsLoader, VMLoader_DeathItems deathItemVMLoader)
+    public VM_DeathItemAssignmentPage(IStateProvider stateProvider, SettingsProvider settingsProvider, VM_PluginList pluginList, VM_DeathItemSelectionList deathItemList, VMLoader_DeathItems deathItemVMLoader)
     {
         _stateProvider = stateProvider;
         _settingsProvider = settingsProvider;
