@@ -2,6 +2,7 @@
 
 using DynamicData;
 using HunterbornExtender.Settings;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 //using Microsoft.CodeAnalysis;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
@@ -43,37 +44,38 @@ sealed public class Program
         return jsonSettings;
     }
 
+    public static bool CheckSettings(string label, Settings.Settings settings)
+    {
+        Write.Title(0, label);
+        Write.Success(2, $"{settings.QuickLootPatch}");
+        Write.Success(2, $"{settings.ReuseSelections}");
+        Write.Success(2, $"Selections: {settings.DeathItemSelections.Length}");
+        Write.Success(2, $"Plugins:    {settings.PluginEntries.Count}");
+        return settings.DeathItemSelections.Length > 0 && settings.PluginEntries.Count > 0;
+    }
 
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
     {
-        Write.Title(0, "PARAMETER SETTINGS");
-        Write.Success(2, $"{settings.QuickLootPatch}");
-        Write.Success(2, $"{settings.ReuseSelections}");
-        Write.Success(2, $"{settings.DeathItemSelections.Pretty()}");
-        Write.Success(2, $"{settings.PluginEntries.Pretty()}");
-
-        string settingsFilename = "settings.json";
-        string settingsPath = $"{state.ExtraSettingsDataPath}\\{settingsFilename}";
-        
-        Write.Title(0, settingsPath);
-
-        var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath, out string settingsException);
-        if (obj is Settings.Settings settings2)
+        if (CheckSettings("PARAMETER SETTINGS", settings))
         {
-            Write.Title(0, "MANUALLY READ SETTINGS");
-            Write.Success(2, $"{settings2.QuickLootPatch}");
-            Write.Success(2, $"{settings2.ReuseSelections}");
-            Write.Success(2, $"{settings2.DeathItemSelections.Pretty()}");
-            Write.Success(2, $"{settings2.PluginEntries.Pretty()}");
+            new Program(settings, state).Initialize().Patch();
         }
         else
-        {
-            Write.Title(0, "Failure: " + Environment.NewLine + settingsException);
-        }
+        { 
+            string settingsFilename = "settings.json";
+            string settingsPath = $"{state.ExtraSettingsDataPath}\\{settingsFilename}";
+            Write.Title(0, settingsPath);
 
-        //Program program = new(settings, state);
-        //program.Initialize();
-        //program.Patch();
+            var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath, out string errorString);
+            if (obj is Settings.Settings settings2 && CheckSettings("PARSED SETTINGS", settings))
+            {
+                new Program(settings2, state).Initialize().Patch();
+            }
+            else
+            {
+                Write.Fail(0, "Failure to parse " + Environment.NewLine + errorString);
+            }
+        } 
     }
 
     /// <summary>
@@ -92,55 +94,16 @@ sealed public class Program
         ItemSubstitution = SpecialCases.GetCACOSubResolved(LoadOrder.ContainsKey(CACO_MODKEY), LinkCache);
     }
 
-    public void Initialize()
+    public Program Initialize()
     {
-        Write.Divider(0);
-        Write.Action(0, "Importing plugins.");
-        var addonPlugins = LegacyConverter.ImportAndConvert(State);
-        Write.Success(0, $"{addonPlugins.Count} creature types imported.");
-
-        //
-        // Create a List<PluginEntry> for the hard-coded creatures.
-        // Merge it into the previous list.
-        //
-        List<PluginEntry> internalPlugins;
-
-        try
+        if (Settings.PluginEntries.Count == 0)
         {
-            Write.Divider(0);
-            Write.Action(0, "Trying to recreate the hard-coded core plugin from Hunterborn.esp.");
-            (internalPlugins, var addDeathItems, var addCarcasses, var addPelts) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
-
-            foreach (var e in addDeathItems) KnownDeathItems.Add(e.Key, e.Value);
-            foreach (var e in addCarcasses) KnownCarcasses.Add(e.Key, e.Value);
-            foreach (var e in addPelts) KnownPelts.Add(e.Key, e.Value);
-
-            if (internalPlugins.Count > 0)
-            {
-                Write.Success(0, $"Success: {internalPlugins.Count} hard-coded creature types found.");
-            }
-            else
-            {
-                Write.Fail(0, $"No hard-coded creature types found. Check your Hunterborn installation.");
-                return;
-            }
-        }
-        catch (RecreationError ex)
-        {
-            if (ex.InnerException is RecordException cause)
-                Write.Fail(0, $"Missing reference during recreation: [{cause.EditorID} ({cause.FormKey})].");
-            Write.Fail(0, ex.Message);
-            Console.WriteLine(ex.ToString());
-            return;
+            Settings.PluginEntries = ImportPlugins();
         }
 
-        List<PluginEntry> plugins = new();
-        plugins.AddRange(internalPlugins);
-        plugins.AddRange(addonPlugins);
-        Settings.PluginEntries = plugins;
-        Write.Success(0, $"Add-on creatures and hard-coded creatures merged; {plugins.Count} total.");
-
-        internalPlugins.ForEach(plugin => Taxonomy.AddCreature(plugin));
+        // Add all creature types to the Advanced Taxonomy power.
+        Settings.PluginEntries.ForEach(plugin => Taxonomy.AddCreature(plugin));
+        var plugins = Settings.PluginEntries;
 
         //
         // Link death entryItem selection to corresponding creature entry
@@ -173,8 +136,60 @@ sealed public class Program
                 Write.Fail(0, $"Missing reference during heuristic: [{cause.EditorID} ({cause.FormKey})].");
             Write.Fail(0, ex.Message);
             Console.WriteLine(ex.ToString());
-            return;
+            throw ex;
         }
+
+        return this;
+    }
+
+    public List<PluginEntry> ImportPlugins()
+    {
+        Write.Divider(0);
+        Write.Action(0, "Importing plugins.");
+        var addonPlugins = LegacyConverter.ImportAndConvert(State);
+        Write.Success(0, $"{addonPlugins.Count} creature types imported.");
+
+        //
+        // Create a List<PluginEntry> for the hard-coded creatures.
+        // Merge it into the previous list.
+        //
+        List<PluginEntry> internalPlugins;
+
+        try
+        {
+            Write.Divider(0);
+            Write.Action(0, "Trying to recreate the hard-coded core plugin from Hunterborn.esp.");
+            (internalPlugins, var addDeathItems, var addCarcasses, var addPelts) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
+
+            foreach (var e in addDeathItems) KnownDeathItems.Add(e.Key, e.Value);
+            foreach (var e in addCarcasses) KnownCarcasses.Add(e.Key, e.Value);
+            foreach (var e in addPelts) KnownPelts.Add(e.Key, e.Value);
+
+            if (internalPlugins.Count > 0)
+            {
+                Write.Success(0, $"Success: {internalPlugins.Count} hard-coded creature types found.");
+            }
+            else
+            {
+                Write.Fail(0, "No hard-coded creature types found. Check your Hunterborn installation.");
+                throw new Exception("No hard-coded creature types found. Check your Hunterborn installation.");
+            }
+        }
+        catch (RecreationError ex)
+        {
+            if (ex.InnerException is RecordException cause)
+                Write.Fail(0, $"Missing reference during recreation: [{cause.EditorID} ({cause.FormKey})].");
+            Write.Fail(0, ex.Message);
+            Console.WriteLine(ex.ToString());
+            throw ex;
+        }
+
+        List<PluginEntry> plugins = new();
+        plugins.AddRange(internalPlugins);
+        plugins.AddRange(addonPlugins);
+        Write.Success(0, $"Addon creatures and hard-coded creatures merged; {plugins.Count} total.");
+
+        return plugins;
     }
 
     public void Patch()
@@ -227,7 +242,6 @@ sealed public class Program
                 {
                     AddRecordFor(data, std);
                     KnownDeathItems.Add(data.DeathItem, prototype);
-                    Taxonomy.AddCreature(data);
                 }
             }
             catch (RecordException ex)
