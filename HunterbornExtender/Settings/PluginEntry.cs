@@ -83,7 +83,7 @@ public class PluginEntry
 /// The skip plugin.
 /// 
 /// </summary>
-sealed class Skip : PluginEntry
+class Skip : PluginEntry
 {
     static internal Skip Instance { get { return instance; } }
 
@@ -103,7 +103,7 @@ sealed class Skip : PluginEntry
 /// For now it's fine if it's empty and unused.
 /// 
 /// </summary>
-sealed public class AddonPluginEntry : PluginEntry
+public class AddonPluginEntry : PluginEntry
 {
     //public ModKey[] RequiredMods { get; set; } = Array.Empty<ModKey>();
 
@@ -116,7 +116,7 @@ sealed public class AddonPluginEntry : PluginEntry
 /// Used to describe the hard-coded plugins from Hunterborn.esp.
 /// They each have a KnownDeathItem used as a prototype.
 /// </summary>
-sealed public class InternalPluginEntry : PluginEntry
+public class InternalPluginEntry : PluginEntry
 {
     public FormKey KnownDeathItem { get; set; } = new();
 
@@ -131,7 +131,7 @@ sealed public class InternalPluginEntry : PluginEntry
 /// <summary>
 /// Describes the amounts of materials that can be harvested from a creature at a single skill level.
 /// </summary>
-public sealed class MaterialLevel
+public class MaterialLevel
 {
     public Dictionary<IFormLinkGetter<IItemGetter>, int> Items { get; set; } = new();
 }
