@@ -50,8 +50,8 @@ sealed public class Program
         Write.Success(2, $"{settings.QuickLootPatch}");
         Write.Success(2, $"{settings.ReuseSelections}");
         Write.Success(2, $"Selections: {settings.DeathItemSelections.Length}");
-        Write.Success(2, $"Plugins:    {settings.PluginEntries.Count}");
-        return settings.DeathItemSelections.Length > 0 && settings.PluginEntries.Count > 0;
+        Write.Success(2, $"Plugins:    {settings.Plugins.Count}");
+        return settings.DeathItemSelections.Length > 0 && settings.Plugins.Count > 0;
     }
 
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
@@ -96,24 +96,24 @@ sealed public class Program
 
     public Program Initialize()
     {
-        if (Settings.PluginEntries.Count == 0)
+        if (Settings.Plugins.Count == 0)
         {
-            Settings.PluginEntries = ImportPlugins();
+            Settings.Plugins = ImportPlugins();
         }
 
         // Add all creature types to the Advanced Taxonomy power.
-        Settings.PluginEntries.ForEach(plugin => Taxonomy.AddCreature(plugin));
-        var plugins = Settings.PluginEntries;
+        Settings.Plugins.ForEach(plugin => Taxonomy.AddCreature(plugin));
+        //var plugins = Settings.Plugins;
 
         //
         // Link death entryItem selection to corresponding creature entry
         //
         foreach (var deathItem in Settings.DeathItemSelections)
         {
-            deathItem.Selection = plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault(PluginEntry.SKIP);
+            deathItem.Selection = Settings.Plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault(PluginEntry.SKIP);
         }
 
-        Write.Success(0, $"Found {plugins.Count} creature types.");
+        Write.Success(0, $"Found {Settings.Plugins.Count} creature types.");
         Write.Success(0, $"Imported {Settings.DeathItemSelections.Length} death item selections");
 
         // Heuristic matching and user selections should already be done.
@@ -125,7 +125,7 @@ sealed public class Program
             Write.Action(0, $"Running heuristics.");
             var npcs = LoadOrder.PriorityOrder.Npc().WinningOverrides();
             
-            DeathItemSelection[] selections = Heuristics.MakeHeuristicSelections(npcs, plugins, Settings.DeathItemSelections, LinkCache, Settings.DebuggingMode);
+            DeathItemSelection[] selections = Heuristics.MakeHeuristicSelections(npcs, Settings.Plugins, Settings.DeathItemSelections, LinkCache, Settings.DebuggingMode);
             Settings.DeathItemSelections = selections;
 
             Write.Success(0, $"Heuristics produced {selections.Length} results.");
