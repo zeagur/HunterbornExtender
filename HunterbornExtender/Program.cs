@@ -508,13 +508,18 @@ sealed public class Program
             // QuickLoot correction.
             if (Settings.QuickLootPatch)
             {
-                if (skillLevel.Items is Dictionary<IFormLinkGetter<IItemGetter>, int> items)
+                //if (skillLevel.Items is Dictionary<IFormLinkGetter<IItemGetter>, int> items)
+                if (skillLevel.Items is List<(IFormLinkGetter<IItemGetter>, int)> items)
                 {
                     foreach (var diEntry in deathItemStuff)
                     {
-                        if (!items.ContainsKey(diEntry.Key))
+                        /*if (!items.ContainsKey(diEntry.Key))
                         {
                             items[diEntry.Key] = diEntry.Value;
+                        }*/
+                        if (!items.Any(item => item.Item1.Equals(diEntry.Key)))
+                        {
+                            items.Add((diEntry.Key, diEntry.Value));
                         }
                     }
                 }
@@ -530,9 +535,9 @@ sealed public class Program
 
             foreach (var itemEntry in skillLevel.Items)
             {
-                IFormLinkGetter<IItemGetter> item = new FormLink<IItemGetter>(itemEntry.Key.FormKey);
+                IFormLinkGetter<IItemGetter> item = new FormLink<IItemGetter>(itemEntry.Item.FormKey);
                 item = FormLinkSubstitution(item);
-                entries.Add(CreateLeveledItemEntry(item, 1, itemEntry.Value));
+                entries.Add(CreateLeveledItemEntry(item, 1, itemEntry.Count));
             }
 
             matsFormList.Items.Add(mat);

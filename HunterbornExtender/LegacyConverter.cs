@@ -164,11 +164,11 @@ namespace HunterbornExtender
             public AddonPluginEntry ToPlugin(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
             {
                 var materials = mats.Select(lvl => {
-                    Dictionary<IFormLinkGetter<IItemGetter>, int> Materials_Level = new();
+                    List<(IFormLinkGetter<IItemGetter> Item, int Count)> Materials_Level = new();
                     foreach (var lvl_mats in lvl)
                     {
                         var item = linkCache.Resolve<IItemGetter>(lvl_mats.Key).ToLink();
-                        Materials_Level[item] = lvl_mats.Value;
+                        Materials_Level.Add((item, lvl_mats.Value));
                     }
                     return new MaterialLevel() { Items = Materials_Level };
                 }).ToList();

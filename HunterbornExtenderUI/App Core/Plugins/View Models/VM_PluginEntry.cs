@@ -93,10 +93,10 @@ public class VM_PluginEntry : ViewModel
         PeltCount = model.PeltCount.Select(x => x.ToString()).ToArray();
         FurPlateCount = model.FurPlateCount.Select(x => x.ToString()).ToArray();
         Meat = model.Meat.FormKey;
-        foreach (var dict in model.Materials)
+        foreach (var level in model.Materials)
         {
             var matEntry = new VM_MaterialEntry(LinkCache, this);
-            matEntry.GetFromModel(dict.Items);
+            matEntry.GetFromModel(level.ToDict());
             Materials.Add(matEntry);
         }
         Discard = new ObservableCollection<FormKey>(model.Discard.Select(x => x.FormKey));
@@ -122,7 +122,7 @@ public class VM_PluginEntry : ViewModel
         model.Meat = Meat.ToLinkGetter<IItemGetter>();
         foreach (var entry in Materials)
         {
-            model.Materials.Add(new MaterialLevel(){ Items = entry.DumpToModel()});
+            model.Materials.Add(MaterialLevel.FromDict(entry.DumpToModel()));
         }
         model.Discard = Discard.Select(x => x.ToLinkGetter<IItemGetter>()).ToList();
         model.SharedDeathItems = SharedDeathItems.ToLinkGetter<IFormListGetter>();
