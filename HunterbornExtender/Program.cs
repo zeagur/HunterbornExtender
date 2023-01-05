@@ -50,7 +50,7 @@ sealed public class Program
         Write.Success(2, $"{settings.QuickLootPatch}");
         Write.Success(2, $"{settings.ReuseSelections}");
         Write.Success(2, $"{settings.DeathItemSelections.Pretty()}");
-        Write.Success(2, $"{settings.Plugins.Pretty()}");
+        Write.Success(2, $"{settings.PluginEntries.Pretty()}");
 
         string settingsFilename = "settings.json";
         string settingsPath = $"{state.ExtraSettingsDataPath}\\{settingsFilename}";
@@ -64,7 +64,7 @@ sealed public class Program
             Write.Success(2, $"{settings2.QuickLootPatch}");
             Write.Success(2, $"{settings2.ReuseSelections}");
             Write.Success(2, $"{settings2.DeathItemSelections.Pretty()}");
-            Write.Success(2, $"{settings2.Plugins.Pretty()}");
+            Write.Success(2, $"{settings2.PluginEntries.Pretty()}");
         }
         else
         {
@@ -137,7 +137,7 @@ sealed public class Program
         List<PluginEntry> plugins = new();
         plugins.AddRange(internalPlugins);
         plugins.AddRange(addonPlugins);
-        Settings.Plugins = plugins;
+        Settings.PluginEntries = plugins;
         Write.Success(0, $"Add-on creatures and hard-coded creatures merged; {plugins.Count} total.");
 
         internalPlugins.ForEach(plugin => Taxonomy.AddCreature(plugin));

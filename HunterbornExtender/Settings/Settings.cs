@@ -2,7 +2,7 @@
 
 sealed public class Settings
 {
-    public List<PluginEntry> Plugins { get; set; } = new();
+    public List<PluginEntry> PluginEntries { get; set; } = new();
 
     public DeathItemSelection[] DeathItemSelections { get; set; } = Array.Empty<DeathItemSelection>();
 

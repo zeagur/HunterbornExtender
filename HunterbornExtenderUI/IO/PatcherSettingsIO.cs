@@ -15,7 +15,7 @@ namespace HunterbornExtenderUI
             {
                 foreach (var entry in plugin.Entries)
                 {
-                    settings.Plugins.Add(entry.DumpToModel());
+                    settings.PluginEntries.Add(entry.DumpToModel());
                 }
             }
             return settings;
