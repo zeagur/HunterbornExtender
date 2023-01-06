@@ -133,7 +133,6 @@ public class InternalPluginEntry : PluginEntry
 /// </summary>
 public class MaterialLevel
 {
-    //public Dictionary<IFormLinkGetter<IItemGetter>, int> Items { get; set; } = new();
     public List<MaterialItem> Items { get; set; } = new();
 
     public void Add(IFormLinkGetter<IItemGetter> item, int count)
