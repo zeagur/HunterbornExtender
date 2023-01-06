@@ -44,7 +44,7 @@ namespace HunterbornExtenderUI
                     MessageBox.Show("Successfully loaded settings from " + path + Environment.NewLine + 
                         "Plugin entries: " + (settings?.PluginEntries.Count ?? 0) + Environment.NewLine + 
                         "Death Item Selections: " + settings?.DeathItemSelections.Length.ToString());
-                    return settings;
+                    return settings ?? new();
                 }
             }
             return new Settings();
