@@ -10,6 +10,7 @@ using HunterbornExtenderUI.App_Core.Death_Item_Selection;
 using HunterbornExtender.Settings;
 using HunterbornExtender;
 using System.Windows;
+using HunterbornExtender.IO;
 
 namespace HunterbornExtenderUI;
 
@@ -41,6 +42,7 @@ sealed public class VM_DeathItemAssignmentPage : ViewModel
         {
             ScanForPluginEntries();
             RaceLinkNamer.State = _stateProvider;
+            SelectionLinker.LinkDeathItemSelections(_settingsProvider.PatcherSettings.DeathItemSelections, _pluginEntries);
             var deathItems = Heuristics.MakeHeuristicSelections(_stateProvider.LoadOrder.PriorityOrder.OnlyEnabledAndExisting().WinningOverrides<INpcGetter>(), _pluginEntries.ToList(), _settingsProvider.PatcherSettings.DeathItemSelections, _stateProvider.LinkCache);
             DeathItemSelectionList.DeathItems.SetTo(_vmDeathItemLoader.GetDeathItemVMs(deathItems).Where(x => x.DeathItem != null));
         }

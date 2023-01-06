@@ -1,6 +1,7 @@
 ﻿namespace HunterbornExtender;
 
 using DynamicData;
+using HunterbornExtender.IO;
 using HunterbornExtender.Settings;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
@@ -66,6 +67,7 @@ sealed public class Program
             var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath, out string errorString);
             if (obj is Settings.Settings settings2 && CheckSettings("PARSED SETTINGS", settings))
             {
+                SelectionLinker.LinkDeathItemSelections(settings2.DeathItemSelections, settings2.Plugins);
                 new Program(settings2, state).Initialize().Patch();
             }
             else
@@ -106,10 +108,7 @@ sealed public class Program
         //
         // Link death entryItem selection to corresponding creature entry
         //
-        foreach (var deathItem in Settings.DeathItemSelections)
-        {
-            deathItem.Selection = Settings.Plugins.Where(x => x.Name == deathItem.CreatureEntryName).FirstOrDefault(PluginEntry.SKIP);
-        }
+        SelectionLinker.LinkDeathItemSelections(Settings.DeathItemSelections, Settings.Plugins);
 
         Write.Success(0, $"Found {Settings.Plugins.Count} creature types.");
         Write.Success(0, $"Imported {Settings.DeathItemSelections.Length} death item selections");
