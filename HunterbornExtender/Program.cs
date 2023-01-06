@@ -330,7 +330,7 @@ sealed public class Program
 
         if (GetDefaultMeat(data, std) is IItemGetter meat)
         {
-            meat = ItemSubstitution(meat);
+            if (IsCacoInstalled()) meat = ItemSubstitution(meat);
             std.GetCCFor(data).MeatType.Objects.Add(CreateProperty(meat.ToLink()));
             std.GetCCFor(data).MeatWeights.Data.Add(meat is IWeightValueGetter w ? w.Weight : 0.0f);
         }
@@ -532,7 +532,8 @@ sealed public class Program
             foreach (var itemEntry in skillLevel.Items)
             {
                 IFormLinkGetter<IItemGetter> item = new FormLink<IItemGetter>(itemEntry.Item.FormKey);
-                item = FormLinkSubstitution(item);
+                
+                if (IsCacoInstalled()) item = FormLinkSubstitution(item);
                 entries.Add(CreateLeveledItemEntry(item, 1, itemEntry.Count));
             }
 
@@ -779,7 +780,7 @@ sealed public class Program
         {
             if (!newMeat.HasKeyword(VendorItemFoodMeat)) newMeat.Keywords.Add(VendorItemFoodMeat);
             if (!newMeat.HasKeyword(VendorItemFoodUncooked)) newMeat.Keywords.Add(VendorItemFoodUncooked);
-            if (!newMeat.HasKeyword(LastSeedEnableKeywordSpoil)) newMeat.Keywords.Add(LastSeedEnableKeywordSpoil);
+            if (!newMeat.HasKeyword(EnableKeywordSpoil_CACO)) newMeat.Keywords.Add(EnableKeywordSpoil_CACO);
             if (!newCooked.HasKeyword(VendorItemFoodMeat)) newCooked.Keywords.Add(VendorItemFoodMeat);
             if (!newCooked.HasKeyword(VendorItemFoodCooked)) newCooked.Keywords.Add(VendorItemFoodCooked);
             if (!newJerky.HasKeyword(VendorItemFoodMeat)) newJerky.Keywords.Add(VendorItemFoodMeat);
@@ -1012,6 +1013,7 @@ sealed public class Program
     }
 
     public bool IsCacoInstalled() => LoadOrder.ContainsKey(CACO_MODKEY);
+
     public bool IsLastSeedInstalled() => LoadOrder.ContainsKey(LASTSEED_MODKEY);
 
     private Func<IFormLinkGetter<IItemGetter>, IFormLinkGetter<IItemGetter>> FormLinkSubstitution { get; }

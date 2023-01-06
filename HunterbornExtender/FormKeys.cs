@@ -27,7 +27,7 @@ sealed public record FormKeys
     // CACO keywords
     static readonly public FormLink<IKeywordGetter> VendorItemFoodUncooked = new(new FormKey(Update.ModKey, 0xAF1002));
     static readonly public FormLink<IKeywordGetter> VendorItemFoodCooked = new(new FormKey(Update.ModKey, 0xAF1001));
-    static readonly public FormLink<IKeywordGetter> LastSeedEnableKeywordSpoil = new(new FormKey(CACO_MODKEY, 0x980126));
+    static readonly public FormLink<IKeywordGetter> EnableKeywordSpoil_CACO = new(new FormKey(CACO_MODKEY, 0x980126));
 
     static readonly public FormLink<IQuestGetter> _DS_Hunterborn = new(new FormKey(HUNTERBORN_MODKEY, 0x003367));
 
