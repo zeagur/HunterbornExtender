@@ -26,6 +26,7 @@ namespace HunterbornExtender.Settings
     {
         public FormKey DeathItem { get; set; }
         public string CreatureEntryName { get; set; } = String.Empty;
+        [JsonIgnore]
         public PluginEntry? Selection { get; set; } = null;
 
         [JsonIgnore]
