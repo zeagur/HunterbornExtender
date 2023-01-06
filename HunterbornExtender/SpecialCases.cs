@@ -66,7 +66,8 @@ sealed public class SpecialCases
     /// <summary>
     /// Translates known DeathItem editorIDs to proper names and sorting names.
     /// </summary>
-    static readonly public Dictionary<string, List<string>> EditorToNames = new() {
+    static readonly public Dictionary<string, List<string>> EditorToNames = new() 
+    {
         { "BearCave", new() {"Bear", "Cave"} },
         { "BearSnow", new() {"Bear", "Snow"} },
         { "CharusHunter", new() {"Chaurus", "Hunter"} },
@@ -88,10 +89,24 @@ sealed public class SpecialCases
     };
 
     /// <summary>
-    /// Regular expression used to turn the names of vanilla DeathItems into useful names.
+    /// Use to match creatures that get a range of names.
+    /// </summary>
+    static readonly public HashSet<HashSet<string>> Synonyms = new()
+    {
+        new() { "bristleback", "boar", "bristle" },
+        new() { "frostbite", "snowbite", "icebite" },
+    };
+
+    /// <summary>
+    /// Regular expression used to turn the editorIDs of vanilla DeathItems into useful names.
     /// </summary>
     static public readonly Regex DeathItemPrefix = new(".*DeathItem", RegexOptions.IgnoreCase);
 
+    /// <summary>
+    /// Regular expression used to turn the editorIDs of vanilla races into useful names.
+    /// </summary>
+    static public readonly Regex RacePostfix = new("Race$", RegexOptions.IgnoreCase);
+    
     /// <summary>
     /// Matcher for pre-existing pelts items.
     /// </summary>

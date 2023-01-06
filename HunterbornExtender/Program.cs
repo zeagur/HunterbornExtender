@@ -90,19 +90,27 @@ sealed public class Program
         if (Settings.PluginEntries.Count == 0)
         {
             Settings.PluginEntries = ImportPlugins();
+        } else
+        {
+            (var plugins, var deathItem_plugins, var carcasses, var pelts) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
+            plugins.AddRange(Settings.PluginEntries);
+            Settings.PluginEntries = plugins;
         }
 
         // Add all creature types to the Advanced Taxonomy power.
         Settings.PluginEntries.ForEach(plugin => Taxonomy.AddCreature(plugin));
-        //var plugins = Settings.Plugins;
 
         //
         // Link death entryItem selection to corresponding creature entry
         //
         SelectionLinker.LinkDeathItemSelections(Settings.DeathItemSelections, Settings.PluginEntries);
 
-        Write.Success(0, $"Found {Settings.PluginEntries.Count} creature types.");
         Write.Success(0, $"Imported {Settings.DeathItemSelections.Length} death item selections");
+        Write.Success(0, $"Found {Settings.PluginEntries.Count} creature types.");
+        foreach(var plugin in Settings.PluginEntries )
+        {
+            Write.Action(1, plugin.SortName);
+        }
 
         // Heuristic matching and user selections should already be done.
         //

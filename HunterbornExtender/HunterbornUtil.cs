@@ -1,25 +1,14 @@
-﻿using DynamicData;
-using System;
-using System.Threading.Tasks;
-using System.Globalization;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
+﻿using System.Text.RegularExpressions;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Plugins;
-using Mutagen.Bethesda.FormKeys.SkyrimSE;
-using Mutagen.Bethesda.Plugins.Cache;
 using Mutagen.Bethesda.Plugins.Records;
 using Microsoft.CodeAnalysis;
-using Mutagen.Bethesda.Plugins.Exceptions;
 using Mutagen.Bethesda.Plugins.Aspects;
 using Noggog;
 using HunterbornExtender.Settings;
-using static HunterbornExtender.FormKeys;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
-using System.Reflection;
 
 namespace HunterbornExtender
 {
@@ -168,11 +157,11 @@ namespace HunterbornExtender
     /// </summary>
     public static class GenericPrettyPrinting
     {
-        public static string Pretty<T>(this T[] array) where T : notnull => "[" + string.Join(", ", array.Select(Prettify)) + "]";
+        public static string Pretty<T>(this T[] array) => "[" + string.Join(", ", array.Select(Prettify)) + "]";
 
-        public static string Pretty<T>(this List<T> list) where T : notnull => "[" + string.Join(", ", list.Select(Prettify)) + "]";
+        public static string Pretty<T>(this List<T> list) => "[" + string.Join(", ", list.Select(Prettify)) + "]";
 
-        public static string Pretty<T>(this HashSet<T> set) where T : notnull => "{" + string.Join(", ", set.Select(Prettify)) + "}";
+        public static string Pretty<T>(this HashSet<T> set) => "{" + string.Join(", ", set.Select(Prettify)) + "}";
 
         public static string Pretty<S, T>(this Dictionary<S, T> dict) where S : notnull => "{" + string.Join(", ", dict) + "}";
 
@@ -204,7 +193,11 @@ namespace HunterbornExtender
             var tokens = TOKENIZER_BREAK_SPLITTER.Split(filtered);
             if (tokens == null || tokens.Length == 0) return new();
 
-            return tokens.SelectMany(t => TOKENIZER_CAMEL_SPLITTER.Split(t)).Where(t => !t.IsNullOrWhitespace()).ToHashSet();
+            return tokens
+                .SelectMany(t => TOKENIZER_CAMEL_SPLITTER.Split(t))
+                .Where(t => !t.IsNullOrWhitespace())
+                .Select(t => t.ToLower())
+                .ToHashSet();
         }
 
         readonly static private Regex TOKENIZER_FILTER = new("[^A-Za-z0-9 _-]");

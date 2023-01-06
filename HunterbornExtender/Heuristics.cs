@@ -46,19 +46,16 @@ sealed public class Heuristics
             foreach (var plugin in plugins) plugin.Tokens = Tokenizer.Tokenize(plugin.Name, plugin.SortName, plugin.ProperName);
             if (debuggingMode)
             {
-                //Write.Title(1, "Tokenizing plugin names.");
-                //plugins.ForEach(p => Write.Action(2, $"Plugin: {p.Name} -> {p.Tokens.Pretty()}"));
-                //Write.Title(1, "Analyzing NPCs.");
+                Write.Title(1, "Tokenizing plugin names.");
+                plugins.ForEach(p => Write.Action(2, $"Plugin: {p.Name} -> {p.Tokens.Pretty()}"));
+                Write.Title(1, "Analyzing NPCs.");
             }
 
             // Scan the list of npcs.
-            foreach (var npc in npcs.Where(n => IsCreature(n, linkCache, debuggingMode)))
+            foreach (var npc in npcs.Where(n => IsValidCreature(n, linkCache, debuggingMode)))
             {
-                //if (settings.DebuggingMode) Write.Action(2, $"Heuristics examining {npc}");
-                if (npc.DeathItem?.IsNull ?? true) continue;
-
-                var deathItem = npc.DeathItem.Resolve(linkCache);
-                //if (KnownDeathItems.ContainsKey(deathItem)) continue;
+                GetDeathItem(npc, linkCache).TryResolve(linkCache, out var deathItem);
+                if (deathItem is null) continue;
 
                 // If there is no DeathItemSelection record for the NPC's DeathItem, create it.
                 // Try as hard as possible to give the DeathItemSelection a internalName. Fallbacks on fallbacks.
@@ -131,26 +128,43 @@ sealed public class Heuristics
         var clicker = DictionaryIncrementer(candidates);
 
         // Try to match the voice.
-        if (!npc.Voice.IsNull)
+        var voice = GetVoice(npc, linkCache);
+        if (!voice.IsNull)
         {
-            plugins
-                .Where(plugin => !plugin.Voice.IsNull)
-                .Where(plugin => plugin.Voice.Equals(npc.Voice))
-                .ForEach(clicker(10.0));
+            foreach (var plugin in plugins)
+            {
+                if (plugin.Voice.Equals(voice)) clicker(10.0)(plugin);
+            }
         }
 
         // Match the creature's editorId, internalName, and race internalName to the names of plugins.
         var nameMatches = new HashSet<PluginEntry>();
-        var race = npc.Race.Resolve(linkCache);
-        npc.DeathItem.TryResolve(linkCache, out var deathItem);
+        
+        GetRace(npc, linkCache).TryResolve(linkCache, out var race);
+        GetDeathItem(npc, linkCache).TryResolve(linkCache, out var deathItem);
 
         if (npc.EditorID is string npcEditorId) plugins.Where(PluginNameMatch(npcEditorId)).ForEach(clicker(1));
         if (npc.Name?.ToString() is string npcName) plugins.Where(PluginNameMatch(npcName)).ForEach(clicker(1));
-        if (race.EditorID is string raceEditorId) plugins.Where(PluginNameMatch(raceEditorId)).ForEach(clicker(1));
-        if (race.Name?.ToString() is string raceName) plugins.Where(PluginNameMatch(raceName)).ForEach(clicker(1));
+        if (race?.EditorID is string raceEditorId) plugins.Where(PluginNameMatch(raceEditorId)).ForEach(clicker(1));
+        if (race?.Name?.ToString() is string raceName) plugins.Where(PluginNameMatch(raceName)).ForEach(clicker(1));
+
+        var deathItemEdid = SpecialCases.DeathItemPrefix.Replace(deathItem?.EditorID ?? "", "");
+        var raceEdid = SpecialCases.RacePostfix.Replace(race?.EditorID ?? "", "");
+
+        var tokens = new HashSet<string?>() { npc.Name?.ToString(), npc.EditorID, race?.Name?.ToString(), raceEdid, deathItemEdid };
+
+        if (debuggingMode) Write.Action(3, $"Initial tokens for {description}: {tokens.Pretty()}");
 
         // Try this tokenizing matcher to break ties.
-        var npcTokens = Tokenizer.Tokenize(new List<string?>() { npc.Name?.ToString(), npc.EditorID, race.Name?.ToString(), race.EditorID, deathItem?.EditorID });
+        var npcTokens = Tokenizer.Tokenize(tokens);
+        if (debuggingMode) Write.Action(3, $"Tokenized tokens for {description}: {npcTokens.Pretty()}");
+
+        foreach (var token in npcTokens.ToArray())
+        {
+            if (token is not null) SpecialCases.Synonyms.Where(syns => syns.Contains(token)).ForEach(syns => npcTokens.Add(syns));
+        }
+
+        if (debuggingMode) Write.Action(3, $"Expanded tokens for {description}: {npcTokens.Pretty()}");
 
         foreach (var plugin in plugins)
         {
@@ -172,7 +186,7 @@ sealed public class Heuristics
     }
 
 
-    static public bool IsCreature(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
+    static public bool IsValidCreature(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
     {
         PassBlockLists passBlock = new(linkCache, debuggingMode);
 
@@ -248,12 +262,8 @@ sealed public class Heuristics
 
         internal bool HasAllowedVoice(INpcGetter npc)
         {
-            if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
-            {
-                npc.Template.TryResolve(LinkCache, out var spawner);
-                if (spawner is not null && spawner is INpcGetter template) return HasAllowedVoice(template);
-            }
-            return SpecialCases.Lists.AllowedVoices.Contains(npc.Voice);
+            var voice = GetVoice(npc, LinkCache);
+            return voice.IsNull || SpecialCases.Lists.AllowedVoices.Contains(voice);
         }
 
         internal bool HasForbiddenDeathItem(INpcGetter npc)
@@ -268,6 +278,53 @@ sealed public class Heuristics
 
         internal static bool HasForbiddenFlag(INpcGetter npc) => (SpecialCases.Lists.ForbiddenFlags & npc.Configuration.Flags) != 0;
 
+    }
+
+    static private IFormLinkGetter<IRaceGetter> GetRace(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+    {
+        if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
+        {
+            npc.Template.TryResolve(linkCache, out var templateLink);
+            if (templateLink is not null && templateLink is INpcGetter templateNpc) return GetRace(templateNpc, linkCache);
+        }
+
+        return npc.Race;
+    }
+
+    static private IFormLinkNullableGetter<DeathItemGetter> GetDeathItem(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+    {
+        if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
+        {
+            npc.Template.TryResolve(linkCache, out var templateLink);
+            if (templateLink is not null && templateLink is INpcGetter templateNpc) return GetDeathItem(templateNpc, linkCache);
+        }
+
+        return npc.DeathItem;
+    }
+
+    static private IFormLinkNullableGetter<IVoiceTypeGetter> GetVoice(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
+    {
+        var name = Naming.NpcFB(npc) + (npc.EditorID ?? "");
+        if (name.ContainsInsensitive("boar"))
+        {
+            var x = (npc.Sound is INpcInheritSoundGetter y && !y.InheritsSoundsFrom.IsNull)
+                ? y.InheritsSoundsFrom.Resolve(linkCache) : null;
+            var z = (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
+                ? npc.Template.Resolve(linkCache) : null;
+            Write.Action(2, $"Getting voice for {name}: {npc.Voice.Pretty()}, Template={z}, Sound={x}");
+        }
+
+        if (npc.Sound is INpcInheritSoundGetter inherited && !inherited.InheritsSoundsFrom.IsNull)
+        {
+            inherited.InheritsSoundsFrom.TryResolve(linkCache, out var soundTemplate);
+            if (soundTemplate is not null && soundTemplate is INpcGetter templateNPC) return GetVoice(templateNPC, linkCache);
+        }
+        else if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
+        {
+            npc.Template.TryResolve(linkCache, out var template);
+            if (template is not null && template is INpcGetter templateNPC) return GetVoice(templateNPC, linkCache);
+        }
+        return npc.Voice;
     }
 
     /// <summary>

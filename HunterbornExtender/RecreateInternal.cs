@@ -205,7 +205,7 @@ sealed public class RecreateInternal
             string voiceEdid = $"Cr{plugin.Name}Voice";
             linkCache.TryResolve<IVoiceTypeGetter>(voiceEdid, out var voice);
             plugin.Voice = voice == null ? new FormLink<IVoiceTypeGetter>() : voice.ToLink();
-            //if (debuggingMode) Write.Action(2, $"Internal plugin {plugin.Name} searching for voice {voiceEdid}: found {plugin.Voice}.");
+            if (debuggingMode) Write.Action(2, $"Internal plugin {plugin.Name} searching for voice {voiceEdid}: found {voice}:{voice?.EditorID}.");
 
             FindRecipes(plugin, internalName, deathItem, knownPelts, linkCache, debuggingMode);
 
