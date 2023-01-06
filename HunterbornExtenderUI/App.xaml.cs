@@ -42,7 +42,8 @@ public partial class App : Application
         {
             mainVM.WelcomePage.ForceSettingsDir(state.ExtraSettingsDataPath.Value);
         }
-        
+        mainVM.Init(); // init after setting SettingsDir
+
         window.Show();
         window.CenterAround(state.RecommendedOpenLocation);
 
@@ -66,6 +67,7 @@ public partial class App : Application
         {
             mainVM.WelcomePage.ForceSettingsDir(Path.Combine(rootPath, "Settings"));
         }
+        mainVM.Init(); // init after setting SettingsDir
 
         window.Show();
         

@@ -1,6 +1,7 @@
 ﻿using HunterbornExtender.Settings;
 using HunterbornExtender;
 using System.IO;
+using System.Windows;
 
 namespace HunterbornExtenderUI
 {
@@ -33,7 +34,18 @@ namespace HunterbornExtenderUI
             var path = System.IO.Path.Combine(folderPath, "settings.json");
             if (System.IO.File.Exists(path))
             {
-                return JSONhandler<Settings>.LoadJSONFile(path, out string exceptionStr) ?? new Settings();
+                var settings =  JSONhandler<Settings>.LoadJSONFile(path, out string exceptionStr) ?? new Settings();
+                if (!string.IsNullOrEmpty(exceptionStr))
+                {
+                    MessageBox.Show("Could not read Settings.json: " + Environment.NewLine + exceptionStr);
+                }
+                else
+                {
+                    MessageBox.Show("Successfully loaded settings from " + path + Environment.NewLine + 
+                        "Plugin entries: " + (settings?.PluginEntries.Count ?? 0) + Environment.NewLine + 
+                        "Death Item Selections: " + settings?.DeathItemSelections.Length.ToString());
+                    return settings;
+                }
             }
             return new Settings();
         }

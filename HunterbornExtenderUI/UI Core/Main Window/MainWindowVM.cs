@@ -52,10 +52,6 @@ public class MainWindowVM : ViewModel
         PluginEditorPage = pluginEditorPage;
         DeathItemMenu = deathItemMenu;
 
-        _settingsProvider.PatcherSettings = PatcherSettingsIO.LoadFromDisk(WelcomePage.SettingsDir); // change this to state.ExtraDataSettingsFolder when it becomes exposed
-
-        Init();
-
         DisplayedSubView = WelcomePage;
 
         ClickDeathItemAssignment = ReactiveCommand.Create(
