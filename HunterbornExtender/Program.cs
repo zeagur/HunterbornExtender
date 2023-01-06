@@ -48,8 +48,8 @@ sealed public class Program
         Write.Success(2, $"{settings.QuickLootPatch}");
         Write.Success(2, $"{settings.ReuseSelections}");
         Write.Success(2, $"Selections: {settings.DeathItemSelections.Length}");
-        Write.Success(2, $"Plugins:    {settings.Plugins.Count}");
-        return settings.DeathItemSelections.Length > 0 && settings.Plugins.Count > 0;
+        Write.Success(2, $"Plugins:    {settings.PluginEntries.Count}");
+        return settings.DeathItemSelections.Length > 0 && settings.PluginEntries.Count > 0;
     }
 
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
@@ -67,7 +67,7 @@ sealed public class Program
             var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath, out string errorString);
             if (obj is Settings.Settings settings2 && CheckSettings("PARSED SETTINGS", settings))
             {
-                SelectionLinker.LinkDeathItemSelections(settings2.DeathItemSelections, settings2.Plugins);
+                SelectionLinker.LinkDeathItemSelections(settings2.DeathItemSelections, settings2.PluginEntries);
                 new Program(settings2, state).Initialize().Patch();
             }
             else
@@ -96,21 +96,21 @@ sealed public class Program
 
     public Program Initialize()
     {
-        if (Settings.Plugins.Count == 0)
+        if (Settings.PluginEntries.Count == 0)
         {
-            Settings.Plugins = ImportPlugins();
+            Settings.PluginEntries = ImportPlugins();
         }
 
         // Add all creature types to the Advanced Taxonomy power.
-        Settings.Plugins.ForEach(plugin => Taxonomy.AddCreature(plugin));
+        Settings.PluginEntries.ForEach(plugin => Taxonomy.AddCreature(plugin));
         //var plugins = Settings.Plugins;
 
         //
         // Link death entryItem selection to corresponding creature entry
         //
-        SelectionLinker.LinkDeathItemSelections(Settings.DeathItemSelections, Settings.Plugins);
+        SelectionLinker.LinkDeathItemSelections(Settings.DeathItemSelections, Settings.PluginEntries);
 
-        Write.Success(0, $"Found {Settings.Plugins.Count} creature types.");
+        Write.Success(0, $"Found {Settings.PluginEntries.Count} creature types.");
         Write.Success(0, $"Imported {Settings.DeathItemSelections.Length} death item selections");
 
         // Heuristic matching and user selections should already be done.
@@ -122,7 +122,7 @@ sealed public class Program
             Write.Action(0, $"Running heuristics.");
             var npcs = LoadOrder.PriorityOrder.Npc().WinningOverrides();
             
-            DeathItemSelection[] selections = Heuristics.MakeHeuristicSelections(npcs, Settings.Plugins, Settings.DeathItemSelections, LinkCache, Settings.DebuggingMode);
+            DeathItemSelection[] selections = Heuristics.MakeHeuristicSelections(npcs, Settings.PluginEntries, Settings.DeathItemSelections, LinkCache, Settings.DebuggingMode);
             Settings.DeathItemSelections = selections;
 
             Write.Success(0, $"Heuristics produced {selections.Length} results.");

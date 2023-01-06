@@ -23,7 +23,7 @@ namespace HunterbornExtenderUI
                 }
                 else
                 {
-                    MessageBox.Show("Successfully loaded settings. Plugin entries: " + settings?.Plugins.Count ?? "0");
+                    MessageBox.Show("Successfully loaded settings. Plugin entries: " + settings?.PluginEntries.Count ?? "0");
                 }
 
                 PatcherSettings = settings ?? new();
