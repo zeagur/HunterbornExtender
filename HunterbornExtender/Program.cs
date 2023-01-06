@@ -70,9 +70,8 @@ sealed public class Program
             }
             else
             {
-                
-                Write.Fail(0, "Failure to parse " + Environment.NewLine + errorString);
-                new Program(settings, state).Initialize().Patch();
+                Write.Fail(0, "Failure to parse: " + errorString);
+                //new Program(settings, state).Initialize().Patch();
             }
         } 
     }
