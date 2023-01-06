@@ -31,17 +31,6 @@ sealed public class Program
         return 0;
     }
 
-    public static JsonSerializerSettings GetCustomJSONSettings()
-    {
-        var jsonSettings = new JsonSerializerSettings();
-        jsonSettings.AddMutagenConverters();
-        jsonSettings.ObjectCreationHandling = ObjectCreationHandling.Replace;
-        jsonSettings.Formatting = Formatting.Indented;
-        jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter()); // https://stackoverflow.com/questions/2441290/javascriptserializer-json-serialization-of-enum-as-string
-
-        return jsonSettings;
-    }
-
     public static bool CheckSettings(string label, Settings.Settings settings)
     {
         Write.Title(0, label);
@@ -63,9 +52,11 @@ sealed public class Program
             string settingsFilename = "settings.json";
             string settingsPath = $"{state.ExtraSettingsDataPath}\\{settingsFilename}";
             Write.Title(0, settingsPath);
+            Console.WriteLine(settingsPath);
 
             var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath, out string errorString);
-            if (obj is Settings.Settings settings2 && CheckSettings("PARSED SETTINGS", settings))
+
+            if (obj is Settings.Settings settings2 && CheckSettings("PARSED SETTINGS", settings2))
             {
                 SelectionLinker.LinkDeathItemSelections(settings2.DeathItemSelections, settings2.PluginEntries);
                 new Program(settings2, state).Initialize().Patch();
