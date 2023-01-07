@@ -306,14 +306,6 @@ sealed public class Heuristics
     static private IFormLinkNullableGetter<IVoiceTypeGetter> GetVoice(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
     {
         var name = Naming.NpcFB(npc) + (npc.EditorID ?? "");
-        if (name.ContainsInsensitive("boar"))
-        {
-            var x = (npc.Sound is INpcInheritSoundGetter y && !y.InheritsSoundsFrom.IsNull)
-                ? y.InheritsSoundsFrom.Resolve(linkCache) : null;
-            var z = (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
-                ? npc.Template.Resolve(linkCache) : null;
-            //Write.Action(2, $"Getting voice for {name}: {npc.Voice.Pretty()}, Template={z}, Sound={x}");
-        }
 
         if (npc.Sound is INpcInheritSoundGetter inherited && !inherited.InheritsSoundsFrom.IsNull)
         {
