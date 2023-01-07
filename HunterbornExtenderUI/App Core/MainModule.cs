@@ -10,6 +10,7 @@ public class MainModule : Autofac.Module
         // Singletons
         builder.RegisterType<EDIDtoForm>().AsSelf().SingleInstance();
 
+        builder.RegisterType<PatcherSettingsIO>().AsSelf().SingleInstance();
         builder.RegisterType<SettingsProvider>().AsSelf().SingleInstance();
 
         builder.RegisterType<PluginLoader>().AsSelf().SingleInstance();

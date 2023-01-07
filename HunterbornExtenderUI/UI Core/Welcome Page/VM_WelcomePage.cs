@@ -14,7 +14,13 @@ public class VM_WelcomePage : ViewModel
     [Reactive]
     public string SettingsDir { get; set; } = String.Empty;
     public ICommand SetSettingsDir { get; }
+    public bool DebuggingMode { get; set; } = true;
 
+    public bool ReuseSelections { get; set; } = true;
+
+    public bool AdvancedTaxonomy { get; set; } = true;
+
+    public bool QuickLootPatch { get; set; } = true;
     public VM_WelcomePage(VM_PluginList pluginList)
     {
         _pluginCount = pluginList.WhenAnyValue(x => x.Plugins.Count)
@@ -56,5 +62,21 @@ public class VM_WelcomePage : ViewModel
     public void ForceSettingsDir(string settingsDir)
     {
         SettingsDir = settingsDir;
+    }
+
+    public void Init(SettingsProvider settingsProvider)
+    {
+        DebuggingMode = settingsProvider.PatcherSettings.DebuggingMode;
+        ReuseSelections = settingsProvider.PatcherSettings.ReuseSelections;
+        AdvancedTaxonomy = settingsProvider.PatcherSettings.AdvancedTaxonomy;
+        QuickLootPatch = settingsProvider.PatcherSettings.QuickLootPatch;
+    }
+
+    public void SaveSettings(SettingsProvider settingsProvider)
+    {
+        settingsProvider.PatcherSettings.DebuggingMode = DebuggingMode;
+        settingsProvider.PatcherSettings.ReuseSelections = ReuseSelections;
+        settingsProvider.PatcherSettings.AdvancedTaxonomy = AdvancedTaxonomy;
+        settingsProvider.PatcherSettings.QuickLootPatch = QuickLootPatch;
     }
 }

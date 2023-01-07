@@ -17,6 +17,7 @@ public class MainWindowVM : ViewModel
     private readonly VMLoader_DeathItems _vmDeathItemLoader;
     private readonly VM_DeathItemSelectionList _deathItemSelectionList;
     private SettingsProvider _settingsProvider;
+    private readonly PatcherSettingsIO _patcherSettingsIO;
 
     [Reactive]
     public object DisplayedSubView { get; set; }
@@ -26,9 +27,11 @@ public class MainWindowVM : ViewModel
 
     public ICommand ClickDeathItemAssignment { get; }
     public ICommand ClickPluginsMenu { get; }
+    public ICommand ClickWelcomePage { get; }
     public ICommand SaveSettings { get; }
 
     public MainWindowVM(
+        PatcherSettingsIO patcherSettingsIO,
         SettingsProvider settingsProvider,
         PluginLoader pluginLoader,
         VM_WelcomePage welcomePage,
@@ -39,6 +42,7 @@ public class MainWindowVM : ViewModel
         VM_DeathItemSelectionList deathItemSelectionList,
         VM_DeathItemAssignmentPage deathItemMenu)
     {
+        _patcherSettingsIO = patcherSettingsIO;
         _settingsProvider = settingsProvider;
         _pluginLoader = pluginLoader;
 
@@ -59,6 +63,8 @@ public class MainWindowVM : ViewModel
 
         ClickPluginsMenu = ReactiveCommand.Create(
             () => DisplayedSubView = PluginEditorPage);
+        ClickWelcomePage = ReactiveCommand.Create(
+            () => DisplayedSubView = WelcomePage);
 
         SaveSettings = ReactiveCommand.Create(() =>
         {
@@ -70,6 +76,8 @@ public class MainWindowVM : ViewModel
     
     public void Init()
     {
+        WelcomePage.Init(_settingsProvider);
+
         _pluginList.Plugins.SetTo(
             _vmPluginLoader.GetPluginVMs(
                 _pluginLoader.LoadPlugins()));
@@ -92,7 +100,10 @@ public class MainWindowVM : ViewModel
     {
         if (WelcomePage.SettingsDir != string.Empty)
         {
-            PatcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir, PatcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList));
+            WelcomePage.SaveSettings(_settingsProvider);
+            _patcherSettingsIO.DumpToSettings(_deathItemSelectionList, _pluginList);
+            _patcherSettingsIO.SaveToDisk(WelcomePage.SettingsDir);
+
             foreach (var plugin in _pluginList.Plugins)
             {
                 plugin.SaveToDisk(false);   

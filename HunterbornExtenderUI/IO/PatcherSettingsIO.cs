@@ -1,4 +1,4 @@
-using HunterbornExtender.Settings;
+﻿using HunterbornExtender.Settings;
 using HunterbornExtender;
 using System.IO;
 using System.Windows;
@@ -7,26 +7,29 @@ namespace HunterbornExtenderUI
 {
     public class PatcherSettingsIO
     {
-
-        public static Settings DumpToSettings(VM_DeathItemSelectionList deathItemsVM, VM_PluginList pluginsVM)
+        private readonly SettingsProvider _settingsProvider;
+        public PatcherSettingsIO(SettingsProvider settingsProvider)
         {
-            Settings settings = new();
-            settings.DeathItemSelections = deathItemsVM.DeathItems.Select(x => x.DumpToModel()).ToArray();
+            _settingsProvider = settingsProvider;
+        }
+
+        public void DumpToSettings(VM_DeathItemSelectionList deathItemsVM, VM_PluginList pluginsVM)
+        {
+            _settingsProvider.PatcherSettings.DeathItemSelections = deathItemsVM.DeathItems.Select(x => x.DumpToModel()).ToArray();
             foreach (var plugin in pluginsVM.Plugins)
             {
                 foreach (var entry in plugin.Entries)
                 {
-                    settings.PluginEntries.Add(entry.DumpToModel());
+                    _settingsProvider.PatcherSettings.PluginEntries.Add(entry.DumpToModel());
                 }
             }
-            return settings;
         }
 
-        public static void SaveToDisk(string folderPath, Settings settings)
+        public void SaveToDisk(string folderPath)
         {
             var path = System.IO.Path.Combine(folderPath, "settings.json");
             Directory.CreateDirectory(folderPath);
-            JSONhandler<Settings>.SaveJSONFile(settings, path);
+            JSONhandler<Settings>.SaveJSONFile(_settingsProvider.PatcherSettings, path);
         }
 
         public static Settings LoadFromDisk(string folderPath)
