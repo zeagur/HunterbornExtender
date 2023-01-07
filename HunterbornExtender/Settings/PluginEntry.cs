@@ -105,11 +105,12 @@ class Skip : PluginEntry
 /// </summary>
 public class AddonPluginEntry : PluginEntry
 {
-    //public ModKey[] RequiredMods { get; set; } = Array.Empty<ModKey>();
-
     public AddonPluginEntry() { }
 
     public AddonPluginEntry(EntryType type, string name) : base(type, name) { }
+
+    [JsonIgnore] public ModKey[] RequiredMods { get; set; } = Array.Empty<ModKey>();
+
 }
 
 /// <summary>
