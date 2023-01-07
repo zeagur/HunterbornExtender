@@ -104,7 +104,7 @@ sealed public class Program
         }
 
         // Add all creature types to the Advanced Taxonomy power.
-        Taxonomy.AddCreature(Skip.SKIP);
+        //Taxonomy.AddCreature(Skip.SKIP);
         Settings.PluginEntries.Where(plugin => plugin is not Skip).ForEach(plugin => Taxonomy.AddCreature(plugin));
 
         //
