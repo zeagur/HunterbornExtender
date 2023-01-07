@@ -276,21 +276,35 @@ sealed public class Program
                 continue;
             }
 
+            LinkCache.TryResolve<ILeveledItemGetter>(selection.DeathItem, out var deathItem);
+            if (deathItem is null) continue;
+            if (KnownDeathItems.ContainsKey(deathItem))
+            {
+                Write.Fail(1, $"Skipped {name}: DeathItem already processed.");
+                continue;
+            }
+            else if (SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem))
+            {
+                Write.Fail(1, $"Skipped {name}: a forbidden DeathItem slipped past the filters!");
+                continue;
+            }
+
             try
             {
-                var deathItem = LinkCache.Resolve<DeathItemGetter>(selection.DeathItem);
+                //
+                // Patching data for a specific DeathItem.
+                //
                 var data = CreateCreatureData(selection, prototype);
-                //if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
 
-                if (KnownDeathItems.ContainsKey(data.DeathItem))
-                {
-                    Write.Fail(1, $"Skipped {name}: DeathItem already processed.");
-                }
-                else if (!SpecialCases.Lists.ForbiddenDeathItems.Contains(data.DeathItem))
-                {
-                    AddRecordFor(data, std);
-                    KnownDeathItems.Add(data.DeathItem, prototype);
-                }
+                //
+                // Make the new records.
+                //
+                AddRecordFor(data, std);
+
+                //
+                // Avoid double-patching!
+                //
+                KnownDeathItems.Add(deathItem, prototype);
             }
             catch (RecordException ex)
             {
@@ -312,7 +326,7 @@ sealed public class Program
         }
 
         //
-        // Correct the names if the internal plugins.
+        // Correct the names of the internal plugins.
         //
         Write.Action(0, "Correcting internal names.");
         foreach (var e in OriginalIndices)
@@ -324,6 +338,9 @@ sealed public class Program
             list.Data[index] = plugin.ProperName;
         }
 
+        //
+        // Finish the advanced taxonomy data.
+        //
         if (Settings.AdvancedTaxonomy)
         {
             try
@@ -345,11 +362,6 @@ sealed public class Program
         }
     }
 
-
-    /// <summary>
-    /// Regular expression used to turn the names of vanilla DeathItems into useful names.
-    /// </summary>
-    //static private readonly Regex DeathItemPrefix = new(".*DeathItem", RegexOptions.IgnoreCase);
 
     /// <summary>
     /// Things that have to be done for each race:
