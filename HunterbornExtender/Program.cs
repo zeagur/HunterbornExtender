@@ -90,11 +90,17 @@ sealed public class Program
         if (Settings.PluginEntries.Count == 0)
         {
             Settings.PluginEntries = ImportPlugins();
-        } else
+        } 
+        else
         {
-            (var plugins, var deathItem_plugins, var carcasses, var pelts) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
+            (var plugins, var recreationData) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
             plugins.AddRange(Settings.PluginEntries);
             Settings.PluginEntries = plugins;
+
+            foreach (var e in recreationData.KnownDeathItems) KnownDeathItems.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownCarcasses) KnownCarcasses.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownPelts) KnownPelts.Add(e.Key, e.Value);
+            OriginalIndices = recreationData.OriginalIndices;
         }
 
         // Add all creature types to the Advanced Taxonomy power.
@@ -155,11 +161,12 @@ sealed public class Program
         {
             Write.Divider(0);
             Write.Action(0, "Trying to recreate the hard-coded core plugin from Hunterborn.esp.");
-            (internalPlugins, var addDeathItems, var addCarcasses, var addPelts) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
+            (internalPlugins, var recreationData) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
 
-            foreach (var e in addDeathItems) KnownDeathItems.Add(e.Key, e.Value);
-            foreach (var e in addCarcasses) KnownCarcasses.Add(e.Key, e.Value);
-            foreach (var e in addPelts) KnownPelts.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownDeathItems) KnownDeathItems.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownCarcasses) KnownCarcasses.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownPelts) KnownPelts.Add(e.Key, e.Value);
+            OriginalIndices = recreationData.OriginalIndices;
 
             if (internalPlugins.Count > 0)
             {
@@ -257,6 +264,17 @@ sealed public class Program
                 Write.Fail(1, $"Skipped {name}: {ex.Message}");
                 Console.WriteLine(ex.ToString());
             }
+        }
+
+        // Correct names.
+        Write.Action(0, "Correcting internal names.");
+        foreach (var e in OriginalIndices)
+        {
+            var plugin = e.Key;
+            var index = e.Value;
+            var list = std.GetCCFor(plugin.Type).RaceIndex;
+            Write.Action(1, $"{list.Data[index]} => {plugin.ProperName}");
+            list.Data[index] = plugin.ProperName;
         }
 
         if (Settings.AdvancedTaxonomy)
@@ -1093,6 +1111,11 @@ sealed public class Program
     /// Associates DeathItems with plugins. Mainly used to avoid processing a DeathItem more than once.
     /// </summary>
     private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
+
+    /// <summary>
+    /// The original indices of the internalplugins in the hunterborn plugin.
+    /// </summary>
+    private Dictionary<InternalPluginEntry, int> OriginalIndices { get; set; } = new();
 
     //private string PluginsPath { get; }
     private Settings.Settings Settings { get; }

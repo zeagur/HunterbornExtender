@@ -68,24 +68,25 @@ sealed public class SpecialCases
     /// </summary>
     static readonly public Dictionary<string, List<string>> EditorToNames = new() 
     {
-        { "BearCave", new() {"Bear", "Cave"} },
-        { "BearSnow", new() {"Bear", "Snow"} },
-        { "CharusHunter", new() {"Chaurus", "Hunter"} },
-        { "ElkFemale", new() {"Elk", "Female"} },
-        { "ElkMale", new() {"Elk", "Male"} },
-        { "FoxIce", new() {"Fox", "Snow"} },
-        { "MudCrab01", new() {"MudCrab", "Small"} },
-        { "MudCrab02", new() {"MudCrab", "Large"} },
-        { "MudCrab03", new() {"MudCrab", "Giant"} },
-        { "SabrecatSnow", new() {"Sabrecat", "Snow"} },
-        { "FrostbiteSpider", new() {"Spider", "Frostbite", "Medium"} },
-        { "FrostbiteSpiderGiant", new() {"Spider", "Frostbite", "Giant"} },
-        { "SprigganBurnt", new() {"Spriggan", "Burnt"} },
-        { "DeerVale", new() {"Deer", "Vale"} },
-        { "SabrecatVale", new() {"Sabrecat", "Vale"} },
-        { "WolfIce", new() {"Wolf", "Ice"} },
-        { "TrollFrost", new() {"Troll", "Frost"} },
-        { "Boar", new() {"Boar", "Bristleback" } }
+        { "BearCave", new() { "Bear", "Cave"} },
+        { "BearSnow", new() { "Bear", "Snow"} },
+        { "CharusHunter", new() { "Chaurus", "Hunter"} },
+        { "ElkFemale", new() { "Elk", "Female"} },
+        { "ElkMale", new() { "Elk", "Male"} },
+        { "FoxIce", new() { "Fox", "Snow"} },
+        { "MudCrab01", new() { "MudCrab", "Small"} },
+        { "MudCrab02", new() { "MudCrab", "Large"} },
+        { "MudCrab03", new() { "MudCrab", "Giant"} },
+        { "SabrecatSnow", new() { "Sabrecat", "Snow"} },
+        { "FrostbiteSpider", new() { "Spider", "Frostbite", "Medium"} },
+        { "FrostbiteSpiderGiant", new() { "Spider", "Frostbite", "Giant"} },
+        { "SprigganBurnt", new() { "Spriggan", "Burnt"} },
+        { "DeerVale", new() { "Deer", "Vale"} },
+        { "SabrecatVale", new() { "Sabrecat", "Vale"} },
+        { "WolfIce", new() { "Wolf", "Ice"} },
+        { "TrollFrost", new() { "Troll", "Frost"} },
+        { "Boar", new() { "Boar", "Bristleback" } },
+        { "Dragon01", new() { "Dragon" } }
     };
 
     /// <summary>
@@ -93,8 +94,9 @@ sealed public class SpecialCases
     /// </summary>
     static readonly public HashSet<HashSet<string>> Synonyms = new()
     {
-        new() { "bristleback", "boar", "bristle" },
+        new() { "bristleback", "boar", "bristle", "wildboar" },
         new() { "frostbite", "snowbite", "icebite" },
+        new() { "chicken", "turkey", "grouse", "pheasant", "peahen", "quail" },
     };
 
     /// <summary>
