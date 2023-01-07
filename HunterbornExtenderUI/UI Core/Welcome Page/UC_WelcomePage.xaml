@@ -8,15 +8,39 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <TextBlock HorizontalAlignment="Center" Margin="0 15 0 0" Text="Welcome to the Synthesis Hunterborn Configurator"/>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Loaded Plugins: "/>
-                <TextBlock Text="{Binding PluginCount}"/>
-            </StackPanel>
-        </StackPanel>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" Margin="0 15 0 0" Text="Welcome to the Synthesis Hunterborn Configurator"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Loaded Plugins: "/>
+        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding PluginCount}"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Debugging Mode"/>
+        <CheckBox Grid.Row="2" Grid.Column="2" IsChecked="{Binding DebuggingMode}"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Reuse Selections"/>
+        <CheckBox Grid.Row="3" Grid.Column="2" IsChecked="{Binding ReuseSelections}"/>
+
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Use Advanced Taxonomy"/>
+        <CheckBox Grid.Row="4" Grid.Column="2" IsChecked="{Binding AdvancedTaxonomy}"/>
+
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Apply Quick Loot Patch"/>
+        <CheckBox Grid.Row="5" Grid.Column="2" IsChecked="{Binding QuickLootPatch}"/>
+
+        <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" VerticalAlignment="Bottom">
             <TextBlock Text="Save settings to folder: " VerticalAlignment="Center"/>
             <TextBox Text="{Binding SettingsDir}"/>
             <Button Command="{Binding SetSettingsDir}" Foreground="LightGreen">Find Folder</Button>
