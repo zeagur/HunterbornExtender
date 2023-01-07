@@ -104,7 +104,8 @@ sealed public class Program
         }
 
         // Add all creature types to the Advanced Taxonomy power.
-        Settings.PluginEntries.ForEach(plugin => Taxonomy.AddCreature(plugin));
+        Taxonomy.AddCreature(Skip.SKIP);
+        Settings.PluginEntries.Where(plugin => plugin is not Skip).ForEach(plugin => Taxonomy.AddCreature(plugin));
 
         //
         // Link death entryItem selection to corresponding creature entry
