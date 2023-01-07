@@ -1,8 +1,8 @@
 [{
     "type": "animal",
     "name": "Pig",
-    "properName": "Pig",
-    "sortName": "Pig",
+    "properName": "Pig (SkyTest)",
+    "sortName": "Pig (SkyTest)",
     "animalSwitch": "",
     "carcassMessageBox": "_DS_MsgBox_FreshCarcass",
     "carcassSize": "1",
