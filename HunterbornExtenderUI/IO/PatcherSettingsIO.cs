@@ -1,4 +1,4 @@
-﻿using HunterbornExtender.Settings;
+using HunterbornExtender.Settings;
 using HunterbornExtender;
 using System.IO;
 using System.Windows;
@@ -41,9 +41,11 @@ namespace HunterbornExtenderUI
                 }
                 else
                 {
+                    /* For debugging
                     MessageBox.Show("Successfully loaded settings from " + path + Environment.NewLine + 
                         "Plugin entries: " + (settings?.PluginEntries.Count ?? 0) + Environment.NewLine + 
                         "Death Item Selections: " + settings?.DeathItemSelections.Length.ToString());
+                    */
                     return settings ?? new();
                 }
             }
