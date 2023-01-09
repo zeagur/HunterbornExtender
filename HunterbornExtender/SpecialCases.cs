@@ -152,7 +152,8 @@ sealed public class SpecialCases
         /// </summary>
         static readonly public HashSet<IFormLinkGetter<IKeywordGetter>> ForbiddenKeywords = new() {
             Skyrim.Keyword.ActorTypeGhost,
-            Skyrim.Keyword.ActorTypeNPC
+            Skyrim.Keyword.ActorTypeNPC,
+            Skyrim.Keyword.ActorTypeUndead,
         };
 
         /// <summary>
@@ -226,6 +227,10 @@ sealed public class SpecialCases
             Skyrim.LeveledItem.DeathItemVampire,
             Skyrim.LeveledItem.DeathItemForsworn,
             Skyrim.LeveledItem.DeathItemGhost,
+            Skyrim.LeveledItem.DeathItemDraugr,
+            Skyrim.LeveledItem.DeathItemDraugrGold,
+            Skyrim.LeveledItem.DeathItemDraugrMage,
+            Skyrim.LeveledItem.DeathItemDragonPriest,
             Dawnguard.LeveledItem.DLC1DeathItemDragon06,
             Dawnguard.LeveledItem.DLC1DeathItemDragon07,
             new(new FormKey(new("Skyrim Immersive Creatures Special Edition", type : ModType.Plugin), 0x11B217))

@@ -274,7 +274,7 @@ sealed public class Heuristics
                 npc.Template.TryResolve(LinkCache, out var spawner);
                 if (spawner is not null && spawner is INpcGetter template) return HasForbiddenDeathItem(template);
             }
-            return npc.DeathItem is DeathItemGetter deathItem && SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem);
+            return npc.DeathItem is DeathItemGetter deathItem && SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem.ToLink());
         }
 
         internal static bool HasForbiddenFlag(INpcGetter npc) => (SpecialCases.Lists.ForbiddenFlags & npc.Configuration.Flags) != 0;
