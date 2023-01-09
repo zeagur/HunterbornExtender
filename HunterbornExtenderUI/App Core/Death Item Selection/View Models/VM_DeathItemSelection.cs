@@ -51,7 +51,7 @@ namespace HunterbornExtenderUI
         {
             if (value is ILeveledItemGetter deathItem)
             {
-                return deathItem.EditorID ?? "NO EDITORID";
+                return deathItem.EditorID?.Replace("DeathItem", "", StringComparison.OrdinalIgnoreCase) ?? "NO EDITORID";
             }
             else
             {
@@ -65,6 +65,7 @@ namespace HunterbornExtenderUI
         }
     }
     [ValueConversion(typeof(ITranslatedStringGetter), typeof(string))]
+
     public sealed class NameConverter : IValueConverter
     {
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
