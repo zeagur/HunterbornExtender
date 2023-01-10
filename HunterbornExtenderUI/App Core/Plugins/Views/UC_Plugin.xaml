@@ -7,6 +7,11 @@
              d:DataContext="{d:DesignInstance Type=local:VM_Plugin}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
@@ -25,7 +30,7 @@
                 <ListBox SelectedValue="{Binding DisplayedEntry}" ItemsSource="{Binding Entries}" IsSynchronizedWithCurrentItem="False" >
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border BorderThickness="1" BorderBrush ="AliceBlue">
+                            <Border BorderThickness="1" BorderBrush ="AliceBlue" Visibility="{Binding IsVisible, Converter={StaticResource BoolToVis}}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>

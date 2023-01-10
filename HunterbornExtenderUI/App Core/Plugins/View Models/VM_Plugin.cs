@@ -42,6 +42,7 @@ public class VM_Plugin : ViewModel
     public ICommand AddEntry { get; }
     public ICommand DeleteEntry { get; }
     public ICommand SavePlugin { get; }
+    public bool IsVisible { get; set; } = true;
 
     public void LoadFromModel(Plugin model)
     {
@@ -54,6 +55,28 @@ public class VM_Plugin : ViewModel
         }
         FilePath = model.FilePath;
         FileName = Path.GetFileName(FilePath);
+
+        IsVisible = true;
+        if (Entries.Any())
+        {
+            int visibleEntries = 0;
+            foreach (var entry in Entries)
+            {
+                if (entry.IsVisible)
+                {
+                    visibleEntries++;
+                }
+            }
+            if (visibleEntries == 0) // hide plugins that have no visible entries
+            {
+                IsVisible = false;
+            }
+        }
+
+        if (IsVisible && Entries.Where(x => x.IsVisible).Any())
+        {
+            DisplayedEntry = Entries.Where(x => x.IsVisible).First();
+        }
     }
 
     public Plugin DumpToModel()

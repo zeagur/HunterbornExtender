@@ -80,11 +80,11 @@ public class PluginEntry
         return Name;
     }
 
-    public bool HasRequiredMods(ILoadOrder<IModListing<ISkyrimModGetter>> loadOrder)
+    public bool HasRequiredMods(ILoadOrderGetter<IModListingGetter<ISkyrimModGetter>> loadOrder)
     {
         return RequiredMods().All(mod => loadOrder.ModExists(mod));
     }
-
+    
     public List<ModKey> RequiredMods()
     {
         HashSet<ModKey> mods = new()
@@ -101,7 +101,7 @@ public class PluginEntry
 
         Recipes.Values.Select(r => r.FormKey.ModKey).ForEach(mod => mods.Add(mod));
         Materials.SelectMany(level => level.Items).Select(mat => mat.Item.FormKey.ModKey).Select(mod => mods.Add(mod));
-        return mods.ToList();
+        return mods.Where(x => !x.IsNull).ToList();
     }
 }
 

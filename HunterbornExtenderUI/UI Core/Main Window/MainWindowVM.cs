@@ -81,6 +81,10 @@ public class MainWindowVM : ViewModel
         _pluginList.Plugins.SetTo(
             _vmPluginLoader.GetPluginVMs(
                 _pluginLoader.LoadPlugins()));
+        if (_pluginList.Plugins.Where(x => x.IsVisible).Any())
+        {
+            PluginEditorPage.DisplayedPlugin = _pluginList.Plugins.Where(x => x.IsVisible).First();
+        }
 
         /*
         _deathItemSelectionList.DeathItems.SetTo(

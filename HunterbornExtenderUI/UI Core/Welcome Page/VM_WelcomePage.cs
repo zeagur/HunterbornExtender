@@ -4,13 +4,14 @@ using ReactiveUI.Fody.Helpers;
 using HunterbornExtender;
 using System.Reflection;
 using System.Windows.Input;
+using DynamicData.Binding;
+using System.Collections.ObjectModel;
 
 namespace HunterbornExtenderUI;
 
 public class VM_WelcomePage : ViewModel
 {
-    private readonly ObservableAsPropertyHelper<int> _pluginCount;
-    public int PluginCount => _pluginCount.Value;
+    public VM_PluginList PluginList { get; }
     [Reactive]
     public string SettingsDir { get; set; } = String.Empty;
     public ICommand SetSettingsDir { get; }
@@ -23,9 +24,6 @@ public class VM_WelcomePage : ViewModel
     public bool QuickLootPatch { get; set; } = true;
     public VM_WelcomePage(VM_PluginList pluginList)
     {
-        _pluginCount = pluginList.WhenAnyValue(x => x.Plugins.Count)
-            .ToProperty(this, nameof(PluginCount));
-
         //Temporary directory setting code until environment creation is done via Synthesis
         string exeLocation = string.Empty;
         var assembly = Assembly.GetEntryAssembly();
@@ -57,6 +55,8 @@ public class VM_WelcomePage : ViewModel
                 }
             });
         // end directory setting
+
+        PluginList = pluginList;
     }
 
     public void ForceSettingsDir(string settingsDir)

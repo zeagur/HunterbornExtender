@@ -79,6 +79,7 @@ public class VM_PluginEntry : ViewModel
     public IEnumerable<Type> VoiceType { get; } = typeof(IVoiceTypeGetter).AsEnumerable();
 
     public ICommand AddMaterial { get; }
+    public bool IsVisible { get; set; } = true;
 
     public void LoadFromModel(PluginEntry model)
     {
@@ -106,6 +107,15 @@ public class VM_PluginEntry : ViewModel
         Voice = model.Voice.FormKey;
         CreateDefaultMeat = model.CreateDefaultMeat;
         CreateDefaultPelt = model.CreateDefaultPelt;
+
+        if (model.HasRequiredMods(_state.LoadOrder))
+        {
+            IsVisible = true;
+        }
+        else
+        {
+            IsVisible = false;
+        }
     }
 
     public PluginEntry DumpToModel()
