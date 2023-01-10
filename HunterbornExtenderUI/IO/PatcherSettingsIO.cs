@@ -16,9 +16,9 @@ namespace HunterbornExtenderUI
         public void DumpToSettings(VM_DeathItemSelectionList deathItemsVM, VM_PluginList pluginsVM)
         {
             _settingsProvider.PatcherSettings.DeathItemSelections = deathItemsVM.DeathItems.Select(x => x.DumpToModel()).ToArray();
-            foreach (var plugin in pluginsVM.Plugins)
+            foreach (var plugin in pluginsVM.Plugins.Where(x => x.IsVisible))
             {
-                foreach (var entry in plugin.Entries)
+                foreach (var entry in plugin.Entries.Where(x => x.IsVisible))
                 {
                     _settingsProvider.PatcherSettings.PluginEntries.Add(entry.DumpToModel());
                 }
