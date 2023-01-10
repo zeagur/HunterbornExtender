@@ -23,5 +23,31 @@ namespace HunterbornExtenderUI
                 source.Add(sortedItem);
             }
         }
+
+        public static bool IsSorted<TSource, TKey>(this ObservableCollection<TSource> source, Func<TSource, TKey> keySelector, bool reverse)
+        {
+            if (source != null)
+            {
+                List<TSource> sortedList = source.OrderBy(keySelector).ToList();
+                if (reverse)
+                {
+                    sortedList.Reverse();
+                }
+
+                for (int i = 0; i < source.Count; i++)
+                {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                    if (source[i] != null && !source[i].Equals(sortedList[i]))
+                    {
+                        return false;
+                    }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+                }
+                return true;
+            }
+            else            {
+                return false;
+            }
+        }
     }
 }
