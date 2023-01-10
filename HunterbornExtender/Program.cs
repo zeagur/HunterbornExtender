@@ -26,27 +26,32 @@ using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen
 
 sealed public class Program
 {
+    /// <summary>
+    /// This is neutered because the patcher should get called from HunterbornExtenderUI.
+    /// </summary>
     public static async Task<int> Main(string[] args)
     {
         return 0;
     }
 
-    public static bool CheckSettings(string label, Settings.Settings settings)
-    {
-        Write.Title(0, label);
-        Write.Success(2, $"{settings.QuickLootPatch}");
-        Write.Success(2, $"{settings.ReuseSelections}");
-        Write.Success(2, $"Selections: {settings.DeathItemSelections.Length}");
-        Write.Success(2, $"Plugins:    {settings.PluginEntries.Count}");
-        return settings.DeathItemSelections.Length > 0 && settings.PluginEntries.Count > 0;
-    }
-
+    /// <summary>
+    /// Runs the patcher. This gets called from HunterbornExtenderUI, which provides the state and settings.
+    /// 
+    /// </summary>
     public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state, Settings.Settings settings)
     {
+        //
+        // If the Settings were provided by HunterbornExtenderUI, the patcher can be run immediately.
+        // Currently not happening!
+        //
         if (CheckSettings("PARAMETER SETTINGS", settings))
         {
             new Program(settings, state).Initialize().Patch();
         }
+
+        //
+        // Load the settings.json file to populate the Settings.
+        //
         else
         { 
             string settingsFilename = "settings.json";
@@ -56,15 +61,19 @@ sealed public class Program
 
             var obj = JSONhandler<Settings.Settings>.LoadJSONFile(settingsPath, out string errorString);
 
+            // Was settings.json successfully read? If so, use it to run the patcher.
             if (obj is Settings.Settings settings2 && CheckSettings("PARSED SETTINGS", settings2))
             {
                 SelectionLinker.LinkDeathItemSelections(settings2.DeathItemSelections, settings2.PluginEntries);
                 new Program(settings2, state).Initialize().Patch();
             }
+
+            // If settings.json couldn't be read, use the empty settings. The patcher will compensate, but there
+            // will be no selections other than the heuristics.
             else
             {
                 Write.Fail(0, "Failure to parse: " + errorString);
-                //new Program(settings, state).Initialize().Patch();
+                new Program(settings, state).Initialize().Patch();
             }
         } 
     }
@@ -72,8 +81,7 @@ sealed public class Program
     /// <summary>
     /// Creates a new instance of Program.
     /// </summary>
-    /// <param name="settings"></param>
-    /// <param name="state"></param>
+    /// 
     public Program(Settings.Settings settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
     {
         State = state;
@@ -85,20 +93,45 @@ sealed public class Program
         ItemSubstitution = SpecialCases.GetCACOSubResolved(LoadOrder.ContainsKey(CACO_MODKEY), LinkCache);
     }
 
+    /// <summary>
+    /// Prepares the patcher object.
+    /// Ensures that the plugins are all recreated and parsed.
+    /// Matches selections to plugins.
+    /// </summary>
     public Program Initialize()
     {
+        //
+        // If the Settings object contains NO plugins at all, perform the full parsing and recreating.
+        // Normally this should happen in HunterbornExtenderUI.
+        //
         if (Settings.PluginEntries.Count == 0)
         {
             Settings.PluginEntries = ImportPlugins();
-        } else
-        {
-            (var plugins, var deathItem_plugins, var carcasses, var pelts) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
-            plugins.AddRange(Settings.PluginEntries);
-            Settings.PluginEntries = plugins;
         }
 
+        //
+        // If the Settings object contains plugins, it still shouldn't contain the internal ones because they
+        // need to be recreated at patching time so that the patcher can get extra data that isn't passed
+        // to the UI.
+        //
+        else
+        {
+            (var plugins, var recreationData) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
+            plugins.AddRange(Settings.PluginEntries);
+            Settings.PluginEntries = plugins;
+
+            // Copy the recreation data into local dictionaries.
+            foreach (var e in recreationData.KnownDeathItems) KnownDeathItems.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownCarcasses) KnownCarcasses.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownPelts) KnownPelts.Add(e.Key, e.Value);
+            OriginalIndices = recreationData.OriginalIndices;
+        }
+
+        //
         // Add all creature types to the Advanced Taxonomy power.
-        Settings.PluginEntries.ForEach(plugin => Taxonomy.AddCreature(plugin));
+        //
+        Taxonomy.AddCreature(Skip.SKIP);
+        Settings.PluginEntries.Where(plugin => plugin is not Skip).ForEach(plugin => Taxonomy.AddCreature(plugin));
 
         //
         // Link death entryItem selection to corresponding creature entry
@@ -112,9 +145,10 @@ sealed public class Program
             Write.Action(1, plugin.SortName);
         }
 
+        //
         // Heuristic matching and user selections should already be done.
         //
-        // Scan the load order and update the selections.
+        // Scan the load order and apply heuristics to anything that is missing.
         // 
         try
         {
@@ -138,28 +172,36 @@ sealed public class Program
         return this;
     }
 
+    /// <summary>
+    /// Recreates the internal plugins and reads the JSON files. 
+    /// If converted ones are not found, the legacies will be converted.
+    /// </summary>
+    /// 
+    /// <returns>A list of plugins; first SKIP, then the internal plugins, then the addons.</returns>
     public List<PluginEntry> ImportPlugins()
     {
+        //
+        // Read the addon jsons.
+        //
         Write.Divider(0);
         Write.Action(0, "Importing plugins.");
         var addonPlugins = LegacyConverter.ImportAndConvert(State);
         Write.Success(0, $"{addonPlugins.Count} creature types imported.");
 
         //
-        // Create a List<PluginEntry> for the hard-coded creatures.
-        // Merge it into the previous list.
+        // Recreate the internal plugins and store the recreation data.
         //
         List<PluginEntry> internalPlugins;
-
         try
         {
             Write.Divider(0);
             Write.Action(0, "Trying to recreate the hard-coded core plugin from Hunterborn.esp.");
-            (internalPlugins, var addDeathItems, var addCarcasses, var addPelts) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
+            (internalPlugins, var recreationData) = RecreateInternal.RecreateInternalPlugins(LinkCache, DebuggingMode);
 
-            foreach (var e in addDeathItems) KnownDeathItems.Add(e.Key, e.Value);
-            foreach (var e in addCarcasses) KnownCarcasses.Add(e.Key, e.Value);
-            foreach (var e in addPelts) KnownPelts.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownDeathItems) KnownDeathItems.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownCarcasses) KnownCarcasses.Add(e.Key, e.Value);
+            foreach (var e in recreationData.KnownPelts) KnownPelts.Add(e.Key, e.Value);
+            OriginalIndices = recreationData.OriginalIndices;
 
             if (internalPlugins.Count > 0)
             {
@@ -180,6 +222,9 @@ sealed public class Program
             throw ex;
         }
 
+        //
+        // Merge the lists and return the combined list.
+        //
         List<PluginEntry> plugins = new();
         plugins.AddRange(internalPlugins);
         plugins.AddRange(addonPlugins);
@@ -188,13 +233,15 @@ sealed public class Program
         return plugins;
     }
 
+    /// <summary>
+    /// Requires that Initialize() has already been called.
+    /// </summary>
     public void Patch()
     {
         //
         // Resolve and locate all the FormLists and ScriptProperties that need patching.
         // 
         PatchingRecords std;
-
         try
         {
             Write.Divider(0);
@@ -210,35 +257,54 @@ sealed public class Program
             return;
         }
 
+        //
+        // Iterate through all the selections and create new records where appropriate.
+        // Each DeathItem only needs one set of records created for it.
+        //
         foreach (var selection in Settings.DeathItemSelections)
         {
             var name = selection.CreatureEntryName;
             PluginEntry? prototype = selection.Selection;
 
-            // null is used to indicate "SKIP".
+            //
+            // null is used to indicate "SKIP". So is the SKIP plugin.
+            // If either is found, continue on to the next selection.
+            //
             if (prototype == null || PluginEntry.SKIP.Equals(prototype))
             {
                 if (Settings.DebuggingMode) Write.Action(0, $"(SKIPPING) {name}");
                 continue;
             }
 
-            //Write.Title(0, $"{name} -> {prototype.Name}");
+            LinkCache.TryResolve<ILeveledItemGetter>(selection.DeathItem, out var deathItem);
+            if (deathItem is null) continue;
+            if (KnownDeathItems.ContainsKey(deathItem))
+            {
+                Write.Fail(1, $"Skipped {name}: DeathItem already processed.");
+                continue;
+            }
+            else if (SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem))
+            {
+                Write.Fail(1, $"Skipped {name}: a forbidden DeathItem slipped past the filters!");
+                continue;
+            }
 
             try
             {
-                var deathItem = LinkCache.Resolve<DeathItemGetter>(selection.DeathItem);
+                //
+                // Patching data for a specific DeathItem.
+                //
                 var data = CreateCreatureData(selection, prototype);
-                //if (Settings.DebuggingMode) Write.Success(1, $"Creating creature Data structure.");
 
-                if (KnownDeathItems.ContainsKey(data.DeathItem))
-                {
-                    Write.Fail(1, $"Skipped {name}: DeathItem already processed.");
-                }
-                else if (!SpecialCases.Lists.ForbiddenDeathItems.Contains(data.DeathItem))
-                {
-                    AddRecordFor(data, std);
-                    KnownDeathItems.Add(data.DeathItem, prototype);
-                }
+                //
+                // Make the new records.
+                //
+                AddRecordFor(data, std);
+
+                //
+                // Avoid double-patching!
+                //
+                KnownDeathItems.Add(deathItem, prototype);
             }
             catch (RecordException ex)
             {
@@ -259,6 +325,22 @@ sealed public class Program
             }
         }
 
+        //
+        // Correct the names of the internal plugins.
+        //
+        Write.Action(0, "Correcting internal names.");
+        foreach (var e in OriginalIndices)
+        {
+            var plugin = e.Key;
+            var index = e.Value;
+            var list = std.GetCCFor(plugin.Type).RaceIndex;
+            Write.Action(1, $"{list.Data[index]} => {plugin.ProperName}");
+            list.Data[index] = plugin.ProperName;
+        }
+
+        //
+        // Finish the advanced taxonomy data.
+        //
         if (Settings.AdvancedTaxonomy)
         {
             try
@@ -280,11 +362,6 @@ sealed public class Program
         }
     }
 
-
-    /// <summary>
-    /// Regular expression used to turn the names of vanilla DeathItems into useful names.
-    /// </summary>
-    //static private readonly Regex DeathItemPrefix = new(".*DeathItem", RegexOptions.IgnoreCase);
 
     /// <summary>
     /// Things that have to be done for each race:
@@ -990,6 +1067,23 @@ sealed public class Program
     }
 
     /// <summary>
+    /// Checks a Settings object to see if it is populated or not. 
+    /// Prints out status information.
+    /// </summary>
+    /// <param name="label">A label stating where the Settings came from.</param>
+    /// <param name="settings">The Settings object.</param>
+    /// <returns>A flag indicating whether the Settings is populated.</returns>
+    public static bool CheckSettings(string label, Settings.Settings settings)
+    {
+        Write.Title(0, label);
+        Write.Success(2, $"{settings.QuickLootPatch}");
+        Write.Success(2, $"{settings.ReuseSelections}");
+        Write.Success(2, $"Selections: {settings.DeathItemSelections.Length}");
+        Write.Success(2, $"Plugins:    {settings.PluginEntries.Count}");
+        return settings.DeathItemSelections.Length > 0 && settings.PluginEntries.Count > 0;
+    }
+
+    /// <summary>
     /// Convenience method for creating new LeveledItemEntry.
     /// No extra data is added.
     /// </summary>
@@ -1093,6 +1187,11 @@ sealed public class Program
     /// Associates DeathItems with plugins. Mainly used to avoid processing a DeathItem more than once.
     /// </summary>
     private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
+
+    /// <summary>
+    /// The original indices of the internalplugins in the hunterborn plugin.
+    /// </summary>
+    private Dictionary<InternalPluginEntry, int> OriginalIndices { get; set; } = new();
 
     //private string PluginsPath { get; }
     private Settings.Settings Settings { get; }

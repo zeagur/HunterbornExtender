@@ -1,4 +1,6 @@
-﻿namespace HunterbornExtender;
+﻿using Mutagen.Bethesda.Fallout4;
+
+namespace HunterbornExtender;
 using DynamicData;
 using HunterbornExtender.Settings;
 using Microsoft.CodeAnalysis;
@@ -17,9 +19,15 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
-//using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter>;
 using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
 using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
+
+
+sealed public record RecreationData(
+    Dictionary<InternalPluginEntry, int> OriginalIndices,
+    OrderedDictionary<DeathItemGetter, InternalPluginEntry> KnownDeathItems,
+    Dictionary<InternalPluginEntry, IMiscItemGetter> KnownCarcasses,
+    Dictionary<InternalPluginEntry, PeltSet> KnownPelts);
 
 sealed public class RecreateInternal
 {
@@ -33,7 +41,7 @@ sealed public class RecreateInternal
     /// 
     static public List<PluginEntry> RecreateInternalPluginsUI(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
     {
-        (var plugins, _, _, _) = RecreateInternalPlugins(linkCache, debuggingMode);
+        (var plugins, _) = RecreateInternalPlugins(linkCache, debuggingMode);
         return plugins;
     }
 
@@ -44,19 +52,14 @@ sealed public class RecreateInternal
     /// <returns></returns>
     /// <exception cref="RecreationException">Indicates that something went wrong during recreation. Using the InnerException field to retrieve the cause.</exception>
     /// 
-    static public (List<PluginEntry>, OrderedDictionary<DeathItemGetter, PluginEntry>, Dictionary<PluginEntry, IMiscItemGetter>, Dictionary<PluginEntry, PeltSet>) 
-        RecreateInternalPlugins(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
+    static public (List<PluginEntry>, RecreationData) RecreateInternalPlugins(ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode = false)
     {
         try
         {
-            OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems = new();
-            Dictionary<PluginEntry, IMiscItemGetter> KnownCarcasses = new();
-            Dictionary<PluginEntry, PeltSet> KnownPelts = new();
+            RecreationData data = new(new(), new(), new(), new());
             List<PluginEntry> plugins = new();
 
-            ViewingRecords std;
-
-            std = ViewingRecords.CreateViewingInstance(linkCache);
+            ViewingRecords std = ViewingRecords.CreateViewingInstance(linkCache);
 
             foreach (EntryType type in Enum.GetValues(typeof(EntryType)))
             {
@@ -73,12 +76,13 @@ sealed public class RecreateInternal
                 {
                     try
                     {
-                        InternalPluginEntry entry = RecreateCorePluginEntry(type, index, KnownDeathItems, KnownCarcasses, KnownPelts, std, linkCache, debuggingMode);
+                        InternalPluginEntry entry = RecreateCorePluginEntry(type, index, data, std, linkCache, debuggingMode);
                         plugins.Add(entry);
+                        data.OriginalIndices[entry] = index;
                     }
                     catch (DataConsistencyError ex)
                     {
-                        Write.Fail(0, "WARNING: inconsistent data detected. This may be the result of some other mod patching Hunterborn.");
+                        Write.Fail(0, "WARNING: inconsistent data detected. This may be the result of some other mod patching Hunterborn, or an old HunterbornExtender patch in your load order.");
                         Write.Fail(0, ex.Message);
                         plugins.Add(PluginEntry.SKIP);
                     }
@@ -86,7 +90,7 @@ sealed public class RecreateInternal
             }
 
             plugins.Insert(0, PluginEntry.SKIP);
-            return (plugins, KnownDeathItems, KnownCarcasses, KnownPelts);
+            return (plugins, data);
         }
         catch (Exception ex)
         {
@@ -94,8 +98,7 @@ sealed public class RecreateInternal
         }
     }
 
-    static private InternalPluginEntry RecreateCorePluginEntry(EntryType type, int index, OrderedDictionary<DeathItemGetter, PluginEntry> knownDeathItems, 
-        Dictionary<PluginEntry, IMiscItemGetter> knownCarcasses, Dictionary<PluginEntry, PeltSet> knownPelts, ViewingRecords std, 
+    static private InternalPluginEntry RecreateCorePluginEntry(EntryType type, int index, RecreationData data, ViewingRecords std, 
         ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode)
     {
         string internalName = std.GetCCFor(type).RaceIndex.Data[index];
@@ -110,7 +113,7 @@ sealed public class RecreateInternal
             if (deathItem == null) throw new DataConsistencyError(type, internalName, index, $"DeathItem could not be resolved: {type} {index} {deathItemLink}");
             if (deathItem.EditorID == null) throw new DataConsistencyError(type, internalName, index, $"DeathItem {deathItem.FormKey} has no editor id.");
 
-            if (knownDeathItems.ContainsKey(deathItem))
+            if (data.KnownDeathItems.ContainsKey(deathItem))
             {
                 var arr = std.GetCCFor(type)._DS_FL_DeathItems.Items.ToArray();
                 int previous = Array.FindIndex(arr, 0, index, di => deathItem.Equals(di));
@@ -118,7 +121,7 @@ sealed public class RecreateInternal
             }
 
             InternalPluginEntry plugin = new(type, internalName, deathItem.FormKey);
-            knownDeathItems.Add(deathItem, plugin);
+            data.KnownDeathItems.Add(deathItem, plugin);
             var renaming = RecreatePluginName(plugin, deathItem);
 
             if (!renaming.Equals(NoRename)) (internalName, plugin.ProperName, plugin.SortName) = renaming;
@@ -163,7 +166,7 @@ sealed public class RecreateInternal
                 var carcass = std.Animals._DS_FL_CarcassObjects.Items[index].Resolve<IMiscItemGetter>(linkCache);
                 plugin.CarcassWeight = (int)carcass.Weight;
                 plugin.CarcassValue = (int)carcass.Value;
-                knownCarcasses.Add(plugin, carcass);
+                data.KnownCarcasses.Add(plugin, carcass);
             }
 
             plugin.Discard = type != EntryType.Monster
@@ -189,7 +192,7 @@ sealed public class RecreateInternal
                     peltList.Items[1].Resolve<IConstructibleGetter>(linkCache),
                     peltList.Items[2].Resolve<IConstructibleGetter>(linkCache),
                     peltList.Items[3].Resolve<IConstructibleGetter>(linkCache));
-                knownPelts[plugin] = pelts;
+                data.KnownPelts[plugin] = pelts;
             }
 
             // The voice field is unnecessary because the core voices are hard-coded.
@@ -207,7 +210,7 @@ sealed public class RecreateInternal
             plugin.Voice = voice == null ? new FormLink<IVoiceTypeGetter>() : voice.ToLink();
             if (debuggingMode) Write.Action(2, $"Internal plugin {plugin.Name} searching for voice {voiceEdid}: found {voice}:{voice?.EditorID}.");
 
-            FindRecipes(plugin, internalName, deathItem, knownPelts, linkCache, debuggingMode);
+            FindRecipes(plugin, internalName, deathItem, data.KnownPelts, linkCache, debuggingMode);
 
             if (debuggingMode) Write.Action(2, $"Recreated {plugin.Name} from {DeathItemNamer(deathItem)} (proper name '{plugin.ProperName}', sort name '{plugin.SortName}')");
             return plugin;
@@ -228,7 +231,7 @@ sealed public class RecreateInternal
     /// 
     /// </summary>
     /// 
-    static private void FindRecipes(PluginEntry plugin, string internalName, DeathItemGetter deathItem, Dictionary<PluginEntry, PeltSet> knownPelts, 
+    static private void FindRecipes(InternalPluginEntry plugin, string internalName, DeathItemGetter deathItem, Dictionary<InternalPluginEntry, PeltSet> knownPelts, 
         ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache, bool debuggingMode)
     {
         // Search for the standard recipes using naming conventions in the order of

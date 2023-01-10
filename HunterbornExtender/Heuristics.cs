@@ -168,9 +168,10 @@ sealed public class Heuristics
 
         foreach (var plugin in plugins)
         {
-            int intersection = plugin.Tokens.Intersect(npcTokens).Count();
-            int surplus = 1 + plugin.Tokens.Except(npcTokens).Count();
-            if (intersection > 0) clicker((double)intersection / (double)surplus)(plugin);
+            double intersection = 2.0 * (double) plugin.Tokens.Intersect(npcTokens).Count();
+            double surplus = 1.0 + (double) plugin.Tokens.Except(npcTokens).Count();
+            double tokenScore = Math.Pow(intersection / surplus, 1.5);
+            if (intersection > 0) clicker(intersection / surplus)(plugin);
         }
 
         // @TODO Add matching for distinctive keywords?
@@ -273,7 +274,7 @@ sealed public class Heuristics
                 npc.Template.TryResolve(LinkCache, out var spawner);
                 if (spawner is not null && spawner is INpcGetter template) return HasForbiddenDeathItem(template);
             }
-            return npc.DeathItem is DeathItemGetter deathItem && SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem);
+            return npc.DeathItem is DeathItemGetter deathItem && SpecialCases.Lists.ForbiddenDeathItems.Contains(deathItem.ToLink());
         }
 
         internal static bool HasForbiddenFlag(INpcGetter npc) => (SpecialCases.Lists.ForbiddenFlags & npc.Configuration.Flags) != 0;
@@ -305,14 +306,6 @@ sealed public class Heuristics
     static private IFormLinkNullableGetter<IVoiceTypeGetter> GetVoice(INpcGetter npc, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
     {
         var name = Naming.NpcFB(npc) + (npc.EditorID ?? "");
-        if (name.ContainsInsensitive("boar"))
-        {
-            var x = (npc.Sound is INpcInheritSoundGetter y && !y.InheritsSoundsFrom.IsNull)
-                ? y.InheritsSoundsFrom.Resolve(linkCache) : null;
-            var z = (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits))
-                ? npc.Template.Resolve(linkCache) : null;
-            Write.Action(2, $"Getting voice for {name}: {npc.Voice.Pretty()}, Template={z}, Sound={x}");
-        }
 
         if (npc.Sound is INpcInheritSoundGetter inherited && !inherited.InheritsSoundsFrom.IsNull)
         {

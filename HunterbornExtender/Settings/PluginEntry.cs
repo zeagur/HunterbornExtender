@@ -5,6 +5,8 @@ using Newtonsoft.Json;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Plugins;
 using Noggog;
+using Mutagen.Bethesda.Plugins.Order;
+using Mutagen.Bethesda;
 
 public class PluginEntry
 {
@@ -77,6 +79,30 @@ public class PluginEntry
         if (!SortName.IsNullOrWhitespace()) return SortName;
         return Name;
     }
+
+    public bool HasRequiredMods(ILoadOrder<IModListing<ISkyrimModGetter>> loadOrder)
+    {
+        return RequiredMods().All(mod => loadOrder.ModExists(mod));
+    }
+
+    public List<ModKey> RequiredMods()
+    {
+        HashSet<ModKey> mods = new()
+        {
+            Toggle.FormKey.ModKey,
+            CarcassMessageBox.FormKey.ModKey,
+            Meat.FormKey.ModKey,
+            SharedDeathItems.FormKey.ModKey,
+            BloodType.FormKey.ModKey,
+            Venom.FormKey.ModKey,
+            Voice.FormKey.ModKey,
+            DefaultPelt.FormKey.ModKey
+        };
+
+        Recipes.Values.Select(r => r.FormKey.ModKey).ForEach(mod => mods.Add(mod));
+        Materials.SelectMany(level => level.Items).Select(mat => mat.Item.FormKey.ModKey).Select(mod => mods.Add(mod));
+        return mods.ToList();
+    }
 }
 
 /// <summary>
@@ -99,17 +125,13 @@ class Skip : PluginEntry
 /// Used to describe plugins that get loaded from JSon files.
 /// They each have a name and can have required mods.
 /// 
-/// @TODO Add required mods to the JSon files. This will reduce unresolved record issues.
-/// For now it's fine if it's empty and unused.
-/// 
 /// </summary>
 public class AddonPluginEntry : PluginEntry
 {
-    //public ModKey[] RequiredMods { get; set; } = Array.Empty<ModKey>();
-
     public AddonPluginEntry() { }
 
     public AddonPluginEntry(EntryType type, string name) : base(type, name) { }
+
 }
 
 /// <summary>
