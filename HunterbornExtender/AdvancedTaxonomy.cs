@@ -1,4 +1,6 @@
 ﻿namespace HunterbornExtender;
+
+using DynamicData;
 using HunterbornExtender.Settings;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Plugins.Cache;
@@ -15,28 +17,28 @@ internal sealed class AdvancedTaxonomy
 
     public void AddCreature(PluginEntry plugin)
     {
-        if (plugin.Type == EntryType.Animal)
-            AnimalNames.Add(Naming.PluginNameFB(plugin));
-        else
-            MonsterNames.Add(Naming.PluginNameFB(plugin));
-    }
-
-    public void AddCreature(Program.CreatureData creature)
-    {
-        if (creature.Prototype.Type == EntryType.Animal)
-            AnimalNames.Add(creature.DescriptiveName);
-        else
-            MonsterNames.Add(creature.DescriptiveName);
+        var name = Naming.PluginNameFB(plugin);
+        if (plugin.Type == EntryType.Animal && !AnimalNames.Contains(name)) AnimalNames.Add(name);
+        else if (plugin.Type == EntryType.Monster && !MonsterNames.Contains(name)) MonsterNames.Add(name);
     }
 
     public void Finalize(ISkyrimMod patchMod, ILinkCache<ISkyrimMod, ISkyrimModGetter> linkCache)
     {
-        var animalMapping = new List<int>(Enumerable.Range(0, AnimalNames.Count));
-        var monsterMapping = new List<int>(Enumerable.Range(0, MonsterNames.Count));
-        QuickCoSort(AnimalNames, animalMapping, 0, AnimalNames.Count - 1);
-        Write.Success(1, "Co-sorted animal names.");
-        QuickCoSort(MonsterNames, monsterMapping, 0, MonsterNames.Count - 1);
-        Write.Success(1, "Co-sorted monster names.");
+        var animals = new List<(string Name, int Index)>();
+        var monsters = new List<(string Name, int Index)>();
+
+        for (var i = 0; i < AnimalNames.Count; i++)
+        {
+            animals.Add((AnimalNames[i], i));
+        }
+
+        for (var i = 0; i < MonsterNames.Count; i++)
+        {
+            monsters.Add((MonsterNames[i], i));
+        }
+
+        animals.Sort();
+        monsters.Sort();
 
         linkCache.TryResolve<IMagicEffectGetter>(ADVANCED_TAXONOMY, out var baseRecord);
         if (baseRecord is not null && patchMod.MagicEffects.GetOrAddAsOverride(baseRecord) is MagicEffect advancedTaxonomy)
@@ -49,19 +51,19 @@ internal sealed class AdvancedTaxonomy
             Write.Success(1, "Loaded script properties.");
 
             propertyAnimalNames.Data.Clear();
-            propertyAnimalNames.Data.AddRange(AnimalNames);
+            propertyAnimalNames.Data.AddRange(animals.Select(p => p.Name).ToArray());
             Write.Success(1, "Added animal names.");
 
             propertyMonsterNames.Data.Clear();
-            propertyMonsterNames.Data.AddRange(MonsterNames);
+            propertyMonsterNames.Data.AddRange(monsters.Select(p => p.Name).ToArray());
             Write.Success(1, "Added monster names.");
 
             propertyAnimalMapping.Data.Clear();
-            propertyAnimalMapping.Data.AddRange(animalMapping);
+            propertyAnimalMapping.Data.AddRange(animals.Select(p => p.Index).ToArray());
             Write.Success(1, "Added animal sorting.");
 
             propertyMonsterMapping.Data.Clear();
-            propertyMonsterMapping.Data.AddRange(monsterMapping);
+            propertyMonsterMapping.Data.AddRange(monsters.Select(p => p.Index).ToArray());
             Write.Success(1, "Added monster sorting.");
 
             propertyInitialized.Data = true;
