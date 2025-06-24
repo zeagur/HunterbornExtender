@@ -41,7 +41,7 @@ internal sealed class AdvancedTaxonomy
         monsters.Sort();
 
         linkCache.TryResolve<IMagicEffectGetter>(ADVANCED_TAXONOMY, out var baseRecord);
-        if (baseRecord is not null && patchMod.MagicEffects.GetOrAddAsOverride(baseRecord) is MagicEffect advancedTaxonomy)
+        if (baseRecord is not null && patchMod.MagicEffects.GetOrAddAsOverride(baseRecord) is { } advancedTaxonomy)
         {
             var propertyAnimalNames = ScriptUtil.GetProperty<ScriptStringListProperty>(advancedTaxonomy, "_DS_HB_mgef_AdvancedTaxonomy", "animalNames");
             var propertyMonsterNames = ScriptUtil.GetProperty<ScriptStringListProperty>(advancedTaxonomy, "_DS_HB_mgef_AdvancedTaxonomy", "monsterNames");

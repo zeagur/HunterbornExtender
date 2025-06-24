@@ -168,6 +168,11 @@ sealed public class Program
             Console.WriteLine(ex.ToString());
             throw ex;
         }
+        
+        foreach (var rec in PatchMod.EnumerateMajorRecords())
+        {
+            rec.IsCompressed = false;
+        }
 
         return this;
     }
@@ -359,6 +364,10 @@ sealed public class Program
                 Console.WriteLine(ex.ToString());
                 return;
             }
+        }
+        foreach (var rec in PatchMod.EnumerateMajorRecords())
+        {
+            rec.IsCompressed = false;
         }
     }
 
