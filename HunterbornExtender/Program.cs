@@ -1,4 +1,6 @@
-﻿namespace HunterbornExtender;
+﻿using Mutagen.Bethesda.Fallout4;
+
+namespace HunterbornExtender;
 
 using DynamicData;
 using HunterbornExtender.IO;
@@ -977,8 +979,8 @@ sealed public class Program
             {
                 var standard = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_STD_RECIPE.Resolve(LinkCache));
                 standard.CreatedObjectCount = (ushort)data.Prototype.PeltCount[1];
-                if (standard.Items?[0].Item is ContainerItem containerItem2) containerItem2.Item = pelts.Item2.ToLink();
-                if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
+                if (standard.Items?[0].Item is {} containerItem2) containerItem2.Item = pelts.Item2.ToLink();
+                if (standard.Conditions?[4].Data is GetItemCountConditionData data2) data2.ItemOrList.Link.SetTo(pelts.Item2.FormKey);
                 standard.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_01";
             }
 
@@ -994,13 +996,13 @@ sealed public class Program
             fine.CreatedObjectCount = (ushort)data.Prototype.PeltCount[2];
             flawless.CreatedObjectCount = (ushort)data.Prototype.PeltCount[2];
 
-            if (poor.Items?[0].Item is ContainerItem containerItem1) containerItem1.Item = pelts.Item1.ToLink();
-            if (fine.Items?[0].Item is ContainerItem containerItem3) containerItem3.Item = pelts.Item3.ToLink();
-            if (flawless.Items?[0].Item is ContainerItem containerItem4) containerItem4.Item = pelts.Item4.ToLink();
+            if (poor.Items?[0].Item is {} containerItem1) containerItem1.Item = pelts.Item1.ToLink();
+            if (fine.Items?[0].Item is {} containerItem3) containerItem3.Item = pelts.Item3.ToLink();
+            if (flawless.Items?[0].Item is {} containerItem4) containerItem4.Item = pelts.Item4.ToLink();
 
-            if (poor.Conditions?[4].Data is FunctionConditionData data1) data1.ParameterOneRecord = pelts.Item1.ToLink();
-            if (fine.Conditions?[4].Data is FunctionConditionData data3) data3.ParameterOneRecord = pelts.Item3.ToLink();
-            if (flawless.Conditions?[4].Data is FunctionConditionData data4) data4.ParameterOneRecord = pelts.Item4.ToLink();
+            if (poor.Conditions?[4].Data is GetItemCountConditionData data1) data1.ItemOrList.Link.SetTo(pelts.Item1.FormKey);
+            if (fine.Conditions?[4].Data is GetItemCountConditionData data3) data3.ItemOrList.Link.SetTo(pelts.Item3.FormKey);
+            if (flawless.Conditions?[4].Data is GetItemCountConditionData data4) data4.ItemOrList.Link.SetTo(pelts.Item4.FormKey);
 
             fine.CreatedObject = pelts.Item2.ToNullableLink();
             flawless.CreatedObject = pelts.Item3.ToNullableLink();
@@ -1022,13 +1024,13 @@ sealed public class Program
             standard.CreatedObjectCount = (ushort)data.Prototype.FurPlateCount[1];
             fine.CreatedObjectCount = (ushort)data.Prototype.FurPlateCount[2];
 
-            if (poor.Items?[0].Item is ContainerItem containerItem1) containerItem1.Item = pelts.Item1.ToLink();
-            if (standard.Items?[0].Item is ContainerItem containerItem2) containerItem2.Item = pelts.Item2.ToLink();
-            if (fine.Items?[0].Item is ContainerItem containerItem3) containerItem3.Item = pelts.Item3.ToLink();
+            if (poor.Items?[0].Item is {} containerItem1) containerItem1.Item = pelts.Item1.ToLink();
+            if (standard.Items?[0].Item is {} containerItem2) containerItem2.Item = pelts.Item2.ToLink();
+            if (fine.Items?[0].Item is {} containerItem3) containerItem3.Item = pelts.Item3.ToLink();
 
-            if (poor.Conditions?[4].Data is FunctionConditionData data1) data1.ParameterOneRecord = pelts.Item1.ToLink();
-            if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
-            if (fine.Conditions?[4].Data is FunctionConditionData data3) data3.ParameterOneRecord = pelts.Item3.ToLink();
+            if (poor.Conditions?[4].Data is GetItemCountConditionData data1) data1.ItemOrList.Link.SetTo(pelts.Item1.FormKey);
+            if (standard.Conditions?[4].Data is GetItemCountConditionData data2) data2.ItemOrList.Link.SetTo(pelts.Item2.FormKey);
+            if (fine.Conditions?[4].Data is GetItemCountConditionData data3) data3.ItemOrList.Link.SetTo(pelts.Item3.FormKey);
 
             if (DebuggingMode) Write.Success(3, $"Created new fur-plate recipes.");
         }
