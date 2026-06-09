@@ -19,13 +19,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
-using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
+using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter>;
 using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter, Mutagen.Bethesda.Skyrim.IFormListGetter>;
 
 
 sealed public record RecreationData(
     Dictionary<InternalPluginEntry, int> OriginalIndices,
-    Noggog.OrderedDictionary<DeathItemGetter, InternalPluginEntry> KnownDeathItems,
+    OrderedDictionary<DeathItemGetter, InternalPluginEntry> KnownDeathItems,
     Dictionary<InternalPluginEntry, IMiscItemGetter> KnownCarcasses,
     Dictionary<InternalPluginEntry, PeltSet> KnownPelts);
 
@@ -327,15 +327,15 @@ sealed public class RecreateInternal
 
             plugin.PeltCount = new int[] { peltRecipe0.CreatedObjectCount ?? 2, peltRecipe1.CreatedObjectCount ?? 2, peltRecipe2.CreatedObjectCount ?? 2, peltRecipe3.CreatedObjectCount ?? 2 };
 
-            IConstructibleGetter? pelt0 = null;
-            IConstructibleGetter? pelt1 = null;
-            IConstructibleGetter? pelt2 = null;
-            IConstructibleGetter? pelt3 = null;
+            IItemGetter? pelt0 = null;
+            IItemGetter? pelt1 = null;
+            IItemGetter? pelt2 = null;
+            IItemGetter? pelt3 = null;
 
-            peltRecipe0.Items?[0].Item.Item.TryResolve<IConstructibleGetter>(linkCache, out pelt0);
-            peltRecipe1.Items?[0].Item.Item.TryResolve<IConstructibleGetter>(linkCache, out pelt1);
-            peltRecipe2.Items?[0].Item.Item.TryResolve<IConstructibleGetter>(linkCache, out pelt2);
-            peltRecipe3.Items?[0].Item.Item.TryResolve<IConstructibleGetter>(linkCache, out pelt3);
+            peltRecipe0.Items?[0].Item.Item.TryResolve<IItemGetter>(linkCache, out pelt0);
+            peltRecipe1.Items?[0].Item.Item.TryResolve<IItemGetter>(linkCache, out pelt1);
+            peltRecipe2.Items?[0].Item.Item.TryResolve<IItemGetter>(linkCache, out pelt2);
+            peltRecipe3.Items?[0].Item.Item.TryResolve<IItemGetter>(linkCache, out pelt3);
 
             if (pelt0 is not null && pelt1 is not null && pelt2 is not null && pelt3 is not null)
             {

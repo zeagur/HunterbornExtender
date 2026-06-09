@@ -14,6 +14,7 @@ using System.Windows.Media;
 namespace HunterbornExtenderUI
 {
     public class VM_Alphabetizer<TSource, TKey> : ViewModel
+        where TSource : notnull
     {
         public ObservableCollection<TSource> SubscribedCollection { get; set; } = new();
         public Func<TSource, TKey> KeySelector { get; set; }

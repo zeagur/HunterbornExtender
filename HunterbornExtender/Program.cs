@@ -22,7 +22,7 @@ using static HunterbornExtender.FormKeys;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
 using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
 using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Mutagen.Bethesda.Skyrim.FormList>;
-using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
+using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter>;
 
 sealed public class Program
 {
@@ -987,7 +987,7 @@ sealed public class Program
                 var standard = PatchMod.ConstructibleObjects.DuplicateInAsNewRecord(DEFAULT_PELT_STD_RECIPE.Resolve(LinkCache));
                 standard.CreatedObjectCount = (ushort)data.Prototype.PeltCount[1];
                 if (standard.Items?[0].Item is ContainerItem containerItem2) containerItem2.Item = pelts.Item2.ToLink();
-                if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
+                if (standard.Conditions?[4].Data is GetItemCountConditionData data2) data2.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data2, pelts.Item2.FormKey);
                 standard.EditorID = $"_DS_Recipe_Pelt_{data.InternalName}_01";
             }
 
@@ -1007,12 +1007,12 @@ sealed public class Program
             if (fine.Items?[0].Item is ContainerItem containerItem3) containerItem3.Item = pelts.Item3.ToLink();
             if (flawless.Items?[0].Item is ContainerItem containerItem4) containerItem4.Item = pelts.Item4.ToLink();
 
-            if (poor.Conditions?[4].Data is FunctionConditionData data1) data1.ParameterOneRecord = pelts.Item1.ToLink();
-            if (fine.Conditions?[4].Data is FunctionConditionData data3) data3.ParameterOneRecord = pelts.Item3.ToLink();
-            if (flawless.Conditions?[4].Data is FunctionConditionData data4) data4.ParameterOneRecord = pelts.Item4.ToLink();
+            if (poor.Conditions?[4].Data is GetItemCountConditionData data1) data1.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data1, pelts.Item1.FormKey);
+            if (fine.Conditions?[4].Data is GetItemCountConditionData data3) data3.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data3, pelts.Item3.FormKey);
+            if (flawless.Conditions?[4].Data is GetItemCountConditionData data4) data4.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data4, pelts.Item4.FormKey);
 
-            fine.CreatedObject = pelts.Item2.ToNullableLink();
-            flawless.CreatedObject = pelts.Item3.ToNullableLink();
+            fine.CreatedObject = pelts.Item2.FormKey.ToNullableLink<IConstructibleGetter>();
+            flawless.CreatedObject = pelts.Item3.FormKey.ToNullableLink<IConstructibleGetter>();
 
             if (DebuggingMode) Write.Success(3, $"Created new tanning recipes.");
         }
@@ -1035,9 +1035,9 @@ sealed public class Program
             if (standard.Items?[0].Item is ContainerItem containerItem2) containerItem2.Item = pelts.Item2.ToLink();
             if (fine.Items?[0].Item is ContainerItem containerItem3) containerItem3.Item = pelts.Item3.ToLink();
 
-            if (poor.Conditions?[4].Data is FunctionConditionData data1) data1.ParameterOneRecord = pelts.Item1.ToLink();
-            if (standard.Conditions?[4].Data is FunctionConditionData data2) data2.ParameterOneRecord = pelts.Item2.ToLink();
-            if (fine.Conditions?[4].Data is FunctionConditionData data3) data3.ParameterOneRecord = pelts.Item3.ToLink();
+            if (poor.Conditions?[4].Data is GetItemCountConditionData data1) data1.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data1, pelts.Item1.FormKey);
+            if (standard.Conditions?[4].Data is GetItemCountConditionData data2) data2.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data2, pelts.Item2.FormKey);
+            if (fine.Conditions?[4].Data is GetItemCountConditionData data3) data3.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data3, pelts.Item3.FormKey);
 
             if (DebuggingMode) Write.Success(3, $"Created new fur-plate recipes.");
         }
@@ -1195,7 +1195,7 @@ sealed public class Program
     /// <summary>
     /// Associates DeathItems with plugins. Mainly used to avoid processing a DeathItem more than once.
     /// </summary>
-    private Noggog.OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
+    private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
 
     /// <summary>
     /// The original indices of the internalplugins in the hunterborn plugin.

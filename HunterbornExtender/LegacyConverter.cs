@@ -7,7 +7,6 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Plugins.Exceptions;
 using HunterbornExtender.Settings;
 using Mutagen.Bethesda.Plugins.Cache;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using DynamicData;
 using System.IO.Abstractions;
 //using Newtonsoft.Json;
