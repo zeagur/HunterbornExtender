@@ -19,8 +19,12 @@ public class MainWindowVM : ViewModel
     private SettingsProvider _settingsProvider;
     private readonly PatcherSettingsIO _patcherSettingsIO;
 
-    [Reactive]
-    public object DisplayedSubView { get; set; }
+    private object _displayedSubView = null!;
+    public object DisplayedSubView
+    {
+        get => _displayedSubView;
+        set => this.RaiseAndSetIfChanged(ref _displayedSubView, value);
+    }
     public VM_WelcomePage WelcomePage { get; }
     public VM_DeathItemAssignmentPage DeathItemMenu { get; }
     public VM_PluginEditorPage PluginEditorPage { get; }
