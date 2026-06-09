@@ -1195,7 +1195,7 @@ sealed public class Program
     /// <summary>
     /// Associates DeathItems with plugins. Mainly used to avoid processing a DeathItem more than once.
     /// </summary>
-    private OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
+    private Noggog.OrderedDictionary<DeathItemGetter, PluginEntry> KnownDeathItems { get; } = new();
 
     /// <summary>
     /// The original indices of the internalplugins in the hunterborn plugin.

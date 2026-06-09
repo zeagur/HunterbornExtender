@@ -25,7 +25,7 @@ using ViewingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimModGetter,
 
 sealed public record RecreationData(
     Dictionary<InternalPluginEntry, int> OriginalIndices,
-    OrderedDictionary<DeathItemGetter, InternalPluginEntry> KnownDeathItems,
+    Noggog.OrderedDictionary<DeathItemGetter, InternalPluginEntry> KnownDeathItems,
     Dictionary<InternalPluginEntry, IMiscItemGetter> KnownCarcasses,
     Dictionary<InternalPluginEntry, PeltSet> KnownPelts);
 
