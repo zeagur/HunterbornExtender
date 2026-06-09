@@ -24,7 +24,7 @@ using static HunterbornExtender.FormKeys;
 using DeathItemGetter = Mutagen.Bethesda.Skyrim.ILeveledItemGetter;
 using MeatSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
 using PatchingRecords = StandardRecords<Mutagen.Bethesda.Skyrim.ISkyrimMod, Mutagen.Bethesda.Skyrim.FormList>;
-using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter, Mutagen.Bethesda.Skyrim.IConstructibleGetter>;
+using PeltSet = ValueTuple<Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter, Mutagen.Bethesda.Skyrim.IItemGetter>;
 
 sealed public class Program
 {
@@ -169,6 +169,11 @@ sealed public class Program
             Write.Fail(0, ex.Message);
             Console.WriteLine(ex.ToString());
             throw ex;
+        }
+        
+        foreach (var rec in PatchMod.EnumerateMajorRecords())
+        {
+            rec.IsCompressed = false;
         }
 
         return this;
@@ -361,6 +366,10 @@ sealed public class Program
                 Console.WriteLine(ex.ToString());
                 return;
             }
+        }
+        foreach (var rec in PatchMod.EnumerateMajorRecords())
+        {
+            rec.IsCompressed = false;
         }
     }
 
@@ -1000,12 +1009,12 @@ sealed public class Program
             if (fine.Items?[0].Item is {} containerItem3) containerItem3.Item = pelts.Item3.ToLink();
             if (flawless.Items?[0].Item is {} containerItem4) containerItem4.Item = pelts.Item4.ToLink();
 
-            if (poor.Conditions?[4].Data is GetItemCountConditionData data1) data1.ItemOrList.Link.SetTo(pelts.Item1.FormKey);
-            if (fine.Conditions?[4].Data is GetItemCountConditionData data3) data3.ItemOrList.Link.SetTo(pelts.Item3.FormKey);
-            if (flawless.Conditions?[4].Data is GetItemCountConditionData data4) data4.ItemOrList.Link.SetTo(pelts.Item4.FormKey);
+            if (poor.Conditions?[4].Data is GetItemCountConditionData data1) data1.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data1, pelts.Item1.FormKey);
+            if (fine.Conditions?[4].Data is GetItemCountConditionData data3) data3.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data3, pelts.Item3.FormKey);
+            if (flawless.Conditions?[4].Data is GetItemCountConditionData data4) data4.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data4, pelts.Item4.FormKey);
 
-            fine.CreatedObject = pelts.Item2.ToNullableLink();
-            flawless.CreatedObject = pelts.Item3.ToNullableLink();
+            fine.CreatedObject = pelts.Item2.FormKey.ToNullableLink<IConstructibleGetter>();
+            flawless.CreatedObject = pelts.Item3.FormKey.ToNullableLink<IConstructibleGetter>();
 
             if (DebuggingMode) Write.Success(3, $"Created new tanning recipes.");
         }
@@ -1028,9 +1037,9 @@ sealed public class Program
             if (standard.Items?[0].Item is {} containerItem2) containerItem2.Item = pelts.Item2.ToLink();
             if (fine.Items?[0].Item is {} containerItem3) containerItem3.Item = pelts.Item3.ToLink();
 
-            if (poor.Conditions?[4].Data is GetItemCountConditionData data1) data1.ItemOrList.Link.SetTo(pelts.Item1.FormKey);
-            if (standard.Conditions?[4].Data is GetItemCountConditionData data2) data2.ItemOrList.Link.SetTo(pelts.Item2.FormKey);
-            if (fine.Conditions?[4].Data is GetItemCountConditionData data3) data3.ItemOrList.Link.SetTo(pelts.Item3.FormKey);
+            if (poor.Conditions?[4].Data is GetItemCountConditionData data1) data1.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data1, pelts.Item1.FormKey);
+            if (standard.Conditions?[4].Data is GetItemCountConditionData data2) data2.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data2, pelts.Item2.FormKey);
+            if (fine.Conditions?[4].Data is GetItemCountConditionData data3) data3.ItemOrList = new FormLinkOrIndex<IItemOrListGetter>(data3, pelts.Item3.FormKey);
 
             if (DebuggingMode) Write.Success(3, $"Created new fur-plate recipes.");
         }

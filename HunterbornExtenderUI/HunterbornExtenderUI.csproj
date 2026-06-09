@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-	<TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <UseWPF>true</UseWPF>
@@ -54,12 +53,15 @@
 
   <ItemGroup>
     <PackageReference Include="Extended.Wpf.Toolkit" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Build" Version="18.6.3" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.6.3" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.6.3" />
     <PackageReference Include="Mutagen.Bethesda.Json" Version="0.53.1" />
     <PackageReference Include="Mutagen.Bethesda.Skyrim" Version="0.53.1" />
     <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.35.5" />
     <PackageReference Include="Mutagen.Bethesda.Synthesis.WPF" Version="0.35.5" />
     <PackageReference Include="Mutagen.Bethesda.WPF" Version="0.53.1" />
-    <PackageReference Include="Noggog.Autofac" Version="4.1.0" />
+    <PackageReference Include="Noggog.Autofac" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
